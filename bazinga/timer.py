@@ -9,4 +9,4 @@ class Timer(pyev.Timer):
 
     @staticmethod
     def on_timeout(watcher, event):
-        Signal.send(signal="timeout", sender=watcher.data)
+        signal.send(signal="timeout", sender=watcher.data)
