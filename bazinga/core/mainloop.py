@@ -1,5 +1,5 @@
 import pyev
-from Singleton import Singleton
+from bazinga.Singleton import Singleton
 
 class MainLoop(Singleton, pyev.Loop):
 

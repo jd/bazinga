@@ -1,6 +1,6 @@
 import pyev
 import Signal
-from MainLoop import MainLoop
+from core.MainLoop import MainLoop
 
 class Timer(pyev.Timer):
 
