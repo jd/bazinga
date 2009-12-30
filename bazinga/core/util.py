@@ -1,10 +1,26 @@
 from xdg import BaseDirectory
 
+loaded_config_file = None
+
 def get_config_file():
 
     """Load configuration file."""
 
     return BaseDirectory.load_first_config("bazinga", "rc.py")
+
+
+def load_config_file():
+
+    configfile = get_config_file()
+
+    if configfile:
+        try:
+            execfile(configfile)
+        except:
+            raise Exception("cannot load configuration file")
+        else:
+            loaded_config_file = configfile
+
 
 def setup_sys_path():
 
