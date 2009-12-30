@@ -3,7 +3,7 @@ from mainloop import MainLoop
 from bazinga.basic import Singleton
 import xcb, xcb.xproto
 
-class X(Singleton, pyev.Io):
+class Connection(Singleton, pyev.Io):
 
     def __init__(self, *args, **kw):
         if not hasattr(self, "connection"):
