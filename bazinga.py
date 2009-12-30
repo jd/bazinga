@@ -3,7 +3,6 @@
 if __name__ == "__main__":
     import bazinga.core.util as util
     from bazinga.core import log
-    import logging
 
     util.setup_sys_path()
 
