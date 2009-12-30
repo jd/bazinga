@@ -17,9 +17,11 @@ def load_config_file():
         try:
             execfile(configfile)
         except:
-            raise Exception("cannot load configuration file")
+            raise Exception("error executing configuration file")
         else:
             loaded_config_file = configfile
+    else:
+        raise Exception("configuration file not found")
 
 
 def setup_sys_path():
