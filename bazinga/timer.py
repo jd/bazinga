@@ -1,8 +1,9 @@
 import pyev
 import signal
+import basic
 from core.mainloop import MainLoop
 
-class Timer(pyev.Timer):
+class Timer(basic.Object, pyev.Timer):
 
     def __init__(self, after, repeat):
         pyev.Timer.__init__(self, after, repeat, MainLoop(), Timer.on_timeout, self)
