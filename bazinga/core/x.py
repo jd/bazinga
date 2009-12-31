@@ -1,5 +1,5 @@
 import pyev
-from ..window import Window
+from bazinga.window import Window
 from mainloop import MainLoop
 from bazinga.basic import Singleton
 import xcb.xproto
