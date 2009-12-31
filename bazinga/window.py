@@ -26,9 +26,7 @@ class Window(basic.Object):
         value_mask = 0
         value_list = []
         for mask in CW_keys:
-            if mask and hasattr(values, CW_rev[mask]):
-                print CW_rev[mask]
-                print mask
+            if mask and values.has_key(CW_rev[mask]):
                 value_mask |= mask
                 value_list.append(values[CW_rev[mask]])
 
