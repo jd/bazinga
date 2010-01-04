@@ -14,7 +14,7 @@ class Connection(Singleton, pyev.Io):
                     pyev.EV_READ, MainLoop(), Connection.on_io)
 
             self.screens = []
-            self.screens.append(Window(id=self.root.root))
+            self.screens.append(Screen(root=Window(id=self.root.root)))
 
     @staticmethod
     def on_io(watcher, events):
