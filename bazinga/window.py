@@ -32,7 +32,54 @@ class Window(basic.Object):
                 value_mask,
                 value_list)
 
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.border_width = border_width
+
         return window
+
+    def move_resize(self, x, y, width, height):
+
+        """Move or resize a window."""
+
+        value_mask = 0
+        value_list = []
+
+        if self.movable:
+            if x != self.x
+                value_mask |= ConfigWindow.X
+                value_list.append(x)
+            if y != self.y:
+                value_mask |= ConfigWindow.Y
+                value_list.append(y)
+
+        if self.resizable:
+            if width != self.width:
+                value_mask |= ConfigWindow.Width
+                value_list.append(width)
+            if height != self.height:
+                value_mask |= ConfigWindow.Height
+                value_list.append(height)
+
+        if value_mask:
+            core.x.Connection().connection.ConfigureWindow(self.id, value_mask, value_list)
+
+
+    def move(self, x, y)
+        
+        """Move a aindow"""
+
+        self.move_resize(x, y, self.width, self.height)
+
+
+    def resize(self, width, height)
+
+        """Resize a window"""
+
+        self.move_resize(self.x, self.y, width, height)
+
 
     def map(self):
 
