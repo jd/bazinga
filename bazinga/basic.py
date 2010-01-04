@@ -33,7 +33,7 @@ class Object(object):
         Note that no signal are emitted if the attribute is private (starts with _)."""
 
         if name[0] != "_":
-            self.emit_signal(name, signal=Setattr, sender=self)
+            self.emit_signal(Setattr, name)
         super(Object, self).__setattr__(name, value)
 
 
@@ -55,4 +55,4 @@ class Object(object):
 
         """Emit a signal on an object."""
 
-        return bsignal.emit(signal=signal, sender=self, *args, **kw)
+        return bsignal.emit(signal=signal, self, *args, **kw)

@@ -1,5 +1,6 @@
 import pyev
 from bazinga.window import Window
+from bazinga.screen import Screen
 from mainloop import MainLoop
 from bazinga.basic import Singleton
 import xcb.xproto

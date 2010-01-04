@@ -48,7 +48,7 @@ class Window(basic.Object):
         value_list = []
 
         if self.movable:
-            if x != self.x
+            if x != self.x:
                 value_mask |= ConfigWindow.X
                 value_list.append(x)
             if y != self.y:
@@ -67,14 +67,14 @@ class Window(basic.Object):
             core.x.Connection().connection.ConfigureWindow(self.id, value_mask, value_list)
 
 
-    def move(self, x, y)
+    def move(self, x, y):
         
         """Move a aindow"""
 
         self.move_resize(x, y, self.width, self.height)
 
 
-    def resize(self, width, height)
+    def resize(self, width, height):
 
         """Resize a window"""
 
