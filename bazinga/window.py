@@ -39,3 +39,9 @@ class Window(basic.Object):
         """Map a window on screen."""
 
         core.x.Connection().connection.core.MapWindow(self.id)
+
+    def unmap(self):
+
+        """Unmap a window on screen."""
+
+        core.x.Connection().connection.core.UnmapWindow(self.id)
