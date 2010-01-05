@@ -1,17 +1,17 @@
 import pyev
 import signal
 import basic
-from core.mainloop import MainLoop
+from loop import MainLoop
 
 class Timeout(signal.Signal):
     pass
 
 class Timer(basic.Object, pyev.Timer):
 
-    def __init__(self, after, repeat):
+    def __init__(self, after, repeat, loop=MainLoop()):
         basic.Object.__init__(self)
-        pyev.Timer.__init__(self, after, repeat, MainLoop(), Timer.on_timeout)
+        pyev.Timer.__init__(self, after, repeat, loop, Timer.on_timeout)
 
     @staticmethod
     def on_timeout(watcher, event):
-        watcher.emit_signal(signal=Timeout, sender=watcher)
+        watcher.emit_signal(signal=Timeout)

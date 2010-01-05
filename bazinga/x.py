@@ -4,10 +4,10 @@ import xcb.xproto
 import xcb.randr
 import xcb.xinerama
 
-from bazinga.window import Window
-from bazinga.screen import Screen, Output
-from bazinga.core.mainloop import MainLoop
-from bazinga.basic import Singleton
+from window import Window
+from screen import Screen, Output
+from basic import Singleton
+from loop import MainLoop
 
 
 def byte_list_to_str(blist):
@@ -20,11 +20,11 @@ def byte_list_to_str(blist):
     return ret
 
 
-class Connection(Singleton, pyev.Io):
+class Connection(pyev.Io):
 
     """A X connection."""
 
-    def __init__(self, *args, **kw):
+    def __init__(self, loop=MainLoop(), *args, **kw):
 
         """Initialize a X connection."""
 
@@ -103,7 +103,7 @@ class Connection(Singleton, pyev.Io):
                 self.screens.append(screen)
 
         pyev.Io.__init__(self, self.connection.get_file_descriptor(),
-                pyev.EV_READ, MainLoop(), Connection.on_io)
+                pyev.EV_READ, loop, Connection.on_io)
 
 
     @staticmethod
@@ -124,3 +124,10 @@ class Connection(Singleton, pyev.Io):
     @staticmethod
     def on_io(watcher, events):
         event = watcher.connection.poll_for_event()
+
+
+class MainConnection(Singleton, Connection):
+
+    """Main X connection of bazinga."""
+
+    pass
