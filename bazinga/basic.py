@@ -55,4 +55,4 @@ class Object(object):
 
         """Emit a signal on an object."""
 
-        return bsignal.emit(signal=signal, self, *args, **kw)
+        return bsignal.emit(signal, self, *args, **kw)
