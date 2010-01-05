@@ -51,7 +51,7 @@ class Connection(pyev.Io):
         self.roots = []
         from window import Window
         for root in self.connection.get_setup().roots:
-            self.roots.append(Window(id=root.root))
+            self.roots.append(Window(id=root.root, connection=self))
 
         self.screens = []
 

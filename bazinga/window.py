@@ -1,4 +1,22 @@
 import basic
+import xcb.xproto
+
+def xcb_dict_to_value(kw, xcb_dict):
+
+    """Many X values are made from a mask indicating which values are present
+    in the request and the actual values. We use that function to build this two
+    variables from a dict { OverrideRedirect: 1 }
+    to a mask |= OverrideRedirect and value = [ 1 ]"""
+
+    value_mask = 0
+    value_list = []
+    for key, value in kw.items():
+        if xcb_dict.__dict__.has_key(key):
+            value_mask |= getattr(xcb_dict, key)
+            value_list.append(value)
+
+    return value_mask, value_list
+
 
 class Window(basic.Object):
 
@@ -12,14 +30,6 @@ class Window(basic.Object):
 
         window = Window(id=self.connection.connection.generate_id())
 
-        value_mask = 0
-        value_list = []
-
-        for key, value in kw.items():
-            if CW.__dict__.has_key(key):
-                value_mask |= getattr(CW, key)
-                value_list.append(value)
-
         # XXX fix root_depth and visual
         self.connection.connection.core.CreateWindow(self.connection.connection.root.root_depth,
                 window.id,
@@ -27,8 +37,7 @@ class Window(basic.Object):
                 x, y, width, height, border_width,
                 WindowClass.CopyFromParent,
                 self.connection.connection.root.root_visual,
-                value_mask,
-                value_list)
+                *xcb_dict_to_value(kw, xcb.xproto.CW))
 
         window.connection = self.connection
         window.x = x
@@ -39,11 +48,14 @@ class Window(basic.Object):
 
         return window
 
-    def set_events(self, events):
+    def set_events(self, **kw):
 
         """Set events that shall be received by the window."""
 
-        self.x.connection()
+        self.connection.connection.core.ChangeWindowAttributes(
+                self.id,
+                *xcb_dict_to_value(kw, xcb.xproto.CW))
+
 
     def move_resize(self, x, y, width, height):
 
