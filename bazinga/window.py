@@ -1,7 +1,4 @@
 import basic
-import core.x
-
-from xcb.xproto import *
 
 class Window(basic.Object):
 
@@ -13,7 +10,7 @@ class Window(basic.Object):
 
         """Create a child window."""
 
-        window = Window(id=core.x.Connection().connection.generate_id())
+        window = Window(id=self.connection.connection.generate_id())
 
         value_mask = 0
         value_list = []
@@ -23,22 +20,30 @@ class Window(basic.Object):
                 value_mask |= getattr(CW, key)
                 value_list.append(value)
 
-        core.x.Connection().connection.core.CreateWindow(core.x.Connection().root.root_depth,
+        # XXX fix root_depth and visual
+        self.connection.connection.core.CreateWindow(self.connection.connection.root.root_depth,
                 window.id,
                 self.id,
                 x, y, width, height, border_width,
                 WindowClass.CopyFromParent,
-                core.x.Connection().root.root_visual,
+                self.connection.connection.root.root_visual,
                 value_mask,
                 value_list)
 
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.border_width = border_width
+        window.connection = self.connection
+        window.x = x
+        window.y = y
+        window.width = width
+        window.height = height
+        window.border_width = border_width
 
         return window
+
+    def set_events(self, events):
+
+        """Set events that shall be received by the window."""
+
+        self.x.connection()
 
     def move_resize(self, x, y, width, height):
 
@@ -51,44 +56,49 @@ class Window(basic.Object):
             if x != self.x:
                 value_mask |= ConfigWindow.X
                 value_list.append(x)
+                self.x = x
             if y != self.y:
                 value_mask |= ConfigWindow.Y
                 value_list.append(y)
+                self.y = x
 
         if self.resizable:
             if width != self.width:
                 value_mask |= ConfigWindow.Width
                 value_list.append(width)
+                self.width = width
             if height != self.height:
                 value_mask |= ConfigWindow.Height
                 value_list.append(height)
+                self.height = height
 
         if value_mask:
-            core.x.Connection().connection.ConfigureWindow(self.id, value_mask, value_list)
+            self.connection.connection.ConfigureWindow(self.id, value_mask, value_list)
 
 
     def move(self, x, y):
         
-        """Move a aindow"""
+        """Move a aindow."""
 
         self.move_resize(x, y, self.width, self.height)
 
 
     def resize(self, width, height):
 
-        """Resize a window"""
+        """Resize a window."""
 
         self.move_resize(self.x, self.y, width, height)
 
 
     def map(self):
 
-        """Map a window on screen."""
+        """Map a window on the screen."""
 
-        core.x.Connection().connection.core.MapWindow(self.id)
+        self.connection.connection.core.MapWindow(self.id)
+
 
     def unmap(self):
 
-        """Unmap a window on screen."""
+        """Unmap a window from the screen."""
 
-        core.x.Connection().connection.core.UnmapWindow(self.id)
+        self.connection.connection.core.UnmapWindow(self.id)

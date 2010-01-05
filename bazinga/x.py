@@ -1,14 +1,8 @@
 import pyev
 
-import xcb.xproto
-import xcb.randr
-import xcb.xinerama
-
-from window import Window
 from screen import Screen, Output
 from basic import Singleton
 from loop import MainLoop
-
 
 def byte_list_to_str(blist):
 
@@ -32,6 +26,10 @@ class Connection(pyev.Io):
         if hasattr(self, "connection"):
             return
 
+        import xcb.xproto
+        import xcb.randr
+        import xcb.xinerama
+
         self.connection = xcb.connect(*args, **kw)
 
         try:
@@ -51,6 +49,7 @@ class Connection(pyev.Io):
             xinerama_isactive_c = self.connection.xinerama.IsActive()
 
         self.roots = []
+        from window import Window
         for root in self.connection.get_setup().roots:
             self.roots.append(Window(id=root.root))
 
@@ -104,6 +103,14 @@ class Connection(pyev.Io):
 
         pyev.Io.__init__(self, self.connection.get_file_descriptor(),
                 pyev.EV_READ, loop, Connection.on_io)
+
+
+    def set_events(self, events):
+
+        """Set events that shall be received by the X connection."""
+
+        for root in self.roots:
+            pass
 
 
     @staticmethod
