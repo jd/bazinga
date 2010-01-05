@@ -3,7 +3,7 @@
 import unittest
 
 import bazinga.signal as signal
-from bazinga.basic import Object
+from bazinga.basic import Object, Setattr
 
 class TestBasicObject(unittest.TestCase):
 
@@ -14,14 +14,15 @@ class TestBasicObject(unittest.TestCase):
         pass
 
     def _test_setattr_signal_with_sender(self, obj, sender):
-        def f():
+        def f(field):
+            self.assert_(field == "value")
             self.has_changed = True
 
         self.has_changed = False
-        signal.connect(f, signal="setattr::value", sender=sender)
+        signal.connect(f, signal=Setattr, sender=sender)
         obj.value = 42
         self.assert_(self.has_changed)
-        signal.disconnect(f, signal="setattr::value", sender=sender)
+        signal.disconnect(f, signal=Setattr, sender=sender)
 
     def test_setattr_signal_on_class(self):
         self._test_setattr_signal_with_sender(self.Yack(), self.Yack)
