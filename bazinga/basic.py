@@ -8,12 +8,17 @@ class Singleton(object):
     __instance = None
 
     def __new__(cls, *args, **kwargs):
+
+        """Create a singleton. Return always the same instance of a class."""
+
         if cls.__instance is None:
             cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
         return cls.__instance
 
+
 class Setattr(bsignal.Signal):
     pass
+
 
 class Object(object):
 
@@ -32,8 +37,20 @@ class Object(object):
         """Override setattr so it emits a signal upon attribute change.
         Note that no signal are emitted if the attribute is private (starts with _)."""
 
-        if name[0] != "_":
-            self.emit_signal(Setattr, name)
+        # Get old value
+        oldvalue = getattr(self, name)
+
+        if oldvalue != value:
+            # If the object a __setattr_name method, call it.
+            setter_name = "__setattr_%s" % name
+            if hasattr(self, setter_name):
+                getattr(self, setter_name)(oldvalue, newvalue)
+
+            # If attribute is not private (starts with _), emit a signal
+            if name[0] != "_":
+                self.emit_signal(Setattr, name, oldvalue, value)
+
+        # Store new value
         super(Object, self).__setattr__(name, value)
 
 
