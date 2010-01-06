@@ -62,49 +62,24 @@ class Window(basic.Object):
                 *xcb_dict_to_value(kw, xcb.xproto.CW))
 
 
-    def move_resize(self, x, y, width, height):
+    def __setattr_x(self, oldvalue, newvalue):
 
-        """Move or resize a window."""
-
-        value_mask = 0
-        value_list = []
-
-        if self.movable:
-            if x != self.x:
-                value_mask |= ConfigWindow.X
-                value_list.append(x)
-                self.x = x
-            if y != self.y:
-                value_mask |= ConfigWindow.Y
-                value_list.append(y)
-                self.y = x
-
-        if self.resizable:
-            if width != self.width:
-                value_mask |= ConfigWindow.Width
-                value_list.append(width)
-                self.width = width
-            if height != self.height:
-                value_mask |= ConfigWindow.Height
-                value_list.append(height)
-                self.height = height
-
-        if value_mask:
-            self.connection.connection.ConfigureWindow(self.id, value_mask, value_list)
+        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ X: newvalue }, xcb.xproto.ConfigWindow))
 
 
-    def move(self, x, y):
-        
-        """Move a aindow."""
+    def __setattr_y(self, oldvalue, newvalue):
 
-        self.move_resize(x, y, self.width, self.height)
+        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
 
 
-    def resize(self, width, height):
+    def __setattr_width(self, oldvalue, newvalue):
 
-        """Resize a window."""
+        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ Width: newvalue }, xcb.xproto.ConfigWindow))
 
-        self.move_resize(self.x, self.y, width, height)
+
+    def __setattr_height(self, oldvalue, newvalue):
+
+        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ Height: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def map(self):
