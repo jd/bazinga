@@ -14,7 +14,7 @@ class TestBasicObject(unittest.TestCase):
         pass
 
     def _test_setattr_signal_with_sender(self, obj, sender):
-        def f(field):
+        def f(field, oldvalue, newvalue):
             self.assert_(field == "value")
             self.has_changed = True
 

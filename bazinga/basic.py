@@ -27,9 +27,9 @@ class Object(object):
     def __init__(self, **kw):
 
         """Initialize the object. This will copy all keywords
-        arguments to the object attr dict."""
+        arguments to the object dict."""
 
-        self.__attr = kw
+        self.__dict__.update(kw)
 
 
     def __setattr__(self, name, value):
@@ -39,8 +39,11 @@ class Object(object):
 
         # If attribute is not private (starts with _)
         if name[0] != "_":
-            # Get old value
-            oldvalue = getattr(self.__attr, name)
+            if hasattr(self, name):
+                # Get old value
+                oldvalue = getattr(self, name)
+            else:
+                oldvalue = None
 
             # Be smart.
             if oldvalue != value:
@@ -48,18 +51,13 @@ class Object(object):
                 # If the object a __setattr_name method, call it.
                 setter_name = "__setattr_%s" % name
                 if hasattr(self, setter_name):
-                    getattr(self, setter_name)(oldvalue, newvalue)
+                    getattr(self, setter_name)(oldvalue, value)
 
                 # Emit a signal to indicate a change to the user.
                 self.emit_signal(Setattr, name, oldvalue, value)
 
         # Store new value.
-        setattr(self.__attr, name, value)
-
-
-    def __getattr__(self, name):
-
-        return getattr(self.__attr, name)
+        super(Object, self).__setattr__(name, value)
 
 
     def connect_signal(self, receiver, signal=bsignal.signal.All):
