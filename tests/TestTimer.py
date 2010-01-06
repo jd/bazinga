@@ -9,7 +9,7 @@ from bazinga.timer import Timer
 class TestTimer(unittest.TestCase):
 
     def setUp(self):
-        self.timer = Timer(1, 0)
+        self.timer = Timer(0.1, 0)
 
     def test_timer(self):
         self.called = False
