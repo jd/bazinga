@@ -1,10 +1,16 @@
 import basic
 import xcb.xproto
 
+
 class NotResizable(Exception):
     pass
 
+
 class NotMovable(Exception):
+    pass
+
+
+class NoBorder(Exception):
     pass
 
 
@@ -121,6 +127,9 @@ class Window(basic.Object):
 
 
     def __setattr_border_width(self, oldvalue, newvalue):
+
+        if oldvalue == None:
+            raise NoBorder("This window cannot have border.")
 
         if newvalue <= 0:
             raise ValueError("Window height must be positive.")
