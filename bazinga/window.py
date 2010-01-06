@@ -135,7 +135,7 @@ class Window(basic.Object):
             raise ValueError("Window height must be positive.")
 
         self.connection.connection.ConfigureWindow(self.id,
-                xcb_dict_to_value( { BorderWidth: newvalue }, xcb.xproto.ConfigWindow)
+                xcb_dict_to_value( { BorderWidth: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def map(self):
