@@ -69,17 +69,26 @@ class Window(basic.Object):
 
     def __setattr_y(self, oldvalue, newvalue):
 
-        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
+        self.connection.connection.ConfigureWindow(self.id,
+                xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def __setattr_width(self, oldvalue, newvalue):
 
-        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ Width: newvalue }, xcb.xproto.ConfigWindow))
+        self.connection.connection.ConfigureWindow(self.id,
+                xcb_dict_to_value({ Width: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def __setattr_height(self, oldvalue, newvalue):
 
-        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ Height: newvalue }, xcb.xproto.ConfigWindow))
+        self.connection.connection.ConfigureWindow(self.id,
+                xcb_dict_to_value({ Height: newvalue }, xcb.xproto.ConfigWindow))
+
+
+    def __setattr_border_width(self, oldvalue, newvalue):
+
+        self.connection.connection.ConfigureWindow(self.id,
+                xcb_dict_to_value( { BorderWidth: newvalue }, xcb.xproto.ConfigWindow)
 
 
     def map(self):
