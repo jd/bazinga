@@ -40,6 +40,13 @@ class Window(basic.Object):
 
         """Create a child window."""
 
+        if width <= 0:
+            raise ValueError("Window width must be positive.")
+        if height <= 0:
+            raise ValueError("Window height must be positive.")
+        if border_width <= 0:
+            raise ValueError("Window border width must be positive.")
+
         window = Window(
                 id = self.connection.connection.generate_id(),
                 x = x,
