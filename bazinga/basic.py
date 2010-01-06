@@ -29,7 +29,7 @@ class Object(object):
         """Initialize the object. This will copy all keywords
         arguments to the object attr dict."""
 
-        self.attr = kw
+        self.__attr = kw
 
 
     def __setattr__(self, name, value):
@@ -37,26 +37,29 @@ class Object(object):
         """Override setattr so it emits a signal upon attribute change.
         Note that no signal are emitted if the attribute is private (starts with _)."""
 
-        # Get old value
-        oldvalue = getattr(self, name)
+        # If attribute is not private (starts with _)
+        if name[0] != "_":
+            # Get old value
+            oldvalue = getattr(self.__attr, name)
 
-        if oldvalue != value:
-            # If the object a __setattr_name method, call it.
-            setter_name = "__setattr_%s" % name
-            if hasattr(self, setter_name):
-                getattr(self, setter_name)(oldvalue, newvalue)
+            # Be smart.
+            if oldvalue != value:
 
-            # If attribute is not private (starts with _), emit a signal
-            if name[0] != "_":
+                # If the object a __setattr_name method, call it.
+                setter_name = "__setattr_%s" % name
+                if hasattr(self, setter_name):
+                    getattr(self, setter_name)(oldvalue, newvalue)
+
+                # Emit a signal to indicate a change to the user.
                 self.emit_signal(Setattr, name, oldvalue, value)
 
-            # Store new value
-            setattr(self.attr, name, value)
+        # Store new value.
+        setattr(self.__attr, name, value)
 
 
     def __getattr__(self, name):
 
-        return getattr(self.attr, name)
+        return getattr(self.__attr, name)
 
 
     def connect_signal(self, receiver, signal=bsignal.signal.All):
