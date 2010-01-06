@@ -22,10 +22,6 @@ class Connection(pyev.Io):
 
         """Initialize a X connection."""
 
-        # We are a singleton, so do not init twice.
-        if hasattr(self, "connection"):
-            return
-
         import xcb.xproto
         import xcb.randr
         import xcb.xinerama
