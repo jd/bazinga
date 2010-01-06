@@ -24,12 +24,12 @@ class Object(object):
 
     """Base class of many bazinga objects."""
 
-    def __init__(self, *args, **kw):
+    def __init__(self, **kw):
 
         """Initialize the object. This will copy all keywords
-        arguments to the object dict."""
+        arguments to the object attr dict."""
 
-        self.__dict__.update(kw)
+        self.attr = kw
 
 
     def __setattr__(self, name, value):
@@ -50,8 +50,13 @@ class Object(object):
             if name[0] != "_":
                 self.emit_signal(Setattr, name, oldvalue, value)
 
-        # Store new value
-        super(Object, self).__setattr__(name, value)
+            # Store new value
+            setattr(self.attr, name, value)
+
+
+    def __getattr__(self, name):
+
+        return getattr(self.attr, name)
 
 
     def connect_signal(self, receiver, signal=bsignal.signal.All):
