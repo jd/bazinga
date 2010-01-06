@@ -1,7 +1,7 @@
 import basic
 import xcb.xproto
 
-def xcb_dict_to_value(kw, xcb_dict):
+def xcb_dict_to_value(values, xcb_dict):
 
     """Many X values are made from a mask indicating which values are present
     in the request and the actual values. We use that function to build this two
@@ -10,10 +10,15 @@ def xcb_dict_to_value(kw, xcb_dict):
 
     value_mask = 0
     value_list = []
-    for key, value in kw.items():
-        if xcb_dict.__dict__.has_key(key):
-            value_mask |= getattr(xcb_dict, key)
-            value_list.append(value)
+
+    xcb_dict_rev = dict(zip(xcb_dict.__dict__.values(), xcb_dict.__dict__.keys()))
+    xcb_dict_keys = xcb_dict_rev.keys()
+    xcb_dict_keys.sort()
+
+    for mask in xcb_dict_keys:
+        if mask and values.has_key(xcb_dict_rev[mask]):
+            value_mask |= mask
+            value_list.append(values[CW_rev[mask]])
 
     return value_mask, value_list
 
