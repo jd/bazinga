@@ -54,8 +54,8 @@ class Connection(xcb.Connection):
                 x = 0,
                 y = 0,
                 noborder = True,
-                width = root.width_in_millimeters,
-                height = root.height_in_millimeters,
+                width = root.width_in_pixels,
+                height = root.height_in_pixels,
                 ))
 
         self.screens = []
