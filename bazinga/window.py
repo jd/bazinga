@@ -84,6 +84,11 @@ class Window(basic.Object):
                 CW.EventMask,
                 events)
 
+    def __setattr_id(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            raise ValueError("cannot change window id")
+
 
     def __setattr_x(self, oldvalue, newvalue):
 
