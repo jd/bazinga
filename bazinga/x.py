@@ -53,6 +53,7 @@ class Connection(xcb.Connection):
                 connection = self,
                 x = 0,
                 y = 0,
+                noborder = True,
                 width = root.width_in_millimeters,
                 height = root.height_in_millimeters,
                 ))
