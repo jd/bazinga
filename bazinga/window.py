@@ -87,16 +87,18 @@ class Window(basic.Object):
 
     def __setattr_x(self, oldvalue, newvalue):
 
-        if not self.movable:
-            raise NotMovable
+        if oldvalue != None:
+            if not self.movable:
+                raise NotMovable
 
         self.connection.ConfigureWindow(self.id, xcb_dict_to_value({ X: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def __setattr_y(self, oldvalue, newvalue):
 
-        if not self.movable:
-            raise NotMovable
+        if oldvalue != None:
+            if not self.movable:
+                raise NotMovable
 
         self.connection.core.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
@@ -104,37 +106,40 @@ class Window(basic.Object):
 
     def __setattr_width(self, oldvalue, newvalue):
 
-        if newvalue <= 0:
-            raise ValueError("Window width must be positive.")
+        if oldvalue != None:
+            if newvalue <= 0:
+                raise ValueError("Window width must be positive.")
 
-        if not self.resizable:
-            raise NotResizable
+            if not self.resizable:
+                raise NotResizable
 
-        self.connection.ConfigureWindow(self.id,
+        self.connection.core.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Width: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def __setattr_height(self, oldvalue, newvalue):
 
-        if newvalue <= 0:
-            raise ValueError("Window height must be positive.")
+        if oldvalue != None:
+            if newvalue <= 0:
+                raise ValueError("Window height must be positive.")
 
-        if not self.resizable:
-            raise NotResizable
+            if not self.resizable:
+                raise NotResizable
 
-        self.connection.ConfigureWindow(self.id,
+        self.connection.core.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Height: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def __setattr_border_width(self, oldvalue, newvalue):
 
-        if oldvalue == None:
-            raise NoBorder("This window cannot have border.")
+        if oldvalue != None:
+            if self.noborder:
+                raise NoBorder("This window cannot have border.")
 
-        if newvalue <= 0:
-            raise ValueError("Window height must be positive.")
+            if newvalue <= 0:
+                raise ValueError("Window height must be positive.")
 
-        self.connection.ConfigureWindow(self.id,
+        self.connection.core.ConfigureWindow(self.id,
                 xcb_dict_to_value( { BorderWidth: newvalue }, xcb.xproto.ConfigWindow))
 
 

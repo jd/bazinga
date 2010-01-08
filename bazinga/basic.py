@@ -44,7 +44,8 @@ class Object(object):
         """Initialize the object. This will copy all keywords
         arguments to the object dict."""
 
-        self.__dict__.update(kw)
+        for key, value in kw.items():
+            setattr(self, key, value)
 
 
     def __setattr__(self, name, value):
