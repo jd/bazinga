@@ -116,7 +116,7 @@ class Connection(xcb.Connection):
         """Set events that shall be received by the X connection."""
 
         for root in self.roots:
-            pass
+            root.set_events(events)
 
 
     @staticmethod
