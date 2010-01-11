@@ -1,4 +1,5 @@
 import pyev
+import xcb
 
 from screen import Screen, Output
 from basic import Singleton
@@ -14,7 +15,7 @@ def byte_list_to_str(blist):
     return ret
 
 
-class Connection(pyev.Io):
+class Connection(xcb.Connection):
 
     """A X connection."""
 
@@ -26,27 +27,27 @@ class Connection(pyev.Io):
         import xcb.randr
         import xcb.xinerama
 
-        self.connection = xcb.connect(*args, **kw)
+        xcb.Connection.__init__(*args, **kw)
 
         try:
-            self.connection.randr = self.connection(xcb.randr.key)
+            self.randr = self(xcb.randr.key)
         except xcb.ExtensionException:
             pass
         else:
             # Check that RandR extension is at least 1.1
-            randr_queryversion_c = self.connection.randr.QueryVersion(1, 1)
+            randr_queryversion_c = self.randr.QueryVersion(1, 1)
 
         try:
-            self.connection.xinerama = self.connection(xcb.xinerama.key)
+            self.xinerama = self(xcb.xinerama.key)
         except xcb.ExtensionException:
             pass
         else:
             # Check that Xinerama is active
-            xinerama_isactive_c = self.connection.xinerama.IsActive()
+            xinerama_isactive_c = self.xinerama.IsActive()
 
         self.roots = []
         from window import Window
-        for root in self.connection.get_setup().roots:
+        for root in self.get_setup().roots:
             self.roots.append(Window(
                 id = root.root,
                 connection = self,
@@ -60,12 +61,12 @@ class Connection(pyev.Io):
 
         # Does it have RandR ?
         if randr_queryversion_c and randr_queryversion_c.reply():
-            screen_resources_c = Connection.prepare_requests(self.connection.randr.GetScreenResources,
+            screen_resources_c = Connection.prepare_requests(self.randr.GetScreenResources,
                     list(root.id for root in self.roots), 0)
             for screen_resources_cookie in screen_resources_c:
                 screen_resources = screen_resources_cookie.reply()
 
-                crtc_info_c = Connection.prepare_requests(self.connection.randr.GetCrtcInfo,
+                crtc_info_c = Connection.prepare_requests(self.randr.GetCrtcInfo,
                         screen_resources.crtcs, 0, xcb.xproto.Time.CurrentTime)
 
                 for crtc_info_cookie in crtc_info_c:
@@ -80,7 +81,7 @@ class Connection(pyev.Io):
                         self.screens.append(screen)
 
                         # Prepare output info requests
-                        output_info_c = Connection.prepare_requests(self.connection.randr.GetOutputInfo,
+                        output_info_c = Connection.prepare_requests(self.randr.GetOutputInfo,
                                 crtc_info.outputs, 0, xcb.xproto.Time.CurrentTime)
 
                         for output_info_cookie in output_info_c:
@@ -90,13 +91,13 @@ class Connection(pyev.Io):
                                     mm_height=output_info.mm_height))
 
         elif xinerama_isactive_c and xinerama_isactive_c.reply().state:
-            screens_info = self.connection.xinerama.QueryScreens().reply()
+            screens_info = self.xinerama.QueryScreens().reply()
             for screen_info in screens_info.screen_info:
                 self.screens.append(Screen(x=screen_info.x_org, y=screen_info.y_org,
                     width=screen_info.width, height=screen_info.height))
 
         else:
-            for root in self.connection.get_setup().roots:
+            for root in self.get_setup().roots:
                 screen = Screen(x=0, y=0,
                         width=root.width_in_pixels,
                         height=root.height_in_pixels,
@@ -104,8 +105,7 @@ class Connection(pyev.Io):
                                          mm_height=root.height_in_millimeters) ])
                 self.screens.append(screen)
 
-        pyev.Io.__init__(self, self.connection.get_file_descriptor(),
-                pyev.EV_READ, loop, Connection.on_io)
+        pyev.Io(self, self.get_file_descriptor(), pyev.EV_READ, loop, Connection.on_io)
 
 
     def set_events(self, events):
@@ -133,7 +133,7 @@ class Connection(pyev.Io):
 
     @staticmethod
     def on_io(watcher, events):
-        event = watcher.connection.poll_for_event()
+        event = watcher.poll_for_event()
 
 
 class MainConnection(Singleton, Connection):

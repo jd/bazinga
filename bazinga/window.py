@@ -54,7 +54,7 @@ class Window(basic.Object):
             raise ValueError("Window border width must be positive.")
 
         window = Window(
-                id = self.connection.connection.generate_id(),
+                id = self.connection.generate_id(),
                 x = x,
                 y = y,
                 width = width,
@@ -65,12 +65,12 @@ class Window(basic.Object):
                 )
 
         # XXX fix root_depth and visual
-        self.connection.connection.core.CreateWindow(self.connection.connection.root.root_depth,
+        self.connection.core.CreateWindow(self.connection.root.root_depth,
                 window.id,
                 self.id,
                 x, y, width, height, border_width,
                 WindowClass.CopyFromParent,
-                self.connection.connection.root.root_visual,
+                self.connection.root.root_visual,
                 *xcb_dict_to_value(kw, xcb.xproto.CW))
 
         return window
@@ -79,7 +79,7 @@ class Window(basic.Object):
 
         """Set events that shall be received by the window."""
 
-        self.connection.connection.core.ChangeWindowAttributes(
+        self.connection.core.ChangeWindowAttributes(
                 self.id,
                 CW.EventMask,
                 events)
@@ -90,7 +90,7 @@ class Window(basic.Object):
         if not self.movable:
             raise NotMovable
 
-        self.connection.connection.ConfigureWindow(self.id, xcb_dict_to_value({ X: newvalue }, xcb.xproto.ConfigWindow))
+        self.connection.ConfigureWindow(self.id, xcb_dict_to_value({ X: newvalue }, xcb.xproto.ConfigWindow))
 
 
     def __setattr_y(self, oldvalue, newvalue):
@@ -98,7 +98,7 @@ class Window(basic.Object):
         if not self.movable:
             raise NotMovable
 
-        self.connection.connection.ConfigureWindow(self.id,
+        self.connection.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
 
 
@@ -110,7 +110,7 @@ class Window(basic.Object):
         if not self.resizable:
             raise NotResizable
 
-        self.connection.connection.ConfigureWindow(self.id,
+        self.connection.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Width: newvalue }, xcb.xproto.ConfigWindow))
 
 
@@ -122,7 +122,7 @@ class Window(basic.Object):
         if not self.resizable:
             raise NotResizable
 
-        self.connection.connection.ConfigureWindow(self.id,
+        self.connection.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Height: newvalue }, xcb.xproto.ConfigWindow))
 
 
@@ -134,7 +134,7 @@ class Window(basic.Object):
         if newvalue <= 0:
             raise ValueError("Window height must be positive.")
 
-        self.connection.connection.ConfigureWindow(self.id,
+        self.connection.ConfigureWindow(self.id,
                 xcb_dict_to_value( { BorderWidth: newvalue }, xcb.xproto.ConfigWindow))
 
 
@@ -142,11 +142,11 @@ class Window(basic.Object):
 
         """Map a window on the screen."""
 
-        self.connection.connection.core.MapWindow(self.id)
+        self.connection.core.MapWindow(self.id)
 
 
     def unmap(self):
 
         """Unmap a window from the screen."""
 
-        self.connection.connection.core.UnmapWindow(self.id)
+        self.connection.core.UnmapWindow(self.id)
