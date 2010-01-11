@@ -86,13 +86,13 @@ class Window(basic.Object):
                 events)
 
 
-    def __setattr_id(self, oldvalue, newvalue):
+    def __setattr_id__(self, oldvalue, newvalue):
 
         if oldvalue != None:
             raise ValueError("cannot change window id")
 
 
-    def __setattr_x(self, oldvalue, newvalue):
+    def __setattr_x__(self, oldvalue, newvalue):
 
         if oldvalue != None:
             if not self.movable:
@@ -101,7 +101,7 @@ class Window(basic.Object):
         self.connection.ConfigureWindow(self.id, xcb_dict_to_value({ X: newvalue }, xcb.xproto.ConfigWindow))
 
 
-    def __setattr_y(self, oldvalue, newvalue):
+    def __setattr_y__(self, oldvalue, newvalue):
 
         if oldvalue != None:
             if not self.movable:
@@ -111,7 +111,7 @@ class Window(basic.Object):
                 xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
 
 
-    def __setattr_width(self, oldvalue, newvalue):
+    def __setattr_width__(self, oldvalue, newvalue):
 
         if oldvalue != None:
             if newvalue <= 0:
@@ -124,7 +124,7 @@ class Window(basic.Object):
                 xcb_dict_to_value({ Width: newvalue }, xcb.xproto.ConfigWindow))
 
 
-    def __setattr_height(self, oldvalue, newvalue):
+    def __setattr_height__(self, oldvalue, newvalue):
 
         if oldvalue != None:
             if newvalue <= 0:
@@ -137,7 +137,7 @@ class Window(basic.Object):
                 xcb_dict_to_value({ Height: newvalue }, xcb.xproto.ConfigWindow))
 
 
-    def __setattr_border_width(self, oldvalue, newvalue):
+    def __setattr_border_width__(self, oldvalue, newvalue):
 
         if oldvalue != None:
             if self.noborder:

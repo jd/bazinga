@@ -65,7 +65,7 @@ class Object(object):
             if oldvalue != value:
 
                 # If the object a __setattr_name method, call it.
-                setter_name = "__setattr_%s" % name
+                setter_name = "__setattr_%s__" % name
                 if hasattr(self, setter_name):
                     getattr(self, setter_name)(oldvalue, value)
 
