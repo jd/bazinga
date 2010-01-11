@@ -27,12 +27,12 @@ class Connection(xcb.Connection):
         import xcb.randr
         import xcb.xinerama
 
-        xcb.Connection.__init__(*args, **kw)
+        xcb.Connection.__init__(self, *args, **kw)
 
         try:
             self.randr = self(xcb.randr.key)
         except xcb.ExtensionException:
-            pass
+            randr_queryversion_c = None
         else:
             # Check that RandR extension is at least 1.1
             randr_queryversion_c = self.randr.QueryVersion(1, 1)
@@ -40,7 +40,7 @@ class Connection(xcb.Connection):
         try:
             self.xinerama = self(xcb.xinerama.key)
         except xcb.ExtensionException:
-            pass
+            xinerama_isactive_c = None
         else:
             # Check that Xinerama is active
             xinerama_isactive_c = self.xinerama.IsActive()
