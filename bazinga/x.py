@@ -9,10 +9,7 @@ def byte_list_to_str(blist):
 
     """Convert a byte list to a string."""
 
-    ret = ""
-    for char in blist:
-        ret += chr(char)
-    return ret
+    return "".join(map(chr, blist)
 
 
 class Connection(xcb.Connection):
