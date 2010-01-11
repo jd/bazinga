@@ -75,6 +75,7 @@ class Window(basic.Object):
 
         return window
 
+
     def set_events(self, events):
 
         """Set events that shall be received by the window."""
@@ -83,6 +84,7 @@ class Window(basic.Object):
                 self.id,
                 CW.EventMask,
                 events)
+
 
     def __setattr_id(self, oldvalue, newvalue):
 
