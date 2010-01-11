@@ -1,8 +1,22 @@
 import signal as bsignal
 
+class SingletonMeta(type):
+
+    """Singleton metaclass."""
+
+    def __call__(cls, *args, **kwargs):
+
+        obj, do_init = cls.__new__(cls, *args, **kwargs)
+        if obj and do_init:
+            cls.__init__(obj, *args, **kwargs)
+        return obj
+
+
 class Singleton(object):
 
     """Singleton class."""
+
+    __metaclass__ = SingletonMeta
 
     # The singleton instance.
     __instance = None
@@ -13,7 +27,8 @@ class Singleton(object):
 
         if cls.__instance is None:
             cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
-        return cls.__instance
+            return cls.__instance, True
+        return cls.__instance, False
 
 
 class Setattr(bsignal.Signal):
