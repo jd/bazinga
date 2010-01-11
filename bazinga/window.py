@@ -98,7 +98,7 @@ class Window(basic.Object):
         if not self.movable:
             raise NotMovable
 
-        self.connection.ConfigureWindow(self.id,
+        self.connection.core.ConfigureWindow(self.id,
                 xcb_dict_to_value({ Y: newvalue }, xcb.xproto.ConfigWindow))
 
 
