@@ -2,17 +2,17 @@ import pyev
 import xcb
 
 from screen import Screen, Output
-from basic import Singleton
+from basic import Singleton, Object
 from loop import MainLoop
 
 def byte_list_to_str(blist):
 
     """Convert a byte list to a string."""
 
-    return "".join(map(chr, blist)
+    return "".join(map(chr, blist))
 
 
-class Connection(xcb.Connection):
+class Connection(Object, xcb.Connection):
 
     """A X connection."""
 
@@ -59,9 +59,9 @@ class Connection(xcb.Connection):
 
         # Does it have RandR ?
         if randr_queryversion_c and randr_queryversion_c.reply():
-            screen_resources_c = Connection.prepare_requests(self.randr.GetScreenResources,
-                                                             list(root.id for root in self.roots), 0)
-            for screen_resources_cookie in screen_resources_c:
+            screen_resources_c = zip(self.roots, Connection.prepare_requests(self.randr.GetScreenResources,
+                                                                             list(root.id for root in self.roots), 0))
+            for root, screen_resources_cookie in screen_resources_c:
                 screen_resources = screen_resources_cookie.reply()
 
                 crtc_info_c = Connection.prepare_requests(self.randr.GetCrtcInfo,
@@ -76,6 +76,7 @@ class Connection(xcb.Connection):
                                         y = crtc_info.y,
                                         width = crtc_info.width,
                                         height = crtc_info.height,
+                                        root = root,
                                         outputs = [])
                         self.screens.append(screen)
 
@@ -95,17 +96,20 @@ class Connection(xcb.Connection):
                 self.screens.append(Screen(x = screen_info.x_org,
                                            y = screen_info.y_org,
                                            width = screen_info.width,
+                                           # There is only one root if we have Xinerama
+                                           root = self.roots[0],
                                            height = screen_info.height))
 
         else:
-            for root in self.get_setup().roots:
+            for root, xroot in zip(self.roots, self.get_setup().roots):
                 self.screens.append(Screen(x = 0, y = 0,
                                            width = root.width_in_pixels,
                                            height = root.height_in_pixels,
-                                           outputs = [ Output(mm_width = root.width_in_millimeters,
-                                                              mm_height = root.height_in_millimeters) ])
+                                           root = root,
+                                           outputs = [ Output(mm_width = xroot.width_in_millimeters,
+                                                              mm_height = xroot.height_in_millimeters) ]))
 
-        pyev.Io(self, self.get_file_descriptor(), pyev.EV_READ, loop, Connection.on_io)
+        pyev.Io(self.get_file_descriptor(), pyev.EV_READ, loop, Connection.on_io)
 
 
     def set_events(self, events):
