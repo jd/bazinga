@@ -1,4 +1,5 @@
 import signal as bsignal
+from threading import Lock
 
 class SingletonMeta(type):
 
@@ -20,14 +21,16 @@ class Singleton(object):
 
     # The singleton instance.
     __instance = None
+    __instance_lock = Lock()
 
     def __new__(cls, *args, **kwargs):
 
         """Create a singleton. Return always the same instance of a class."""
 
-        if cls.__instance is None:
-            cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
-            return cls.__instance, True
+        with cls.__instance_lock:
+            if cls.__instance is None:
+                cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
+                return cls.__instance, True
         return cls.__instance, False
 
 
