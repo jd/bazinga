@@ -43,16 +43,10 @@ class Window(basic.Object):
 
     def create_window(self,
                       x=0, y=0, width=1, height=1, border_width=0,
+                      movable=True, resizable=True, noborder=False,
                       **kw):
 
         """Create a child window."""
-
-        if width <= 0:
-            raise ValueError("Window width must be positive.")
-        if height <= 0:
-            raise ValueError("Window height must be positive.")
-        if border_width <= 0:
-            raise ValueError("Window border width must be positive.")
 
         window = Window(id = self.connection.generate_id(),
                         x = x,
@@ -60,6 +54,9 @@ class Window(basic.Object):
                         width = width,
                         height = height,
                         border_width = border_width,
+                        movable = movable,
+                        resizable = resizable,
+                        noborder = noborder,
                         connection = self.connection,
                         parent = self)
 
@@ -81,6 +78,12 @@ class Window(basic.Object):
 
         self.connection.core.ChangeWindowAttributes(self.id, CW.EventMask,
                                                     events)
+
+
+    def __setattr_connection__(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            raise ValueError("cannot change window connection")
 
 
     def __setattr_id__(self, oldvalue, newvalue):
