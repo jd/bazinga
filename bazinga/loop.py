@@ -1,7 +1,7 @@
 import pyev
-from basic import Singleton
+from basic import Singleton, Object
 
-class Loop(pyev.Loop):
+class Loop(Object, pyev.Loop):
 
     """An event loop."""
 
