@@ -80,10 +80,19 @@ class Window(basic.Object):
                                                     events)
 
 
-    def __setattr_connection__(self, oldvalue, newvalue):
+    @property
+    def connection(self):
 
-        if oldvalue != None:
+        return self._connection
+
+    @connection.setter
+    def connection(self, value):
+
+        if hasattr(self, "_connection"):
             raise ValueError("cannot change window connection")
+
+    connection = property(lambda self: return self._connection,
+                          lambda self, value:
 
 
     def __setattr_id__(self, oldvalue, newvalue):

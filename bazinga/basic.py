@@ -1,5 +1,6 @@
 import signal as bsignal
 from threading import Lock
+from decorator import decorator
 
 class SingletonMeta(type):
 
@@ -56,6 +57,9 @@ class Object(object):
         """Override setattr so it emits a signal upon attribute change.
         Note that no signal are emitted if the attribute is private (starts with _)."""
 
+        # Store new value.
+        super(Object, self).__setattr__(name, value)
+
         # If attribute is not private (starts with _)
         if name[0] != "_":
             if hasattr(self, name):
@@ -66,17 +70,8 @@ class Object(object):
 
             # Be smart.
             if oldvalue != value:
-
-                # If the object a __setattr_name method, call it.
-                setter_name = "__setattr_%s__" % name
-                if hasattr(self, setter_name):
-                    getattr(self, setter_name)(oldvalue, value)
-
                 # Emit a signal to indicate a change to the user.
                 self.emit_signal(Setattr, name, oldvalue, value)
-
-        # Store new value.
-        super(Object, self).__setattr__(name, value)
 
 
     def connect_signal(self, receiver, signal=bsignal.signal.All):
@@ -98,3 +93,50 @@ class Object(object):
         """Emit a signal on an object."""
 
         return bsignal.emit(signal, self, *args, **kw)
+
+
+class Property(object):
+
+    def __init__(self, default_value=None, readable=True, writable=True, deletable=False, wcheck=None):
+
+        self.wcheck = wcheck
+        self.readable = readable
+        self.writable = writable
+        self.deletable = deletable
+        self.default_value = default_value
+        self.values = {}
+
+
+    def __get__(self, inst, owner=None):
+
+        if inst is None:
+            return self
+        if not self.readable:
+            raise AttributeError("unreadable attribute")
+        if self.values.has_key(inst):
+            return self.values[inst]
+        return self.default_value
+
+
+    def __set__(self, inst, value):
+
+        # Do not block initial set
+        if self.values.has_key(inst):
+            if not self.writable:
+                raise AttributeError("unwritable attribute")
+        if self.wcheck:
+            self.wcheck(inst, value)
+        self.values[inst] = value
+
+
+    def __delete__(self, inst):
+
+        if not self.deletable:
+            raise AttributeError("undeletable attribute")
+        del self.values[inst]
+
+
+    def writecheck(self, func):
+
+        self.wcheck = func
+        return self
