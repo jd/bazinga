@@ -1,6 +1,5 @@
 import signal as bsignal
 from threading import Lock
-from decorator import decorator
 
 class SingletonMeta(type):
 
@@ -35,13 +34,14 @@ class Singleton(object):
         return cls.__instance, False
 
 
-class Setattr(bsignal.Signal):
-    pass
-
-
 class Object(object):
 
     """Base class of many bazinga objects."""
+
+    class Setattr(bsignal.Signal):
+
+        pass
+
 
     def __init__(self, **kw):
 
@@ -95,7 +95,14 @@ class Object(object):
         return bsignal.emit(signal, self, *args, **kw)
 
 
-class Property(object):
+class Property(Object):
+
+    """A property object."""
+
+    class Set(bsignal.Signal):
+
+        pass
+
 
     def __init__(self, default_value=None, readable=True, writable=True, deletable=False, wcheck=None):
 
@@ -127,6 +134,7 @@ class Property(object):
         if self.wcheck:
             self.wcheck(inst, value)
         self.values[inst] = value
+        self.emit_signal(Set)
 
 
     def __delete__(self, inst):
