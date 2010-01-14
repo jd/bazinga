@@ -1,4 +1,4 @@
-import basic
+from basic import Object, Property
 import xcb.xproto
 
 
@@ -37,7 +37,7 @@ def xcb_dict_to_value(values, xcb_dict):
     return value_mask, value_list
 
 
-class Window(basic.Object):
+class Window(Object):
 
     """A basic X window."""
 
@@ -80,28 +80,12 @@ class Window(basic.Object):
                                                     events)
 
 
-    @property
-    def connection(self):
+    connection = Property(writable=False)
+    id = Property(writable=False)
+    x = Property()
 
-        return self._connection
-
-    @connection.setter
-    def connection(self, value):
-
-        if hasattr(self, "_connection"):
-            raise ValueError("cannot change window connection")
-
-    connection = property(lambda self: return self._connection,
-                          lambda self, value:
-
-
-    def __setattr_id__(self, oldvalue, newvalue):
-
-        if oldvalue != None:
-            raise ValueError("cannot change window id")
-
-
-    def __setattr_x__(self, oldvalue, newvalue):
+    @x.on_set
+    def on_x_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
             if not self.movable:
