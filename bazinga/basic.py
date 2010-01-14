@@ -138,7 +138,7 @@ class Property(Object):
         else:
             oldvalue = self.default_value
         self.values[inst] = value
-        self.emit_signal(Set, oldvalue, value)
+        self.emit_signal(self.Set, inst, oldvalue, value)
 
 
     def __delete__(self, inst):
@@ -156,5 +156,5 @@ class Property(Object):
 
     def on_set(self, func):
 
-        self.connect(func, Set)
-        return self
+        self.connect_signal(func, self.Set)
+        return func
