@@ -133,8 +133,12 @@ class Property(Object):
                 raise AttributeError("unwritable attribute")
         if self.wcheck:
             self.wcheck(inst, value)
+        if self.values.has_key(inst):
+            oldvalue = self.values[inst]
+        else:
+            oldvalue = self.default_value
         self.values[inst] = value
-        self.emit_signal(Set)
+        self.emit_signal(Set, oldvalue, value)
 
 
     def __delete__(self, inst):
