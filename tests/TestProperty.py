@@ -6,22 +6,23 @@ from bazinga.basic import Property
 
 class TestBasicObject(unittest.TestCase):
 
+    class Phone(object):
+
+        nodefaultval = Property()
+        defaultval = Property(1)
+        ro = Property(42, writable=False)
+        rw = Property(43, readable=False, deletable=True)
+        notdeletable = Property(deletable=False)
+
+        @defaultval.writecheck
+        def defaultval_writecheck(self, newvalue):
+            if newvalue == 666:
+                raise ValueError("EVIL")
+
+
     def setUp(self):
 
-        class Phone(object):
-
-            nodefaultval = Property()
-            defaultval = Property(1)
-            ro = Property(42, writable=False)
-            rw = Property(43, readable=False, deletable=True)
-            notdeletable = Property(deletable=False)
-
-            @defaultval.writecheck
-            def defaultval_writecheck(self, newvalue):
-                if newvalue == 666:
-                    raise ValueError("EVIL")
-
-        self.p = Phone()
+        self.p = self.Phone()
 
 
     def test_defaultval(self):
@@ -65,12 +66,26 @@ class TestBasicObject(unittest.TestCase):
 
 
     def test_check(self):
+
         self.p.defaultval = 34
         try:
             self.p.defaultval = 666
             self.assert_(False) # never reached
         except ValueError:
             pass
+
+
+    def test_signal(self):
+
+        self.has_signal = False
+
+        @self.Phone.defaultval.on_set
+        def on_set(inst, newvalue, oldvalue, sender=None):
+            print inst
+            inst.has_signal = True
+
+        self.p.defaultval = 999
+        self.assert_(self.p.has_signal)
 
 
 if __name__ == "__main__":
