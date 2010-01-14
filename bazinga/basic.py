@@ -148,3 +148,9 @@ class Property(Object):
 
         self.wcheck = func
         return self
+
+
+    def on_set(self, func):
+
+        self.connect(func, Set)
+        return self
