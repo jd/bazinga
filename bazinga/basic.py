@@ -84,7 +84,6 @@ class Property(Object):
         self.writable = writable
         self.deletable = deletable
         self.default_value = default_value
-        self.values = {}
 
 
     def __get__(self, inst, owner=None):
@@ -93,24 +92,24 @@ class Property(Object):
             return self
         if not self.readable:
             raise AttributeError("unreadable attribute")
-        if self.values.has_key(inst):
-            return self.values[inst]
+        if self.__dict__.has_key(inst):
+            return self.__dict__[inst]
         return self.default_value
 
 
     def __set__(self, inst, value):
 
         # Do not block initial set
-        if self.values.has_key(inst):
+        if self.__dict__.has_key(inst):
             if not self.writable:
                 raise AttributeError("unwritable attribute")
         if self.wcheck:
             self.wcheck(inst, value)
-        if self.values.has_key(inst):
-            oldvalue = self.values[inst]
+        if self.__dict__.has_key(inst):
+            oldvalue = self.__dict__[inst]
         else:
             oldvalue = self.default_value
-        self.values[inst] = value
+        self.__dict__[inst] = value
         self.emit_signal(self.Set, inst, oldvalue, value)
 
 
@@ -118,7 +117,7 @@ class Property(Object):
 
         if not self.deletable:
             raise AttributeError("undeletable attribute")
-        del self.values[inst]
+        del self.__dict__[inst]
 
 
     def writecheck(self, func):
