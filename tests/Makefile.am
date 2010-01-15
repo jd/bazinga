@@ -1,4 +1,4 @@
-TESTS = TestBasicObject.py \
+TESTS = TestSignal.py \
 	TestSingleton.py \
 	TestTimer.py \
 	TestProperty.py
