@@ -4,14 +4,14 @@ import basic
 from loop import MainLoop
 
 
-class Timeout(signal.Signal):
-
-    """Timeout signal.  This is send by the timeout object."""
-
-    pass
-
-
 class Timer(basic.Object, pyev.Timer):
+
+    class Timeout(signal.Signal):
+
+        """Timeout signal.  This is send by the timeout object."""
+
+        pass
+
 
     """Timer object.
     This objects send a Timeout signal every time you configure it for."""
@@ -27,4 +27,4 @@ class Timer(basic.Object, pyev.Timer):
     @staticmethod
     def on_timeout(watcher, event):
 
-        watcher.emit_signal(signal=Timeout)
+        watcher.emit_signal(signal=Timer.Timeout)

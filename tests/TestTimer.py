@@ -16,7 +16,7 @@ class TestTimer(unittest.TestCase):
         self.timer.start()
         def cb(*args, **kw):
             self.called = True
-        bazinga.signal.connect(cb, sender=self.timer, signal=bazinga.timer.Timeout)
+        bazinga.signal.connect(cb, sender=self.timer, signal=self.timer.Timeout)
         MainLoop().loop()
         self.assert_(self.called)
 
