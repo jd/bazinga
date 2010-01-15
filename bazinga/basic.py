@@ -38,11 +38,6 @@ class Object(object):
 
     """Base class of many bazinga objects."""
 
-    class Setattr(bsignal.Signal):
-
-        pass
-
-
     def __init__(self, **kw):
 
         """Initialize the object. This will copy all keywords
@@ -50,28 +45,6 @@ class Object(object):
 
         for key, value in kw.items():
             setattr(self, key, value)
-
-
-    def __setattr__(self, name, value):
-
-        """Override setattr so it emits a signal upon attribute change.
-        Note that no signal are emitted if the attribute is private (starts with _)."""
-
-        # Store new value.
-        super(Object, self).__setattr__(name, value)
-
-        # If attribute is not private (starts with _)
-        if name[0] != "_":
-            if hasattr(self, name):
-                # Get old value
-                oldvalue = getattr(self, name)
-            else:
-                oldvalue = None
-
-            # Be smart.
-            if oldvalue != value:
-                # Emit a signal to indicate a change to the user.
-                self.emit_signal(Setattr, name, oldvalue, value)
 
 
     def connect_signal(self, receiver, signal=bsignal.signal.All):
