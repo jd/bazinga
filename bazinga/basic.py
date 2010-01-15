@@ -77,13 +77,14 @@ class Property(Object):
         pass
 
 
-    def __init__(self, default_value=None, readable=True, writable=True, deletable=False, wcheck=None):
+    def __init__(self, default_value=None, readable=True, writable=True, deletable=False, typecheck=None, wcheck=None):
 
         self.wcheck = wcheck
         self.readable = readable
         self.writable = writable
         self.deletable = deletable
         self.default_value = default_value
+        self.typecheck = typecheck
 
 
     def __get__(self, inst, owner=None):
@@ -105,6 +106,8 @@ class Property(Object):
                 raise AttributeError("unwritable attribute")
         if self.wcheck:
             self.wcheck(inst, value)
+        if self.typecheck is not None and not isinstance(value, self.typecheck):
+            raise ValueError("value should be instance of %s" % self.typecheck)
         if self.__dict__.has_key(inst):
             oldvalue = self.__dict__[inst]
         else:

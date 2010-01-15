@@ -13,6 +13,7 @@ class TestBasicObject(unittest.TestCase):
         ro = Property(42, writable=False)
         rw = Property(43, readable=False, deletable=True)
         notdeletable = Property(deletable=False)
+        typed = Property(typecheck=str)
 
         @defaultval.writecheck
         def defaultval_writecheck(self, newvalue):
@@ -86,6 +87,16 @@ class TestBasicObject(unittest.TestCase):
 
         self.p.defaultval = 999
         self.assert_(self.p.has_signal)
+
+
+    def test_typecheck(self):
+        self.p.typed = "lol"
+
+        try:
+            self.p.typed = 23
+            self.assert_(False) # never reached
+        except ValueError:
+            pass
 
 
 if __name__ == "__main__":
