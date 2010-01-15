@@ -50,10 +50,7 @@ class Connection(Object, xcb.Connection):
                                      x = 0,
                                      y = 0,
                                      width = root.width_in_pixels,
-                                     height = root.height_in_pixels,
-                                     noborder = True,
-                                     movable = False,
-                                     resizable = False))
+                                     height = root.height_in_pixels))
 
         self.screens = []
 

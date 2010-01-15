@@ -3,18 +3,6 @@ import x
 import xcb.xproto
 
 
-class NotResizable(Exception):
-    pass
-
-
-class NotMovable(Exception):
-    pass
-
-
-class NoBorder(Exception):
-    pass
-
-
 def xcb_dict_to_value(values, xcb_dict):
 
     """Many X values are made from a mask indicating which values are present
@@ -43,31 +31,39 @@ class Window(Object):
     """A basic X window."""
 
     connection = Property(writable=False, typecheck=x.Connection)
-    id = Property(writable=False, typecheck=int)
+    xid = Property(writable=False, typecheck=int)
+    parent = Property(writable=False, typecheck=Window)
     x = Property(typecheck=int)
     y = Property(typecheck=int)
     width = Property(typecheck=int)
     height = Property(typecheck=int)
-    border_width = Property(typecheck=int)
 
-    def create_window(self,
-                      x=0, y=0, width=1, height=1, border_width=0,
-                      movable=True, resizable=True, noborder=False,
-                      **kw):
+    @width.writecheck
+    def width_writecheck(self, value):
 
-        """Create a child window."""
+        if value <= 0:
+            raise ValueError("Window width must be positive.")
 
-        window = Window(id = self.connection.generate_id(),
-                        x = x,
-                        y = y,
-                        width = width,
-                        height = height,
-                        border_width = border_width,
-                        movable = movable,
-                        resizable = resizable,
-                        noborder = noborder,
-                        connection = self.connection,
-                        parent = self)
+
+    @height.writecheck
+    def height_writecheck(self, value):
+
+        if value <= 0:
+            raise ValueError("Window width must be positive.")
+
+
+    def __init__(self, xid=None, parent=None, connection=None,
+                 x=0, y=0, width=1, height=1, border_width=0,
+                 **kw):
+
+        """Create a window."""
+
+        # If creating a window with no parent, automagically pick-up first root window.
+        if parent is None and wid is None:
+            parent = connection.roots[0]
+
+        if xid is None:
+            xid = self.connection.generate_id()
 
         # XXX fix root_depth and visual
         self.connection.core.CreateWindow(self.connection.root.root_depth,
@@ -78,7 +74,7 @@ class Window(Object):
                                           self.connection.root.root_visual,
                                           *xcb_dict_to_value(kw, xcb.xproto.CW))
 
-        return window
+        Object.__init__(self, kw)
 
 
     def set_events(self, events):
@@ -89,99 +85,9 @@ class Window(Object):
                                                     events)
 
 
-    @x.writecheck
-    def x_writecheck(self, value):
+class MappableWindow(Window):
 
-        if self.x != None:
-            if not self.movable:
-                raise NotMovable
-
-
-    @x.on_set
-    def on_x_set(self, oldvalue, newvalue):
-
-        if oldvalue != None:
-            self.connection.ConfigureWindow(self.id,
-                                            xcb_dict_to_value({ "X": newvalue },
-                                                              xcb.xproto.ConfigWindow))
-
-
-    @y.writecheck
-    def y_writecheck(self, value):
-
-        if self.y != None:
-            if not self.movable:
-                raise NotMovable
-
-
-    @y.on_set
-    def on_y_set(self, oldvalue, newvalue):
-
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id,
-                                                 xcb_dict_to_value({ "Y": newvalue },
-                                                                   xcb.xproto.ConfigWindow))
-
-
-    @width.writecheck
-    def width_writecheck(self, value):
-
-        if self.width != None:
-            if newvalue <= 0:
-                raise ValueError("Window width must be positive.")
-
-            if not self.resizable:
-                raise NotResizable
-
-
-    @width.on_set
-    def on_width_set(self, oldvalue, newvalue):
-
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id,
-                                                 xcb_dict_to_value({ "Width": newvalue },
-                                                                   xcb.xproto.ConfigWindow))
-
-
-    @height.writecheck
-    def height_writecheck(self, value):
-
-        if self.width != None:
-            if newvalue <= 0:
-                raise ValueError("Window width must be positive.")
-
-            if not self.resizable:
-                raise NotResizable
-
-
-    @height.on_set
-    def on_width_set(self, oldvalue, newvalue):
-
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id,
-                                                 xcb_dict_to_value({ "Width": newvalue },
-                                                                   xcb.xproto.ConfigWindow))
-
-
-    @border_width.writecheck
-    def border_width_writecheck(self, value):
-
-        if self.border_width != None:
-            if self.noborder:
-                raise NoBorder("This window cannot have border.")
-
-            if newvalue <= 0:
-                raise ValueError("Window height must be positive.")
-
-
-    @border_width.on_set
-    def on_border_width_set(self, oldvalue, newvalue):
-
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id,
-                                                 xcb_dict_to_value({ "BorderWidth": newvalue },
-                                                                   xcb.xproto.ConfigWindow))
-
+    """A window that can be mapped or unmaped on screen."""
 
     def map(self):
 
@@ -195,3 +101,69 @@ class Window(Object):
         """Unmap a window from the screen."""
 
         self.connection.core.UnmapWindow(self.id)
+
+
+class MovableWindow(Window):
+
+    """A window that can be moved."""
+
+    @x.on_set
+    def on_x_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            self.connection.ConfigureWindow(self.id,
+                                            xcb_dict_to_value({ "X": newvalue },
+                                                              xcb.xproto.ConfigWindow))
+
+
+    @y.on_set
+    def on_y_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            self.connection.core.ConfigureWindow(self.id,
+                                                 xcb_dict_to_value({ "Y": newvalue },
+                                                                   xcb.xproto.ConfigWindow))
+
+
+class ResizableWindow(Window):
+
+    """A window that can be resized."""
+
+    @width.on_set
+    def on_width_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            self.connection.core.ConfigureWindow(self.id,
+                                                 xcb_dict_to_value({ "Width": newvalue },
+                                                                   xcb.xproto.ConfigWindow))
+
+
+    @height.on_set
+    def on_width_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            self.connection.core.ConfigureWindow(self.id,
+                                                 xcb_dict_to_value({ "Width": newvalue },
+                                                                   xcb.xproto.ConfigWindow))
+
+
+ class BorderWindow(Window):
+
+     """A window with borders."""
+
+    border_width = Property(typecheck=int)
+
+    @border_width.writecheck
+    def border_width_writecheck(self, value):
+
+        if value <= 0:
+            raise ValueError("Window height must be positive.")
+
+
+    @border_width.on_set
+    def on_border_width_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
+            self.connection.core.ConfigureWindow(self.id,
+                                                 xcb_dict_to_value({ "BorderWidth": newvalue },
+                                                                   xcb.xproto.ConfigWindow))
