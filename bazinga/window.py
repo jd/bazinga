@@ -1,4 +1,5 @@
 from basic import Object, Property
+import x
 import xcb.xproto
 
 
@@ -41,6 +42,14 @@ class Window(Object):
 
     """A basic X window."""
 
+    connection = Property(writable=False, typecheck=x.Connection)
+    id = Property(writable=False, typecheck=int)
+    x = Property(typecheck=int)
+    y = Property(typecheck=int)
+    width = Property(typecheck=int)
+    height = Property(typecheck=int)
+    border_width = Property(typecheck=int)
+
     def create_window(self,
                       x=0, y=0, width=1, height=1, border_width=0,
                       movable=True, resizable=True, noborder=False,
@@ -80,70 +89,95 @@ class Window(Object):
                                                     events)
 
 
-    connection = Property(writable=False)
-    id = Property(writable=False)
-    x = Property()
+    @x.writecheck
+    def x_writecheck(self, value):
+
+        if self.x != None:
+            if not self.movable:
+                raise NotMovable
+
 
     @x.on_set
     def on_x_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
-            if not self.movable:
-                raise NotMovable
-
             self.connection.ConfigureWindow(self.id,
                                             xcb_dict_to_value({ "X": newvalue },
                                                               xcb.xproto.ConfigWindow))
 
 
-    def __setattr_y__(self, oldvalue, newvalue):
+    @y.writecheck
+    def y_writecheck(self, value):
 
-        if oldvalue != None:
+        if self.y != None:
             if not self.movable:
                 raise NotMovable
 
+
+    @y.on_set
+    def on_y_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id,
                                                  xcb_dict_to_value({ "Y": newvalue },
                                                                    xcb.xproto.ConfigWindow))
 
 
-    def __setattr_width__(self, oldvalue, newvalue):
+    @width.writecheck
+    def width_writecheck(self, value):
 
-        if oldvalue != None:
+        if self.width != None:
             if newvalue <= 0:
                 raise ValueError("Window width must be positive.")
 
             if not self.resizable:
                 raise NotResizable
 
+
+    @width.on_set
+    def on_width_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id,
                                                  xcb_dict_to_value({ "Width": newvalue },
                                                                    xcb.xproto.ConfigWindow))
 
 
-    def __setattr_height__(self, oldvalue, newvalue):
+    @height.writecheck
+    def height_writecheck(self, value):
 
-        if oldvalue != None:
+        if self.width != None:
             if newvalue <= 0:
-                raise ValueError("Window height must be positive.")
+                raise ValueError("Window width must be positive.")
 
             if not self.resizable:
                 raise NotResizable
 
+
+    @height.on_set
+    def on_width_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id,
-                                                 xcb_dict_to_value({ "Height": newvalue },
+                                                 xcb_dict_to_value({ "Width": newvalue },
                                                                    xcb.xproto.ConfigWindow))
 
 
-    def __setattr_border_width__(self, oldvalue, newvalue):
+    @border_width.writecheck
+    def border_width_writecheck(self, value):
 
-        if oldvalue != None:
+        if self.border_width != None:
             if self.noborder:
                 raise NoBorder("This window cannot have border.")
 
             if newvalue <= 0:
                 raise ValueError("Window height must be positive.")
 
+
+    @border_width.on_set
+    def on_border_width_set(self, oldvalue, newvalue):
+
+        if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id,
                                                  xcb_dict_to_value({ "BorderWidth": newvalue },
                                                                    xcb.xproto.ConfigWindow))
