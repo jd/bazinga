@@ -45,7 +45,7 @@ class Connection(Object, xcb.Connection):
         self.roots = []
         from window import Window
         for root in self.get_setup().roots:
-            self.roots.append(Window(id = root.root,
+            self.roots.append(Window(xid = root.root,
                                      connection = self,
                                      x = 0,
                                      y = 0,
@@ -57,7 +57,7 @@ class Connection(Object, xcb.Connection):
         # Does it have RandR ?
         if randr_queryversion_c and randr_queryversion_c.reply():
             screen_resources_c = zip(self.roots, Connection.prepare_requests(self.randr.GetScreenResources,
-                                                                             list(root.id for root in self.roots), 0))
+                                                                             list(root.xid for root in self.roots), 0))
             for root, screen_resources_cookie in screen_resources_c:
                 screen_resources = screen_resources_cookie.reply()
 

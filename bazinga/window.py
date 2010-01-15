@@ -1,6 +1,8 @@
 from basic import Object, Property
-import x
+from x import Connection
+
 import xcb.xproto
+import inspect
 
 
 def xcb_dict_to_value(values, xcb_dict):
@@ -30,13 +32,12 @@ class Window(Object):
 
     """A basic X window."""
 
-    connection = Property(writable=False, typecheck=x.Connection)
-    xid = Property(writable=False, typecheck=int)
-    parent = Property(writable=False, typecheck=Window)
-    x = Property(typecheck=int)
-    y = Property(typecheck=int)
-    width = Property(typecheck=int)
-    height = Property(typecheck=int)
+    connection = Property(writable=False, type=Connection)
+    xid = Property(writable=False, type=int)
+    x = Property(type=int)
+    y = Property(type=int)
+    width = Property(type=int)
+    height = Property(type=int)
 
     @width.writecheck
     def width_writecheck(self, value):
@@ -53,37 +54,42 @@ class Window(Object):
 
 
     def __init__(self, xid=None, parent=None, connection=None,
-                 x=0, y=0, width=1, height=1, border_width=0,
-                 **kw):
+                 x=0, y=0, width=1, height=1, **kw):
 
         """Create a window."""
 
         if xid is None:
-            # Generate an X id
-            xid = self.connection.generate_id()
             if parent is None:
                 if connection:
                     # If creating a window with no parent, automagically pick-up first root window.
-                    parent = connection.roots[0]
+                    self.parent = connection.roots[0]
                 else:
                     raise ValueError("You must provide a connection to create a window.")
             else:
-                connection = parent.connection
+                self.parent = parent
+                self.connection = parent.connection
+            # Generate an X id
+            self.xid = self.connection.generate_id()
+        else:
+            self.xid = xid
+
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
 
         # Record everything
-        kw.update([ (key, eval(key)) for key in inspect.getargcpsec(__init__).args ])
-        Object.__init__(self, kw)
+        Object.__init__(self, **kw)
 
-        # XXX fix root_depth and visual
-        self.connection.core.CreateWindow(self.connection.root.root_depth,
-                                          self.xid,
-                                          self.parent.xid,
-                                          self.x, self.y, self.width, self.height, self.border_width,
-                                          WindowClass.CopyFromParent,
-                                          self.connection.root.root_visual,
-                                          *xcb_dict_to_value(kw, xcb.xproto.CW))
-
-
+        if xid is None:
+            # XXX fix root_depth and visual
+            self.connection.core.CreateWindow(self.connection.root.root_depth,
+                                              self.xid,
+                                              self.parent.xid,
+                                              self.x, self.y, self.width, self.height, self.border_width,
+                                              WindowClass.CopyFromParent,
+                                              self.connection.root.root_visual,
+                                              *xcb_dict_to_value(kw, xcb.xproto.CW))
 
 
     def set_events(self, events):
@@ -92,6 +98,10 @@ class Window(Object):
 
         self.connection.core.ChangeWindowAttributes(self.id, CW.EventMask,
                                                     events)
+
+
+# Reference parent, so has to be here
+Window.parent = Property(writable=False, type=Window)
 
 
 class MappableWindow(Window):
@@ -116,14 +126,14 @@ class MovableWindow(Window):
 
     """A window that can be moved."""
 
-    @x.on_set
+    @Window.x.on_set
     def on_x_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.X, [ newvalue ])
 
 
-    @y.on_set
+    @Window.y.on_set
     def on_y_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
@@ -134,25 +144,25 @@ class ResizableWindow(Window):
 
     """A window that can be resized."""
 
-    @width.on_set
+    @Window.width.on_set
     def on_width_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.Width, [ newvalue ])
 
 
-    @height.on_set
+    @Window.height.on_set
     def on_height_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
             self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.Height, [ newvalue ])
 
 
- class BorderWindow(Window):
+class BorderWindow(Window):
 
-     """A window with borders."""
+    """A window with borders."""
 
-    border_width = Property(typecheck=int)
+    border_width = Property(type=int)
 
     @border_width.writecheck
     def border_width_writecheck(self, value):

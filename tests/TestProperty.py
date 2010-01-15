@@ -13,7 +13,7 @@ class TestBasicObject(unittest.TestCase):
         ro = Property(42, writable=False)
         rw = Property(43, readable=False, deletable=True)
         notdeletable = Property(deletable=False)
-        typed = Property(typecheck=str)
+        typed = Property(type=str)
 
         @defaultval.writecheck
         def defaultval_writecheck(self, newvalue):

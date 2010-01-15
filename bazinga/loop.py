@@ -6,7 +6,7 @@ class Loop(Object, pyev.Loop):
     """An event loop."""
 
     def __init__(self):
-        pyev.Loop.__init__(self, pyev.EVFLAG_NOSIGFD)
+        pyev.Loop.__init__(pyev.EVFLAG_NOSIGFD)
 
 
 class MainLoop(Singleton, Loop):
