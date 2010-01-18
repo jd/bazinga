@@ -63,17 +63,18 @@ class Window(Object):
             if parent is None:
                 if connection:
                     # If creating a window with no parent, automagically pick-up first root window.
-                    self.parent = connection.roots[0]
+                    Window.parent.init(self, connection.roots[0])
                 else:
                     raise ValueError("You must provide a connection to create a window.")
             else:
-                self.parent = parent
-                self.connection = parent.connection
+                Window.parent.init(self, parent)
+                if connection is not None and parent.connection != connection:
+                    raise ValueError("Specified connection differs from parent connection")
             # Generate an X id
-            self.xid = self.connection.generate_id()
+            Window.xid.init(self, self.connection.generate_id())
         else:
-            self.xid = xid
-            self.parent = parent
+            Window.xid.init(self, xid)
+            Window.parent.init(self, parent)
             if connection is None:
                 raise ValueError("You must provide a connection to create a window.")
 
@@ -82,7 +83,7 @@ class Window(Object):
         Window.x.init(self, width)
         Window.y.init(self, height)
 
-        # Record everything
+        # Record everything else
         Object.__init__(self, **kw)
 
         if xid is None:
@@ -136,17 +137,15 @@ class MovableWindow(Window):
 
 
     @x.on_set
-    def on_x_set(self, oldvalue, newvalue):
+    def on_x_set(self, newvalue):
 
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.X, [ newvalue ])
+        self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.X, [ newvalue ])
 
 
     @y.on_set
-    def on_y_set(self, oldvalue, newvalue):
+    def on_y_set(self, newvalue):
 
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Y, [ newvalue ])
+        self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Y, [ newvalue ])
 
 
 class ResizableWindow(Window):
@@ -158,17 +157,15 @@ class ResizableWindow(Window):
 
 
     @width.on_set
-    def on_width_set(self, oldvalue, newvalue):
+    def on_width_set(self, newvalue):
 
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Width, [ newvalue ])
+        self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Width, [ newvalue ])
 
 
     @height.on_set
-    def on_height_set(self, oldvalue, newvalue):
+    def on_height_set(self, newvalue):
 
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Height, [ newvalue ])
+        self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Height, [ newvalue ])
 
 
 class BorderWindow(Window):
