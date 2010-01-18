@@ -107,13 +107,9 @@ class Property(Object):
         if self.wcheck:
             self.wcheck(inst, value)
         if self.type is not None and not isinstance(value, self.type):
-            raise ValueError("value should be instance of %s" % self.type)
-        if self.__dict__.has_key(inst):
-            oldvalue = self.__dict__[inst]
-        else:
-            oldvalue = self.default_value
+            raise ValueError("value should be instance of {0}".format(self.type))
         self.__dict__[inst] = value
-        self.emit_signal(self.Set, inst, oldvalue, value)
+        self.emit_signal(self.Set, inst, value)
 
 
     def __delete__(self, inst):
@@ -121,6 +117,13 @@ class Property(Object):
         if not self.deletable:
             raise AttributeError("undeletable attribute")
         del self.__dict__[inst]
+
+
+    def init(self, inst, value):
+
+        if self.__dict__.has_key(inst):
+            raise ValueError("Property of this object has already been initialized.")
+        self.__dict__[inst] = value
 
 
     def writecheck(self, func):

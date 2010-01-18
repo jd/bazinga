@@ -81,7 +81,7 @@ class TestBasicObject(unittest.TestCase):
         self.has_signal = False
 
         @self.Phone.defaultval.on_set
-        def on_set(inst, newvalue, oldvalue, sender=None):
+        def on_set(inst, newvalue, sender=None):
             print inst
             inst.has_signal = True
 
