@@ -5,50 +5,6 @@ from screen import Screen, Output
 from basic import Singleton, Object, Property
 from loop import MainLoop
 
-
-class Window(Object):
-
-    """A basic X window."""
-
-    xid = Property(writable=False, type=int)
-    x = Property(writable=False, type=int)
-    y = Property(writable=False, type=int)
-    width = Property(writable=False, type=int)
-    height = Property(writable=False, type=int)
-
-
-    @width.writecheck
-    def width_writecheck(self, value):
-
-        if value <= 0:
-            raise ValueError("Window width must be positive.")
-
-
-    @height.writecheck
-    def height_writecheck(self, value):
-
-        if value <= 0:
-            raise ValueError("Window width must be positive.")
-
-
-    def get_root(self):
-
-        """Get the root window the window is attached on."""
-
-        while self.parent:
-            self = self.parent
-
-        return self
-
-
-    def set_events(self, events):
-
-        """Set events that shall be received by the window."""
-
-        self.connection.core.ChangeWindowAttributes(self.xid, CW.EventMask,
-                                                    events)
-
-
 def byte_list_to_str(blist):
 
     """Convert a byte list to a string."""
@@ -87,6 +43,7 @@ class Connection(Object, xcb.Connection):
             xinerama_isactive_c = self.xinerama.IsActive()
 
         self.roots = []
+        from window import Window
         for root in self.get_setup().roots:
             self.roots.append(Window(xid = root.root,
                                      connection = self,
@@ -189,74 +146,18 @@ class MainConnection(Singleton, Connection):
     pass
 
 
-# Reference parent, so has to be here
-Window.parent = Property(writable=False, type=Window)
-Window.connection = Property(writable=False, type=Connection)
+class XObject(Object):
+
+    """A generic X object."""
+
+    connection = Property(writable=False, type=Connection)
 
 
-def xcb_dict_to_value(values, xcb_dict):
+    def __init__(self, connection=None, **kw):
 
-    """Many X values are made from a mask indicating which values are present
-    in the request and the actual values. We use that function to build this two
-    variables from a dict { OverrideRedirect: 1 }
-    to a mask |= OverrideRedirect and value = [ 1 ]"""
-
-    value_mask = 0
-    value_list = []
-
-    xcb_dict_rev = dict(zip(xcb_dict.__dict__.values(),
-                            xcb_dict.__dict__.keys()))
-    xcb_dict_keys = xcb_dict_rev.keys()
-    xcb_dict_keys.sort()
-
-    for mask in xcb_dict_keys:
-        if mask and values.has_key(xcb_dict_rev[mask]):
-            value_mask |= mask
-            value_list.append(values[xcb_dict_rev[mask]])
-
-    return value_mask, value_list
-
-
-def Window_init(self, xid=None, parent=None, connection=MainConnection(),
-             x=0, y=0, width=1, height=1, **kw):
-
-    """Create a window."""
-
-    if xid is None:
-        if parent is None:
-            if connection:
-                # If creating a window with no parent, automagically pick-up first root window.
-                Window.parent.init(self, connection.roots[0])
-            else:
-                raise ValueError("You must provide a connection to create a window.")
-        else:
-            Window.parent.init(self, parent)
-            if connection is not None and parent.connection != connection:
-                raise ValueError("Specified connection differs from parent connection")
-        Window.connection.init(self, connection)
-        # Generate an X id
-        Window.xid.init(self, self.connection.generate_id())
-    else:
-        Window.xid.init(self, xid)
-        Window.parent.init(self, parent)
         if connection is None:
-            raise ValueError("You must provide a connection to create a window.")
+            connection = MainConnection()
 
-    Window.x.init(self, x)
-    Window.y.init(self, y)
-    Window.width.init(self, width)
-    Window.height.init(self, height)
+        XObject.connection.init(self, connection)
 
-    # Record everything else
-    Object.__init__(self, **kw)
-
-    if xid is None:
-        self.connection.core.CreateWindow(self.get_root().root_depth,
-                                          self.xid,
-                                          self.parent.xid,
-                                          self.x, self.y, self.width, self.height,
-                                          0,
-                                          xcb.xproto.WindowClass.CopyFromParent,
-                                          self.get_root().root_visual,
-                                          *xcb_dict_to_value(kw, xcb.xproto.CW))
-Window.__init__ = Window_init
+        Object.__init__(self, **kw)
