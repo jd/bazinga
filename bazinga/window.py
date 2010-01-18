@@ -55,7 +55,7 @@ class Window(Object):
 
 
     def __init__(self, xid=None, parent=None, connection=None,
-                 x=0, y=0, width=1, height=1, border_width=0, **kw):
+                 x=0, y=0, width=1, height=1, **kw):
 
         """Create a window."""
 
@@ -73,12 +73,14 @@ class Window(Object):
             self.xid = self.connection.generate_id()
         else:
             self.xid = xid
+            self.parent = parent
+            if connection is None:
+                raise ValueError("You must provide a connection to create a window.")
 
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.border_width = border_width
+        Window.x.init(self, x)
+        Window.y.init(self, y)
+        Window.x.init(self, width)
+        Window.y.init(self, height)
 
         # Record everything
         Object.__init__(self, **kw)
@@ -175,6 +177,11 @@ class BorderWindow(Window):
 
     border_width = Property(type=int)
 
+    def __init__(self, border_width=0, **kw):
+
+        Window.__init__(self, **kw)
+        self.border_width = border_width
+
 
     @border_width.writecheck
     def border_width_writecheck(self, value):
@@ -184,6 +191,6 @@ class BorderWindow(Window):
 
 
     @border_width.on_set
-    def on_border_width_set(self, oldvalue, newvalue):
+    def on_border_width_set(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.BorderWidth, [ newvalue ])
