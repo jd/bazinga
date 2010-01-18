@@ -123,6 +123,8 @@ class Property(Object):
 
         if self.__dict__.has_key(inst):
             raise ValueError("Property of this object has already been initialized.")
+        if self.wcheck:
+            self.wcheck(inst, value)
         self.__dict__[inst] = value
 
 
