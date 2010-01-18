@@ -52,7 +52,8 @@ class Connection(Object, xcb.Connection):
                                      width = root.width_in_pixels,
                                      height = root.height_in_pixels,
                                      root_depth = root.root_depth,
-                                     root_visual = root.root_visual))
+                                     root_visual = root.root_visual,
+                                     default_colormap = root.default_colormap))
 
         self.screens = []
 
