@@ -1,3 +1,5 @@
+import xcb.xproto
+
 from x import XObject
 from basic import Property
 
@@ -21,9 +23,7 @@ class Color(XObject):
                 blue = int(name[5:7], 16) * 257
 
                 if len_name == 9:
-                    self.alpha = int(name[7:9], 16) * 257
-                else:
-                    self.alpha = 0
+                    alpha = int(name[7:9], 16) * 257
 
             for value in [ red, blue, green, alpha ]:
                 if value < 0 or value >= 65535:
@@ -35,24 +35,34 @@ class Color(XObject):
                 raise ValueError("Color attribute value is too high.")
             self.cookie = self.connection.core.AllocNamedColor(colormap, len(name), name)
             self._name = name
-            self.alpha = alpha
+
+        self.alpha = alpha
 
 
     def read_reply(self):
 
         if hasattr(self, "cookie"):
-            self.reply = self.cookie.reply()
+            reply = self.cookie.reply()
             del self.cookie
+            self._pixel = reply.pixel
+            if isinstance(reply, xcb.xproto.AllocNamedColorReply):
+                self._red = reply.exact_red
+                self._blue = reply.exact_blue
+                self._green = reply.exact_green
+            else:
+                self._red = reply.red
+                self._green = reply.green
+                self._blue = reply.blue
 
 
     @property
     def hex(self):
 
         self.read_reply()
-        return "{0}{1}{2}{3}".format(hex(red / 257)[2:],
-                                     hex(green / 257)[2:],
-                                     hex(blue / 257)[2:],
-                                     hex(alpha / 257)[2:])
+        return "#{0:<02x}{1:<02x}{2:<02x}{3:<02x}".format(self.red / 257,
+                                                          self.green / 257,
+                                                          self.blue / 257,
+                                                          self.alpha / 257)
 
 
     @property
@@ -67,24 +77,24 @@ class Color(XObject):
     def pixel(self):
 
         self.read_reply()
-        return self.reply.pixel
+        return self._pixel
 
 
     @property
     def red(self):
 
         self.read_reply()
-        return self.reply.red
+        return self._red
 
 
     @property
     def green(self):
 
         self.read_reply()
-        return self.reply.green
+        return self._green
 
     @property
     def blue(self):
 
         self.read_reply()
-        return self.reply.blue
+        return self._blue
