@@ -43,10 +43,12 @@ class Color(XObject):
         if hasattr(self, "cookie"):
             self.reply = self.cookie.reply()
             del self.cookie
-            if self._name is None:
+
 
     @property
     def hex(self):
+
+        self.read_reply()
         return "{0}{1}{2}{3}".format(hex(red / 257)[2:],
                                      hex(green / 257)[2:],
                                      hex(blue / 257)[2:],
