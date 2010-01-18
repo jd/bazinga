@@ -99,7 +99,7 @@ class Window(Object):
 
         """Set events that shall be received by the window."""
 
-        self.connection.core.ChangeWindowAttributes(self.id, CW.EventMask,
+        self.connection.core.ChangeWindowAttributes(self.xid, CW.EventMask,
                                                     events)
 
 
@@ -115,14 +115,14 @@ class MappableWindow(Window):
 
         """Map a window on the screen."""
 
-        self.connection.core.MapWindow(self.id)
+        self.connection.core.MapWindow(self.xid)
 
 
     def unmap(self):
 
         """Unmap a window from the screen."""
 
-        self.connection.core.UnmapWindow(self.id)
+        self.connection.core.UnmapWindow(self.xid)
 
 
 class MovableWindow(Window):
@@ -137,14 +137,14 @@ class MovableWindow(Window):
     def on_x_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.X, [ newvalue ])
+            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.X, [ newvalue ])
 
 
     @y.on_set
     def on_y_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.Y, [ newvalue ])
+            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Y, [ newvalue ])
 
 
 class ResizableWindow(Window):
@@ -159,14 +159,14 @@ class ResizableWindow(Window):
     def on_width_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.Width, [ newvalue ])
+            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Width, [ newvalue ])
 
 
     @height.on_set
     def on_height_set(self, oldvalue, newvalue):
 
         if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id, xcb.xproto.ConfigWindow.Height, [ newvalue ])
+            self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Height, [ newvalue ])
 
 
 class BorderWindow(Window):
@@ -186,7 +186,4 @@ class BorderWindow(Window):
     @border_width.on_set
     def on_border_width_set(self, oldvalue, newvalue):
 
-        if oldvalue != None:
-            self.connection.core.ConfigureWindow(self.id,
-                                                 xcb_dict_to_value({ "BorderWidth": newvalue },
-                                                                   xcb.xproto.ConfigWindow))
+        self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.BorderWidth, [ newvalue ])
