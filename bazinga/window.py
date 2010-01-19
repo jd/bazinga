@@ -1,5 +1,6 @@
 from basic import Property
 from x import XObject
+from color import Color
 
 import xcb.xproto
 
@@ -172,6 +173,7 @@ class BorderWindow(Window):
     """A window with borders."""
 
     border_width = Property(type=int)
+    border_color = Property(type=Color)
 
     def __init__(self, border_width=0, **kw):
 
@@ -190,3 +192,8 @@ class BorderWindow(Window):
     def on_border_width_set(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.BorderWidth, [ newvalue ])
+
+    @border_color.on_set
+    def on_border_color_set(self, newvalue):
+
+        self.connection.core.ChangeWindowAttributes(self.xid, xcb.xproto.CW.BorderPixel, [ newvalue.pixel ])
