@@ -2,7 +2,8 @@
 
 import unittest
 
-from bazinga.basic import Property
+from bazinga.base.property import Property
+from bazinga.base.object import Object
 
 class TestBasicObject(unittest.TestCase):
 

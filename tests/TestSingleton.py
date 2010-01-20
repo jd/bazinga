@@ -2,7 +2,7 @@
 
 import unittest
 
-from bazinga.basic import Singleton
+from bazinga.base.singleton import Singleton
 
 class TestBasicObject(unittest.TestCase):
 

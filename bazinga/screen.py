@@ -1,13 +1,13 @@
-import basic
+import base.object import Object
 
-class Screen(basic.Object):
+class Screen(Object):
 
     """A screen."""
 
     pass
 
 
-class Output(basic.Object):
+class Output(Object):
 
     """A screen output."""
 

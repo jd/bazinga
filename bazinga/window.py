@@ -1,4 +1,4 @@
-from basic import Property
+from base.property import Property
 from x import XObject
 from color import Color
 

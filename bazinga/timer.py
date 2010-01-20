@@ -1,10 +1,10 @@
 import pyev
-import signal
-import basic
+import base.signal as signal
+from base.object import Object
 from loop import MainLoop
 
 
-class Timer(basic.Object, pyev.Timer):
+class Timer(Object, pyev.Timer):
 
     class Timeout(signal.Signal):
 
@@ -20,7 +20,7 @@ class Timer(basic.Object, pyev.Timer):
 
         """Initialize a timeout object."""
 
-        basic.Object.__init__(self)
+        Object.__init__(self)
         pyev.Timer.__init__(self, after, repeat, loop, Timer.on_timeout)
 
 

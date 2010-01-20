@@ -1,5 +1,6 @@
 import pyev
-from basic import Singleton, Object
+from base.singleton import Singleton
+from base.object import Object
 
 class Loop(Object, pyev.Loop):
 

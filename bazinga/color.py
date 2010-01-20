@@ -1,7 +1,7 @@
 import xcb.xproto
 
 from x import XObject
-from basic import Property
+from base.property import Property
 
 class Color(XObject):
 

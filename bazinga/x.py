@@ -2,7 +2,9 @@ import pyev
 import xcb
 
 from screen import Screen, Output
-from basic import Singleton, Object, Property
+from base.singleton import Singleton
+from base.object import Object
+from base.property import Property
 from loop import MainLoop
 
 def byte_list_to_str(blist):

@@ -2,8 +2,8 @@
 
 import unittest
 
-import bazinga.signal as signal
-from bazinga.basic import Object
+import bazinga.base.signal as signal
+from bazinga.base.object import Object
 
 class TestBasicObject(unittest.TestCase):
 
