@@ -69,7 +69,7 @@ class Window(XObject):
             # Generate an X id
             Window.xid.init(self, self.connection.generate_id())
             if parent is None:
-                parent = self.connection.roots[0]
+                parent = self.connection.roots[self.connection.pref_screen]
         else:
             if parent is not None and  parent.connection != self.connection:
                 raise ValueError("Parent connection should be the same")
