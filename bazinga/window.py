@@ -40,14 +40,14 @@ class Window(XObject):
 
 
     @width.writecheck
-    def width_writecheck(self, value):
+    def width(self, value):
 
         if value <= 0:
             raise ValueError("Window width must be positive.")
 
 
     @height.writecheck
-    def height_writecheck(self, value):
+    def height(self, value):
 
         if value <= 0:
             raise ValueError("Window width must be positive.")
@@ -137,13 +137,13 @@ class MovableWindow(Window):
 
 
     @x.on_set
-    def on_x_set(self, newvalue):
+    def x(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.X, [ newvalue ])
 
 
     @y.on_set
-    def on_y_set(self, newvalue):
+    def y(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Y, [ newvalue ])
 
@@ -157,13 +157,13 @@ class ResizableWindow(Window):
 
 
     @width.on_set
-    def on_width_set(self, newvalue):
+    def width(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Width, [ newvalue ])
 
 
     @height.on_set
-    def on_height_set(self, newvalue):
+    def height(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Height, [ newvalue ])
 
@@ -182,18 +182,18 @@ class BorderWindow(Window):
 
 
     @border_width.writecheck
-    def border_width_writecheck(self, value):
+    def border_width(self, value):
 
         if value <= 0:
             raise ValueError("Border width must be positive.")
 
 
     @border_width.on_set
-    def on_border_width_set(self, newvalue):
+    def border_width(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.BorderWidth, [ newvalue ])
 
     @border_color.on_set
-    def on_border_color_set(self, newvalue):
+    def border_color(self, newvalue):
 
         self.connection.core.ChangeWindowAttributes(self.xid, xcb.xproto.CW.BorderPixel, [ newvalue.pixel ])
