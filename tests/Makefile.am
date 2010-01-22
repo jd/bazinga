@@ -1,7 +1,8 @@
 TESTS = TestSignal.py \
 	TestSingleton.py \
 	TestTimer.py \
-	TestProperty.py
+	TestProperty.py \
+	TestMemoize.py
 TEST_EXTENSIONS = .py
 PY_LOG_COMPILER = PYTHONPATH=$(top_srcdir) $(PYTHON)
 

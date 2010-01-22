@@ -5,7 +5,7 @@ import unittest
 from bazinga.base.property import Property
 from bazinga.base.object import Object
 
-class TestBasicObject(unittest.TestCase):
+class TestProperty(unittest.TestCase):
 
     class Phone(object):
 

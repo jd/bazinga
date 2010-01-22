@@ -4,7 +4,7 @@ import unittest
 
 from bazinga.base.singleton import Singleton
 
-class TestBasicObject(unittest.TestCase):
+class TestProperty(unittest.TestCase):
 
     def test_identity(self):
         self.assert_(Singleton() is Singleton())

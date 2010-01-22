@@ -5,7 +5,7 @@ import unittest
 import bazinga.base.signal as signal
 from bazinga.base.object import Object
 
-class TestBasicObject(unittest.TestCase):
+class TestSignal(unittest.TestCase):
 
     class Yack(Object):
 
