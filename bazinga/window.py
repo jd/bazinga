@@ -48,25 +48,6 @@ class Window(XObject):
         if value <= 0:
             raise ValueError("Window width must be positive.")
 
-    class ButtonPress(signal.Signal):
-        """Signal emitted on button press event."""
-
-        pass
-
-    events_to_signal = { xcb.xproto.EventMask.ButtonPress: ButtonPress }
-
-    def _emit_xevent(self, xevent, *args, **kwargs):
-        """Emit an X event as a signal."""
-
-        return self.emit_signal(self.__events_to_signal[xevent], *args, **kwargs)
-
-    def on_button_press(self, func):
-        """Decorator to use to connection a function to a button press event on that window."""
-
-        self._add_event(xcb.xproto.EventMask.ButtonPress)
-        self.connect_signal(func, self.ButtonPress)
-        return func
-
     def __init__(self, xid=None, parent=None, x=0, y=0, width=1, height=1, **kw):
         """Create a window."""
 
@@ -109,6 +90,23 @@ class Window(XObject):
 
         return self
 
+    def on_event(self, func):
+        """Decorator to use to connect to any event."""
+        self.connect_signal(func, xcb.xproto.Event)
+        return func
+
+    def on_button_press(self, func):
+        """Decorator to use to connect to a button press event on that window."""
+        self._add_event(xcb.xproto.EventMask.ButtonPress)
+        self.connect_signal(func, xcb.xproto.Event.ButtonPress)
+        return func
+
+    def on_button_release(self, func):
+        """Decorator to use to connect to a button release event on that window."""
+        self._add_event(xcb.xproto.EventMask.ButtonRelease)
+        self.connect_signal(func, xcb.xproto.Event.ButtonRelease)
+        return func
+
     def _set_events(self, events):
         """Set events that shall be received by the window."""
 
@@ -124,7 +122,7 @@ class Window(XObject):
         self._set_events(self.__events | event)
 
 
-# Reference parent, so has to be here
+# Reference Window, so has to be here
 Window.parent = Property("Parent window.", writable=False, type=Window)
 
 
