@@ -5,6 +5,35 @@ from color import Color
 
 import xcb.xproto
 
+events_window_attribute = {
+    xcb.xproto.KeyPressEvent: "event",
+    xcb.xproto.KeyReleaseEvent: "event",
+    xcb.xproto.ButtonPressEvent: "event",
+    xcb.xproto.ButtonReleaseEvent: "event",
+    xcb.xproto.MotionNotifyEvent: "event",
+    xcb.xproto.EnterNotifyEvent: "event",
+    xcb.xproto.LeaveNotifyEvent: "event",
+    xcb.xproto.FocusInEvent: "event",
+    xcb.xproto.ExposeEvent: "window",
+    xcb.xproto.GraphicsExposureEvent: "drawable",
+    xcb.xproto.NoExposureEvent: "drawable",
+    xcb.xproto.VisibilityNotifyEvent: "window",
+    xcb.xproto.CreateNotifyEvent: "window",
+    xcb.xproto.DestroyNotifyEvent: "window",
+    xcb.xproto.UnmapNotifyEvent: "window",
+    xcb.xproto.MapNotifyEvent: "window",
+    xcb.xproto.MapRequestEvent: "window",
+    xcb.xproto.ReparentNotifyEvent: "window",
+    xcb.xproto.ConfigureNotifyEvent: "window",
+    xcb.xproto.ConfigureRequestEvent: "window",
+    xcb.xproto.GravityNotifyEvent: "window",
+    xcb.xproto.ResizeRequestEvent: "window",
+    xcb.xproto.CirculateNotifyEvent: "window",
+    xcb.xproto.CirculateRequestEvent: "window",
+    xcb.xproto.PropertyNotifyEvent: "window",
+    xcb.xproto.PropertyNotifyEvent: "window"
+}
+
 
 def xcb_dict_to_value(values, xcb_dict):
     """Many X values are made from a mask indicating which values are present
@@ -82,6 +111,10 @@ class Window(XObject):
                                               self.get_root().root_visual,
                                               *xcb_dict_to_value(kw, xcb.xproto.CW))
 
+        # Receive events from the X connection
+        self.connection.connect_signal(self._dispatch_signals,
+                                       signal=xcb.Event)
+
     def get_root(self):
         """Get the root window the window is attached on."""
 
@@ -90,21 +123,35 @@ class Window(XObject):
 
         return self
 
+    def _is_event_for_me(self, event):
+        """Guess if an X even is for us or not."""
+
+        if event.__class__ in events_window_attribute.keys():
+            return getattr(event, events_window_attribute[event.__class__]) == self.xid
+        return False
+
+
+    def _dispatch_signals(self, event, signal, sender):
+        """Dipatch signals that belongs to us."""
+
+        if self._is_event_for_me(event):
+            self.emit_signal(event, event)
+
     def on_event(self, func):
         """Decorator to use to connect to any event."""
-        self.connect_signal(func, xcb.xproto.Event)
+        self.connect_signal(func, xcb.Event)
         return func
 
     def on_button_press(self, func):
         """Decorator to use to connect to a button press event on that window."""
         self._add_event(xcb.xproto.EventMask.ButtonPress)
-        self.connect_signal(func, xcb.xproto.Event.ButtonPress)
+        self.connect_signal(func, xcb.xproto.ButtonPressEvent)
         return func
 
     def on_button_release(self, func):
         """Decorator to use to connect to a button release event on that window."""
         self._add_event(xcb.xproto.EventMask.ButtonRelease)
-        self.connect_signal(func, xcb.xproto.Event.ButtonRelease)
+        self.connect_signal(func, xcb.xproto.ButtonReleaseEvent)
         return func
 
     def _set_events(self, events):

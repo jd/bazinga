@@ -7,7 +7,8 @@ def emit(signal=signal.All, sender=sender.Anonymous, *arguments, **named):
 
     ret = []
     for s in [ sender ] + list(sender.__class__.__mro__):
-        ret += send(signal, s, *arguments, **named)
+        for sig in [ signal ] + list(signal.__class__.__mro__):
+            ret += send(sig, s, *arguments, **named)
     return ret
 
 
