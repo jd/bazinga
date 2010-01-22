@@ -1,4 +1,5 @@
 from base.property import Property
+import base.signal as signal
 from x import XObject
 from color import Color
 
@@ -6,7 +7,6 @@ import xcb.xproto
 
 
 def xcb_dict_to_value(values, xcb_dict):
-
     """Many X values are made from a mask indicating which values are present
     in the request and the actual values. We use that function to build this two
     variables from a dict { OverrideRedirect: 1 }
@@ -29,7 +29,6 @@ def xcb_dict_to_value(values, xcb_dict):
 
 
 class Window(XObject):
-
     """A basic X window."""
 
     xid = Property("The X id of the object.", writable=False, type=int)
@@ -37,24 +36,38 @@ class Window(XObject):
     y = Property("y coordinate.", writable=False, type=int)
     width = Property("Width.", writable=False, type=int)
     height = Property("Height.", writable=False, type=int)
-
+    __events = xcb.xproto.EventMask.NoEvent
 
     @width.writecheck
     def _writcheck_width(self, value):
-
         if value <= 0:
             raise ValueError("Window width must be positive.")
-
 
     @height.writecheck
     def _writecheck_height(self, value):
-
         if value <= 0:
             raise ValueError("Window width must be positive.")
 
+    class ButtonPress(signal.Signal):
+        """Signal emitted on button press event."""
+
+        pass
+
+    events_to_signal = { xcb.xproto.EventMask.ButtonPress: ButtonPress }
+
+    def _emit_xevent(self, xevent, *args, **kwargs):
+        """Emit an X event as a signal."""
+
+        return self.emit_signal(self.__events_to_signal[xevent], *args, **kwargs)
+
+    def on_button_press(self, func):
+        """Decorator to use to connection a function to a button press event on that window."""
+
+        self._add_event(xcb.xproto.EventMask.ButtonPress)
+        self.connect_signal(func, self.ButtonPress)
+        return func
 
     def __init__(self, xid=None, parent=None, x=0, y=0, width=1, height=1, **kw):
-
         """Create a window."""
 
         self.x = x
@@ -88,9 +101,7 @@ class Window(XObject):
                                               self.get_root().root_visual,
                                               *xcb_dict_to_value(kw, xcb.xproto.CW))
 
-
     def get_root(self):
-
         """Get the root window the window is attached on."""
 
         while self.parent:
@@ -98,12 +109,17 @@ class Window(XObject):
 
         return self
 
-
-    def set_events(self, events):
-
+    def _set_events(self, events):
         """Set events that shall be received by the window."""
 
-        self.connection.core.ChangeWindowAttributes(self.xid, CW.EventMask, events)
+        if events != self.__events:
+            self.connection.core.ChangeWindowAttributes(self.xid, CW.EventMask, events)
+            self.__events = events
+
+    def _add_event(self, event):
+        """Add an event that shall be received by the window."""
+
+        self._set_events(self.__events | event)
 
 
 # Reference parent, so has to be here
@@ -111,89 +127,66 @@ Window.parent = Property("Parent window.", writable=False, type=Window)
 
 
 class MappableWindow(Window):
-
     """A window that can be mapped or unmaped on screen."""
 
     def map(self):
-
         """Map a window on the screen."""
 
         self.connection.core.MapWindow(self.xid)
 
-
     def unmap(self):
-
         """Unmap a window from the screen."""
 
         self.connection.core.UnmapWindow(self.xid)
 
 
 class MovableWindow(Window):
-
     """A window that can be moved."""
 
     x = Property(Window.x.__doc__, type=int, wcheck=Window.x.writecheck)
     y = Property(Window.y.__doc__, type=int, wcheck=Window.y.writecheck)
 
-
     @x.on_set
     def _on_set_x(self, newvalue):
-
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.X, [ newvalue ])
-
 
     @y.on_set
     def _on_set_y(self, newvalue):
-
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Y, [ newvalue ])
 
-
 class ResizableWindow(Window):
-
     """A window that can be resized."""
 
     width = Property(Window.width.__doc__, type=int, wcheck=Window.width.writecheck)
     height = Property(Window.height.__doc__, type=int, wcheck=Window.height.writecheck)
 
-
     @width.on_set
     def _on_set_width(self, newvalue):
-
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Width, [ newvalue ])
-
 
     @height.on_set
     def _on_set_height(self, newvalue):
-
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Height, [ newvalue ])
 
-
 class BorderWindow(Window):
-
     """A window with borders."""
 
     border_width = Property("The window border width.", type=int)
     border_color = Property("The window border color.", type=Color)
 
     def __init__(self, border_width=0, **kw):
-
         Window.__init__(self, **kw)
         self.border_width = border_width
 
-
     @border_width.writecheck
     def _writecheck_border_width(self, value):
-
         if value <= 0:
             raise ValueError("Border width must be positive.")
 
-
     @border_width.on_set
     def _on_set_border_width(self, newvalue):
-
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.BorderWidth, [ newvalue ])
 
     @border_color.on_set
     def _on_set_border_color(self, newvalue):
-
         self.connection.core.ChangeWindowAttributes(self.xid, xcb.xproto.CW.BorderPixel, [ newvalue.pixel ])
