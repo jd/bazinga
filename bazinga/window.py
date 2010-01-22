@@ -40,14 +40,14 @@ class Window(XObject):
 
 
     @width.writecheck
-    def width(self, value):
+    def _writcheck_width(self, value):
 
         if value <= 0:
             raise ValueError("Window width must be positive.")
 
 
     @height.writecheck
-    def height(self, value):
+    def _writecheck_height(self, value):
 
         if value <= 0:
             raise ValueError("Window width must be positive.")
@@ -182,7 +182,7 @@ class BorderWindow(Window):
 
 
     @border_width.writecheck
-    def border_width(self, value):
+    def _writecheck_border_width(self, value):
 
         if value <= 0:
             raise ValueError("Border width must be positive.")
