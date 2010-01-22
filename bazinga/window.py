@@ -137,13 +137,13 @@ class MovableWindow(Window):
 
 
     @x.on_set
-    def x(self, newvalue):
+    def _on_set_x(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.X, [ newvalue ])
 
 
     @y.on_set
-    def y(self, newvalue):
+    def _on_set_y(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Y, [ newvalue ])
 
@@ -157,13 +157,13 @@ class ResizableWindow(Window):
 
 
     @width.on_set
-    def width(self, newvalue):
+    def _on_set_width(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Width, [ newvalue ])
 
 
     @height.on_set
-    def height(self, newvalue):
+    def _on_set_height(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.Height, [ newvalue ])
 
@@ -189,11 +189,11 @@ class BorderWindow(Window):
 
 
     @border_width.on_set
-    def border_width(self, newvalue):
+    def _on_set_border_width(self, newvalue):
 
         self.connection.core.ConfigureWindow(self.xid, xcb.xproto.ConfigWindow.BorderWidth, [ newvalue ])
 
     @border_color.on_set
-    def border_color(self, newvalue):
+    def _on_set_border_color(self, newvalue):
 
         self.connection.core.ChangeWindowAttributes(self.xid, xcb.xproto.CW.BorderPixel, [ newvalue.pixel ])

@@ -63,4 +63,4 @@ class Property(Object):
     def on_set(self, func):
 
         self.connect_signal(func, self.Set)
-        return self
+        return func
