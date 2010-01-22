@@ -108,9 +108,17 @@ class Connection(Object, xcb.Connection):
                                            outputs = [ Output(mm_width = xroot.width_in_millimeters,
                                                               mm_height = xroot.height_in_millimeters) ]))
 
-        self._io = pyev.Io(self.get_file_descriptor(), pyev.EV_READ, loop,
-                Connection.on_io, self)
+        # Initialize IO watcher
+        self._io = pyev.Io(self.get_file_descriptor(),
+                           pyev.EV_READ, loop,
+                           self._on_io)
         self._io.start()
+
+        # Initialize Prepare watcher
+        self._prepare = pyev.Prepare(loop, self._prepare)
+        self._prepare.start()
+
+        # Store loop
         self.loop = loop
 
     def _set_events(self, events):
@@ -133,9 +141,12 @@ class Connection(Object, xcb.Connection):
 
         return cookies
 
-    @staticmethod
-    def on_io(watcher, events):
-        event = watcher.data.poll_for_event()
+    def _on_io(self, watcher, events):
+        event = self.poll_for_event()
+
+    def _prepare(self, watcher, events):
+        self.flush()
+
 
 class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""
