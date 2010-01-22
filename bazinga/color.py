@@ -4,78 +4,59 @@ from x import XObject
 from base.memoize import memoize
 
 class Color(XObject):
-
     """Generic color class."""
 
     def read_reply(self):
-
         if hasattr(self, "cookie"):
             reply = self.cookie.reply()
             del self.cookie
             self._pixel = reply.pixel
             return reply
 
-
     @property
     def hex(self):
-
         self.read_reply()
         return "#{0:<02x}{1:<02x}{2:<02x}{3:<02x}".format(self.red / 257,
                                                           self.green / 257,
                                                           self.blue / 257,
                                                           self.alpha / 257)
 
-
     @property
     def name(self):
-
         return self.hex
-
 
     @property
     def pixel(self):
-
         self.read_reply()
         return self._pixel
 
-
     @property
     def red(self):
-
         self.read_reply()
         return self._red
 
-
     @property
     def green(self):
-
         self.read_reply()
         return self._green
 
-
     @property
     def blue(self):
-
         self.read_reply()
         return self._blue
 
     @property
     def alpha(self):
-
         return self._alpha
 
-
     def __str__(self):
-
         return self.name
 
 
 class NamedColor(Color):
-
     """A named color."""
 
     def __init__(self, colormap, name, alpha=65535, **kw):
-
         Color.__init__(self, **kw)
 
         if alpha < 0 or alpha > 65535:
@@ -85,9 +66,7 @@ class NamedColor(Color):
         self._name = name
         self._alpha = alpha
 
-
     def read_reply(self):
-
         reply = Color.read_reply(self)
         if reply:
             self._red = reply.exact_red
@@ -95,19 +74,14 @@ class NamedColor(Color):
             self._blue = reply.exact_blue
             return reply
 
-
     @property
     def name(self):
-
         return self._name
 
-
 class ValueColor(Color):
-
     """A color by value."""
 
     def __init__(self, colormap, red=0, green=0, blue=0, alpha=65535, **kw):
-
         Color.__init__(self, **kw)
 
         for value in [ red, blue, green, alpha ]:
@@ -117,9 +91,7 @@ class ValueColor(Color):
         self.cookie = self.connection.core.AllocColor(colormap, red, green, blue)
         self._alpha = alpha
 
-
     def read_reply(self):
-
         reply = Color.read_reply(self)
         if reply:
             self._red = reply.red
@@ -129,11 +101,9 @@ class ValueColor(Color):
 
 
 class HexColor(ValueColor):
-
     """An hexadecimal color."""
 
     def __init__(self, colormap, name, alpha=65535, **kw):
-
         len_name = len(name)
 
         if len_name != 6 and len_name != 8:
@@ -151,7 +121,6 @@ class HexColor(ValueColor):
 
 @memoize
 def make_color(colormap, name=None, red=0, green=0, blue=0, alpha=65535, **kw):
-
     """Create a color. You should specify name, or RGB value."""
 
     if name:
