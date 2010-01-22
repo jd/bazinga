@@ -109,6 +109,7 @@ class Connection(Object, xcb.Connection):
                                                               mm_height = xroot.height_in_millimeters) ]))
 
         pyev.Io(self.get_file_descriptor(), pyev.EV_READ, loop, Connection.on_io)
+        self.loop = loop
 
     def set_events(self, events):
 
@@ -134,6 +135,7 @@ class Connection(Object, xcb.Connection):
     @staticmethod
     def on_io(watcher, events):
         event = watcher.poll_for_event()
+        print event
 
 
 class MainConnection(Singleton, Connection):
