@@ -8,18 +8,15 @@ from base.property import Property
 from loop import MainLoop
 
 def byte_list_to_str(blist):
-
     """Convert a byte list to a string."""
 
     return "".join(map(chr, blist))
 
 
 class Connection(Object, xcb.Connection):
-
     """A X connection."""
 
     def __init__(self, loop=MainLoop(), *args, **kw):
-
         """Initialize a X connection."""
 
         import xcb.xproto
@@ -113,7 +110,6 @@ class Connection(Object, xcb.Connection):
 
         pyev.Io(self.get_file_descriptor(), pyev.EV_READ, loop, Connection.on_io)
 
-
     def set_events(self, events):
 
         """Set events that shall be received by the X connection."""
@@ -124,7 +120,6 @@ class Connection(Object, xcb.Connection):
 
     @staticmethod
     def prepare_requests(method, variable_list, position, *args):
-
         """Prepare a bunch of requests."""
 
         cookies = []
@@ -136,31 +131,24 @@ class Connection(Object, xcb.Connection):
 
         return cookies
 
-
     @staticmethod
     def on_io(watcher, events):
         event = watcher.poll_for_event()
 
 
 class MainConnection(Singleton, Connection):
-
     """Main X connection of bazinga."""
 
     pass
 
 
 class XObject(Object):
-
     """A generic X object."""
 
     connection = Property("Connection to the X server.", writable=False, type=Connection)
 
-
     def __init__(self, connection=None, **kw):
-
         if connection is None:
             connection = MainConnection()
-
         self.connection = connection
-
         Object.__init__(self, **kw)
