@@ -2,13 +2,11 @@ import xcb.xproto
 
 from x import XObject
 from base.property import Property
+from base.memoize import memoize
 
 class Color(XObject):
 
-    def __init__(self, **kw):
-
-        XObject.__init__(self, **kw)
-
+    """Generic color class."""
 
     def read_reply(self):
 
@@ -139,7 +137,7 @@ class HexColor(ValueColor):
 
         len_name = len(name)
 
-        if (len_name != 7 and len_name != 9) or name[0] != '#':
+        if len_name != 6 and len_name != 8:
             raise ValueError("Bad color name {0}.".format(name))
 
         red = int(name[1:3], 16) * 257
@@ -150,3 +148,17 @@ class HexColor(ValueColor):
             alpha = int(name[7:9], 16) * 257
 
         ValueColor.__init__(self, colormap, red, green, blue, alpha, **kw)
+
+
+@memoize
+def make_color(colormap, name=None, red=0, green=0, blue=0, alpha=65535, **kw):
+
+    """Create a color. You should specify name, or RGB value."""
+
+    if name:
+        if name[0] == '#':
+            return HexColor(colormap, name[1:], alpha, **kw)
+        else:
+            return NamedColor(colormap, name, alpha, **kw)
+    else:
+        return ValueColor(colormap, red, green, blue, alpha, **kw)
