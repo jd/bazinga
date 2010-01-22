@@ -10,8 +10,10 @@ class Property(Object):
         pass
 
 
-    def __init__(self, default_value=None, readable=True, writable=True, deletable=False, type=None, wcheck=None):
+    def __init__(self, docstring, default_value=None, readable=True, writable=True, deletable=False,
+                 type=None, wcheck=None):
 
+        self.__doc__ = docstring
         self.wcheck = wcheck
         self.readable = readable
         self.writable = writable
@@ -70,4 +72,4 @@ class Property(Object):
     def on_set(self, func):
 
         self.connect_signal(func, self.Set)
-        return func
+        return self

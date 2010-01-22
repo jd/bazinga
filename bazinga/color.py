@@ -1,7 +1,6 @@
 import xcb.xproto
 
 from x import XObject
-from base.property import Property
 from base.memoize import memoize
 
 class Color(XObject):

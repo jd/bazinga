@@ -32,11 +32,11 @@ class Window(XObject):
 
     """A basic X window."""
 
-    xid = Property(writable=False, type=int)
-    x = Property(writable=False, type=int)
-    y = Property(writable=False, type=int)
-    width = Property(writable=False, type=int)
-    height = Property(writable=False, type=int)
+    xid = Property("The X id of the object.", writable=False, type=int)
+    x = Property("x coordinate.", writable=False, type=int)
+    y = Property("y coordinate.", writable=False, type=int)
+    width = Property("Width.", writable=False, type=int)
+    height = Property("Height.", writable=False, type=int)
 
 
     @width.writecheck
@@ -107,7 +107,7 @@ class Window(XObject):
 
 
 # Reference parent, so has to be here
-Window.parent = Property(writable=False, type=Window)
+Window.parent = Property("Parent window.", writable=False, type=Window)
 
 
 class MappableWindow(Window):
@@ -132,8 +132,8 @@ class MovableWindow(Window):
 
     """A window that can be moved."""
 
-    x = Property(type=int, wcheck=Window.x.writecheck)
-    y = Property(type=int, wcheck=Window.y.writecheck)
+    x = Property(Window.x.__doc__, type=int, wcheck=Window.x.writecheck)
+    y = Property(Window.y.__doc__, type=int, wcheck=Window.y.writecheck)
 
 
     @x.on_set
@@ -152,8 +152,8 @@ class ResizableWindow(Window):
 
     """A window that can be resized."""
 
-    width= Property(type=int, wcheck=Window.width.writecheck)
-    height = Property(type=int, wcheck=Window.height.writecheck)
+    width = Property(Window.width.__doc__, type=int, wcheck=Window.width.writecheck)
+    height = Property(Window.height.__doc__, type=int, wcheck=Window.height.writecheck)
 
 
     @width.on_set
@@ -172,8 +172,8 @@ class BorderWindow(Window):
 
     """A window with borders."""
 
-    border_width = Property(type=int)
-    border_color = Property(type=Color)
+    border_width = Property("The window border width.", type=int)
+    border_color = Property("The window border color.", type=Color)
 
     def __init__(self, border_width=0, **kw):
 

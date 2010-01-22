@@ -9,12 +9,12 @@ class TestProperty(unittest.TestCase):
 
     class Phone(object):
 
-        nodefaultval = Property()
-        defaultval = Property(1)
-        ro = Property(42, writable=False)
-        rw = Property(43, readable=False, deletable=True)
-        notdeletable = Property(deletable=False)
-        typed = Property(type=str)
+        nodefaultval = Property("")
+        defaultval = Property("", 1)
+        ro = Property("", 42, writable=False)
+        rw = Property("", 43, readable=False, deletable=True)
+        notdeletable = Property("", deletable=False)
+        typed = Property("", type=str)
 
         @defaultval.writecheck
         def defaultval_writecheck(self, newvalue):

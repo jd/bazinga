@@ -153,7 +153,7 @@ class XObject(Object):
 
     """A generic X object."""
 
-    connection = Property(writable=False, type=Connection)
+    connection = Property("Connection to the X server.", writable=False, type=Connection)
 
 
     def __init__(self, connection=None, **kw):
