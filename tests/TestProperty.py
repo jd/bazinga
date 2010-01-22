@@ -99,10 +99,6 @@ class TestProperty(unittest.TestCase):
         except ValueError:
             pass
 
-    def test_init(self):
-        self.Phone.defaultval.init(self.p, 9)
-        self.assert_(self.p.defaultval is 9)
-
 
 if __name__ == "__main__":
     import sys
