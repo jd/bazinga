@@ -57,26 +57,26 @@ class Window(XObject):
 
         """Create a window."""
 
-        Window.x.init(self, x)
-        Window.y.init(self, y)
-        Window.width.init(self, width)
-        Window.height.init(self, height)
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
 
         # Record everything else
         XObject.__init__(self, **kw)
 
         if xid is None:
             # Generate an X id
-            Window.xid.init(self, self.connection.generate_id())
+            self.xid = self.connection.generate_id()
             if parent is None:
                 parent = self.connection.roots[self.connection.pref_screen]
         else:
             if parent is not None and  parent.connection != self.connection:
                 raise ValueError("Parent connection should be the same")
-            Window.xid.init(self, xid)
+            self.xid = xid
 
-
-        Window.parent.init(self, parent)
+        if parent:
+            self.parent = parent
 
         if xid is None:
             self.connection.core.CreateWindow(self.get_root().root_depth,

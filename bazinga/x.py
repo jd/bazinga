@@ -161,6 +161,6 @@ class XObject(Object):
         if connection is None:
             connection = MainConnection()
 
-        XObject.connection.init(self, connection)
+        self.connection = connection
 
         Object.__init__(self, **kw)

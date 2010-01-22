@@ -54,15 +54,6 @@ class Property(Object):
         del self.__dict__[inst]
 
 
-    def init(self, inst, value):
-
-        if self.__dict__.has_key(inst):
-            raise ValueError("Property of this object has already been initialized.")
-        if self.wcheck:
-            self.wcheck(inst, value)
-        self.__dict__[inst] = value
-
-
     def writecheck(self, func):
 
         self.wcheck = func
