@@ -108,11 +108,12 @@ class Connection(Object, xcb.Connection):
                                            outputs = [ Output(mm_width = xroot.width_in_millimeters,
                                                               mm_height = xroot.height_in_millimeters) ]))
 
-        pyev.Io(self.get_file_descriptor(), pyev.EV_READ, loop, Connection.on_io)
+        self._io = pyev.Io(self.get_file_descriptor(), pyev.EV_READ, loop,
+                Connection.on_io, self)
+        self._io.start()
         self.loop = loop
 
-    def set_events(self, events):
-
+    def _set_events(self, events):
         """Set events that shall be received by the X connection."""
 
         for root in self.roots:
@@ -134,9 +135,7 @@ class Connection(Object, xcb.Connection):
 
     @staticmethod
     def on_io(watcher, events):
-        event = watcher.poll_for_event()
-        print event
-
+        event = watcher.data.poll_for_event()
 
 class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""

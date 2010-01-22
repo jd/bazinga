@@ -113,7 +113,9 @@ class Window(XObject):
         """Set events that shall be received by the window."""
 
         if events != self.__events:
-            self.connection.core.ChangeWindowAttributes(self.xid, CW.EventMask, events)
+            self.connection.core.ChangeWindowAttributes(self.xid,
+                                                        xcb.xproto.CW.EventMask,
+                                                        [ events ])
             self.__events = events
 
     def _add_event(self, event):
