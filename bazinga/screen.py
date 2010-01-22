@@ -1,4 +1,4 @@
-import base.object import Object
+from base.object import Object
 
 class Screen(Object):
 
