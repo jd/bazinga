@@ -4,7 +4,6 @@ import xcb
 from screen import Screen, Output
 from base.singleton import Singleton
 from base.object import Object
-from base.property import Property
 from loop import MainLoop
 
 def byte_list_to_str(blist):
@@ -44,15 +43,16 @@ class Connection(Object, xcb.Connection):
         self.roots = []
         from window import Window
         for root in self.get_setup().roots:
-            self.roots.append(Window(xid = root.root,
-                                     connection = self,
-                                     x = 0,
-                                     y = 0,
-                                     width = root.width_in_pixels,
-                                     height = root.height_in_pixels,
-                                     root_depth = root.root_depth,
-                                     root_visual = root.root_visual,
-                                     default_colormap = root.default_colormap))
+            root_window = Window(connection=self, xid=root.root)
+            Window.x.set_cache(root_window, 0)
+            Window.y.set_cache(root_window, 0)
+            Window.width.set_cache(root_window, root.width_in_pixels)
+            Window.height.set_cache(root_window, root.height_in_pixels)
+            # Extra attributes
+            root_window.default_colormap = root.default_colormap
+            root_window.root_depth = root.root_depth
+            root_window.root_visual = root.root_visual
+            self.roots.append(root_window)
 
         self.screens = []
 
@@ -71,12 +71,13 @@ class Connection(Object, xcb.Connection):
                     crtc_info = crtc_info_cookie.reply()
                     # Does the CRTC have outputs?
                     if len(crtc_info.outputs):
-                        screen = Screen(x = crtc_info.x,
-                                        y = crtc_info.y,
-                                        width = crtc_info.width,
-                                        height = crtc_info.height,
-                                        root = root,
-                                        outputs = [])
+                        screen = Screen()
+                        screen.x = crtc_info.x
+                        screen.y = crtc_info.y
+                        screen.width = crtc_info.width
+                        screen.height = crtc_info.height
+                        screen.root = root
+                        screen.outputs = []
                         self.screens.append(screen)
 
                         # Prepare output info requests
@@ -85,28 +86,35 @@ class Connection(Object, xcb.Connection):
 
                         for output_info_cookie in output_info_c:
                             output_info = output_info_cookie.reply()
-                            screen.outputs.append(Output(name = byte_list_to_str(output_info.name),
-                                                         mm_width = output_info.mm_width,
-                                                         mm_height = output_info.mm_height))
+                            output = Output()
+                            output.name = byte_list_to_str(output_info.name)
+                            output.mm_width = output_info.mm_width
+                            output.mm_height = output_info.mm_height
+                            screen.outputs.append(output)
 
         elif xinerama_isactive_c and xinerama_isactive_c.reply().state:
             screens_info = self.xinerama.QueryScreens().reply()
             for screen_info in screens_info.screen_info:
-                self.screens.append(Screen(x = screen_info.x_org,
-                                           y = screen_info.y_org,
-                                           width = screen_info.width,
-                                           # There is only one root if we have Xinerama
-                                           root = self.roots[0],
-                                           height = screen_info.height))
-
+                screen = Screen()
+                screen.x = screen_info.x_org
+                screen.y = screen_info.y_org
+                screen.width = screen_info.width
+                screen.height = screen_info.height
+                # There is only one root if we have Xinerama
+                root = self.roots[0]
+                self.screens.append(screen)
         else:
             for root, xroot in zip(self.roots, self.get_setup().roots):
-                self.screens.append(Screen(x = 0, y = 0,
-                                           width = root.width_in_pixels,
-                                           height = root.height_in_pixels,
-                                           root = root,
-                                           outputs = [ Output(mm_width = xroot.width_in_millimeters,
-                                                              mm_height = xroot.height_in_millimeters) ]))
+                screen = Screen()
+                screen.x = screen.y = 0
+                screen.width = root.width_in_pixels
+                screen.height = root.height_in_pixels
+                screen.root = root
+                output = Output()
+                output.mm_width = xroot.width_in_millimeters
+                output.mm_height = xroot.height_in_millimeters
+                screen.outputs = [ output ]
+                self.screens.append(screen)
 
         # Initialize IO watcher
         self._io = pyev.Io(self.get_file_descriptor(),
@@ -157,10 +165,8 @@ class MainConnection(Singleton, Connection):
 class XObject(Object):
     """A generic X object."""
 
-    connection = Property("Connection to the X server.", writable=False, type=Connection)
-
-    def __init__(self, connection=None, **kw):
+    def __init__(self, connection=None):
         if connection is None:
             connection = MainConnection()
         self.connection = connection
-        Object.__init__(self, **kw)
+        Object.__init__(self)
