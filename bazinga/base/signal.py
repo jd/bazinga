@@ -1,5 +1,4 @@
 from louie import *
-from decorator import decorator
 
 def emit(signal=signal.All, sender=sender.Anonymous, *arguments, **named):
     """Emit a signal. This is the same as send, except that it also emit the
@@ -16,7 +15,6 @@ def connected(signal=signal.All, sender=sender.Any, weak=True):
     """Return a decorator function that will connect
     the underlying function to an event."""
 
-    @decorator
     def connect_func(func):
         connect(func, signal, sender)
         return func
