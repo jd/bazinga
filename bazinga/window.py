@@ -138,18 +138,18 @@ class Window(XObject):
             self.emit_signal(event, event)
 
     def on_event(self, func):
-        """Decorator to use to connect to any event."""
+        """Connect a function to any event."""
         self.connect_signal(func, xcb.Event)
         return func
 
     def on_button_press(self, func):
-        """Decorator to use to connect to a button press event on that window."""
+        """Connect a function to a button press event on that window."""
         self._add_event(xcb.xproto.EventMask.ButtonPress)
         self.connect_signal(func, xcb.xproto.ButtonPressEvent)
         return func
 
     def on_button_release(self, func):
-        """Decorator to use to connect to a button release event on that window."""
+        """Connect a function to a button release event on that window."""
         self._add_event(xcb.xproto.EventMask.ButtonRelease)
         self.connect_signal(func, xcb.xproto.ButtonReleaseEvent)
         return func
