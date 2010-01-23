@@ -16,8 +16,6 @@ events_window_attribute = {
     xcb.xproto.LeaveNotifyEvent: "event",
     xcb.xproto.FocusInEvent: "event",
     xcb.xproto.ExposeEvent: "window",
-    xcb.xproto.GraphicsExposureEvent: "drawable",
-    xcb.xproto.NoExposureEvent: "drawable",
     xcb.xproto.VisibilityNotifyEvent: "window",
     xcb.xproto.CreateNotifyEvent: "window",
     xcb.xproto.DestroyNotifyEvent: "window",
