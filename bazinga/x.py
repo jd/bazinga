@@ -142,7 +142,7 @@ class Connection(Object, xcb.Connection):
         return cookies
 
     def _on_io(self, watcher, events):
-        self.emit_signal(xcb.Event, self.poll_for_event())
+        self.emit_signal(self.poll_for_event())
 
     def _prepare(self, watcher, events):
         self.flush()

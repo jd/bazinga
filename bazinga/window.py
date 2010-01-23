@@ -131,11 +131,11 @@ class Window(XObject):
         return False
 
 
-    def _dispatch_signals(self, event, signal, sender):
+    def _dispatch_signals(self, signal, sender):
         """Dipatch signals that belongs to us."""
 
-        if self._is_event_for_me(event):
-            self.emit_signal(event, event)
+        if self._is_event_for_me(signal):
+            self.emit_signal(signal)
 
     def on_event(self, func):
         """Connect a function to any event."""
