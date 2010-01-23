@@ -15,7 +15,7 @@ class Object(object):
         return bsignal.connect(receiver, signal=signal, sender=self)
 
     def disconnect_signal(self, receiver, signal=bsignal.signal.All):
-        """Connect a signal."""
+        """Disconnect a signal."""
         return bsignal.disconnect(receiver, signal=signal, sender=self)
 
     def emit_signal(self, signal=bsignal.signal.All, *args, **kw):
