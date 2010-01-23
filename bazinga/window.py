@@ -26,7 +26,6 @@ events_window_attribute = {
     xcb.xproto.ConfigureNotifyEvent: "window",
     xcb.xproto.ConfigureRequestEvent: "window",
     xcb.xproto.GravityNotifyEvent: "window",
-    xcb.xproto.ResizeRequestEvent: "window",
     xcb.xproto.CirculateNotifyEvent: "window",
     xcb.xproto.CirculateRequestEvent: "window",
     xcb.xproto.PropertyNotifyEvent: "window",
