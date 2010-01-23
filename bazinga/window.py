@@ -5,6 +5,7 @@ from color import Color
 
 import xcb.xproto
 
+
 events_window_attribute = {
     xcb.xproto.KeyPressEvent: "event",
     xcb.xproto.KeyReleaseEvent: "event",
@@ -120,7 +121,6 @@ class Window(XObject):
 
         while self.parent:
             self = self.parent
-
         return self
 
     def _is_event_for_me(self, event):
@@ -129,7 +129,6 @@ class Window(XObject):
         if event.__class__ in events_window_attribute.keys():
             return getattr(event, events_window_attribute[event.__class__]) == self.xid
         return False
-
 
     def _dispatch_signals(self, signal, sender):
         """Dipatch signals that belongs to us."""
