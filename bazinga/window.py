@@ -61,6 +61,7 @@ class Window(XObject):
     __events = xcb.xproto.EventMask.NoEvent
 
     class x(cachedproperty):
+        """X coordinate."""
         def __get__(self):
             return 42
 
@@ -68,6 +69,7 @@ class Window(XObject):
             raise AttributeError("read-only attribute")
 
     class y(cachedproperty):
+        """Y coordinate."""
         def __get__(self):
             return 43
 
@@ -75,6 +77,7 @@ class Window(XObject):
             raise AttributeError("read-only attribute")
 
     class width(cachedproperty):
+        """Width."""
         def __get__(self):
             return 42
 
@@ -82,6 +85,7 @@ class Window(XObject):
             raise AttributeError("read-only attribute")
 
     class height(cachedproperty):
+        """Height."""
         def __get__(self):
             return 42
 
@@ -144,7 +148,6 @@ class BorderWindow(Window):
 
     class border_width(cachedproperty):
         """Border width."""
-
         def __get__(self):
             return 100
 
@@ -155,7 +158,6 @@ class BorderWindow(Window):
 
     class border_color(cachedproperty):
         """Border color."""
-
         def __get__(self):
             return 100
 
@@ -163,7 +165,7 @@ class BorderWindow(Window):
             if isinstance(value, color.Color):
                 bcolor = value
             else:
-                bcolor = color.make_color(value)
+                bcolor = color.make_color(self.get_root().default_colormap, value)
             self.connection.core.ChangeWindowAttributesChecked(self.xid,
                                                                xcb.xproto.CW.BorderPixel,
                                                                [ bcolor.pixel ]).check()
@@ -190,13 +192,11 @@ class MovableWindow(Window):
             self.connection.core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.X,
                                                         [ value ]).check()
-
     class y(Window.y):
         def __set__(self, value):
             self.connection.core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Y,
                                                         [ value ]).check()
-
 
 class ResizableWindow(Window):
     """A window that can be resized."""
