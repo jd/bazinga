@@ -298,8 +298,8 @@ class BorderWindow(Window):
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                        xcb.xproto.ConfigWindow.BorderWidth,
-                                                        [ value ])
+                                                         xcb.xproto.ConfigWindow.BorderWidth,
+                                                         [ value ])
 
     class border_color(cachedproperty):
         """Border color."""
@@ -309,8 +309,8 @@ class BorderWindow(Window):
         def __set__(self, value):
             color = Color(self.get_root().default_colormap, value)
             MainConnection().core.ChangeWindowAttributesChecked(self.xid,
-                                                               xcb.xproto.CW.BorderPixel,
-                                                               [ color.pixel ])
+                                                                xcb.xproto.CW.BorderPixel,
+                                                                [ color.pixel ])
             return color
 
     def _retrieve_window_geometry(self):
@@ -399,6 +399,11 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
 
         xid = MainConnection().generate_id()
 
+        # Always listen to this events at creation.
+        # Otherwise our cache might not be up to date.
+        self.__events = xcb.xproto.EventMask.StructureNotify \
+                        | xcb.xproto.EventMask.PropertyChange
+
         create_window = \
         MainConnection().core.CreateWindowChecked(self.get_root().root_depth,
                                                  xid,
@@ -407,7 +412,9 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  border_width,
                                                  xcb.xproto.WindowClass.CopyFromParent,
                                                  self.get_root().root_visual,
-                                                 *xcb_dict_to_value(values, xcb.xproto.CW))
+                                                 xcb.xproto.CW.EventMask,
+                                                 [ self.__events ])
+
         CreatedWindow.border_width.set_cache(self, border_width)
         CreatedWindow.x.set_cache(self, x)
         CreatedWindow.y.set_cache(self, y)
