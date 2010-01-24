@@ -329,3 +329,9 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         self._add_event(xcb.xproto.EventMask.PointerMotion)
         self.connect_signal(func, xcb.xproto.MotionNotifyEvent)
         return func
+
+    def on_expose(self, func):
+        """Connect a function to an expose event."""
+        self._add_event(xcb.xproto.EventMask.Exposure)
+        self.connect_signal(func, xcb.xproto.ExposeEvent)
+        return func
