@@ -63,7 +63,7 @@ class Window(XObject):
     class x(cachedproperty):
         """X coordinate."""
         def __get__(self):
-            return 42
+            self._retrieve_window_geometry()
 
         def __set__(self, value):
             raise AttributeError("read-only attribute")
@@ -71,7 +71,7 @@ class Window(XObject):
     class y(cachedproperty):
         """Y coordinate."""
         def __get__(self):
-            return 43
+            self._retrieve_window_geometry()
 
         def __set__(self, value):
             raise AttributeError("read-only attribute")
@@ -79,7 +79,7 @@ class Window(XObject):
     class width(cachedproperty):
         """Width."""
         def __get__(self):
-            return 42
+            self._retrieve_window_geometry()
 
         def __set__(self, value):
             raise AttributeError("read-only attribute")
@@ -87,7 +87,7 @@ class Window(XObject):
     class height(cachedproperty):
         """Height."""
         def __get__(self):
-            return 42
+            self._retrieve_window_geometry()
 
         def __set__(self, value):
             raise AttributeError("read-only attribute")
@@ -142,6 +142,15 @@ class Window(XObject):
         """Add an event that shall be received by the window."""
         self._set_events(self.__events | event)
 
+    def _retrieve_window_geometry(self):
+        """Update window geometry."""
+        wg = self.connection.core.GetGeometry(self.xid).reply()
+        Window.x.set_cache(self, wg.x)
+        Window.y.set_cache(self, wg.y)
+        Window.width.set_cache(self, wg.width)
+        Window.height.set_cache(self, wg.height)
+        return wg
+
 
 class BorderWindow(Window):
     """A window with borders."""
@@ -149,7 +158,7 @@ class BorderWindow(Window):
     class border_width(cachedproperty):
         """Border width."""
         def __get__(self):
-            return 100
+            self._retrieve_window_geometry()
 
         def __set__(self, value):
             self.connection.core.ConfigureWindowChecked(self.xid,
@@ -158,8 +167,8 @@ class BorderWindow(Window):
 
     class border_color(cachedproperty):
         """Border color."""
-        def __get__(self):
-            return 100
+        def __delete__(self):
+            raise AttributeError("Border color cannot be uncached.")
 
         def __set__(self, value):
             if isinstance(value, color.Color):
@@ -170,6 +179,12 @@ class BorderWindow(Window):
                                                                xcb.xproto.CW.BorderPixel,
                                                                [ bcolor.pixel ]).check()
             return bcolor
+
+    def _retrieve_window_geometry(self):
+        """Update window geometry."""
+        wg = Window._retrieve_window_geometry(self)
+        BorderWindow.border_width.set_cache(self, wg.border_width)
+        return wg
 
 
 class MappableWindow(Window):
