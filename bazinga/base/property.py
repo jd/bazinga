@@ -57,7 +57,6 @@ class CachedProperty(object):
             pass
 
     def set_cache(self, inst, value):
-        print "SET CACHE", value
         setattr(inst, self.key, value)
 
 
