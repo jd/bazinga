@@ -286,3 +286,15 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         self._add_event(xcb.xproto.EventMask.ButtonRelease)
         self.connect_signal(func, xcb.xproto.ButtonReleaseEvent)
         return func
+
+    def on_key_press(self, func):
+        """Connect a function to a key press event on that window."""
+        self._add_event(xcb.xproto.EventMask.KeyPress)
+        self.connect_signal(func, xcb.xproto.KeyPressEvent)
+        return func
+
+    def on_key_release(self, func):
+        """Connect a function to a key release event on that window."""
+        self._add_event(xcb.xproto.EventMask.KeyRelease)
+        self.connect_signal(func, xcb.xproto.KeyReleaseEvent)
+        return func
