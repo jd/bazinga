@@ -13,9 +13,9 @@ class TestTimer(unittest.TestCase):
     def test_timer(self):
         self.called = False
         self.timer.start()
+        @self.timer.on_timeout
         def cb(*args, **kw):
             self.called = True
-        self.timer.connect_signal(cb, self.timer.Timeout)
         MainLoop().loop()
         self.assert_(self.called)
 

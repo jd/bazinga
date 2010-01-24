@@ -132,7 +132,9 @@ class Window(Object):
                                         signal=xcb.Event)
 
         # Handle ConfigureNotify to update cached attributes
-        self.on_configure(self._update_window_geometry)
+        self.on_configure(self._update_geometry)
+        # Handle PropertyChange
+        self.on_configure(self._update_property)
 
     # XXX Should be cached?
     def get_root(self):
@@ -175,7 +177,7 @@ class Window(Object):
         """Add an event that shall be received by the window."""
         self._set_events(self.__events | event)
 
-    def _retrieve_window_geometry(self):
+    def _retrieve_geometry(self):
         """Update window geometry."""
         wg = MainConnection().core.GetGeometry(self.xid).reply()
         Window.x.set_cache(self, wg.x)
@@ -184,12 +186,26 @@ class Window(Object):
         Window.height.set_cache(self, wg.height)
         return wg
 
-    def _update_window_geometry(self, signal, sender):
+    def _update_geometry(self, signal, sender):
         """Update window geometry from an event."""
         Window.x.set_cache(self, signal.x)
         Window.y.set_cache(self, signal.y)
         Window.width.set_cache(self, signal.width)
         Window.height.set_cache(self, signal.height)
+
+    def _update_property(self, signal, sender):
+
+        # XXX move this out
+        # But cannot be in class because it loop on import:
+        # Window -> Atom -> x.MainConn -> Window
+        _atom_to_property = {
+            Atom("WM_NAME"): "_icccm_name",
+            Atom("_NET_WM_NAME"): "_netwm_name",
+        }
+        # If this a atom property we care?
+        if _atom_to_property.has_key(signal.atom):
+            # Erase cache
+            delattr(self, _atom_to_property[signal.atom])
 
     def focus(self):
         """Give focus to a window.
@@ -294,7 +310,7 @@ class BorderWindow(Window):
     class border_width(cachedproperty):
         """Border width."""
         def __get__(self):
-            self._retrieve_window_geometry()
+            self._retrieve_geometry()
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -313,15 +329,15 @@ class BorderWindow(Window):
                                                                 [ color.pixel ])
             return color
 
-    def _retrieve_window_geometry(self):
+    def _retrieve_geometry(self):
         """Update window geometry."""
-        wg = Window._retrieve_window_geometry(self)
+        wg = Window._retrieve_geometry(self)
         BorderWindow.border_width.set_cache(self, wg.border_width)
         return wg
 
-    def _update_window_geometry(self, signal, sender):
+    def _update_geometry(self, signal, sender):
         """Update window geometry from an event."""
-        Window._update_window_geometry(self, signal, sender)
+        Window._update_geometry(self, signal, sender)
         BorderWindow.border_width.set_cache(self, signal.border_width)
 
 
