@@ -102,6 +102,9 @@ class Window(Object):
         MainConnection().connect_signal(self._dispatch_signals,
                                         signal=xcb.Event)
 
+        # Handle ConfigureNotify to update cached attributes
+        self.on_configure(self._update_window_geometry)
+
     # XXX Should be cached?
     def get_root(self):
         """Get the root window the window is attached on."""
@@ -151,6 +154,13 @@ class Window(Object):
         Window.width.set_cache(self, wg.width)
         Window.height.set_cache(self, wg.height)
         return wg
+
+    def _update_window_geometry(self, signal, sender):
+        """Update window geometry from an event."""
+        Window.x.set_cache(self, signal.x)
+        Window.y.set_cache(self, signal.y)
+        Window.width.set_cache(self, signal.width)
+        Window.height.set_cache(self, signal.height)
 
     def focus(self):
         """Give focus to a window.
@@ -209,6 +219,16 @@ class Window(Object):
         # XXX DO ME
         pass
 
+    def on_configure(self, func):
+        """Connect a function to a configure notify event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.ConfigureNotifyEvent)
+        return func
+
+    def on_configure_subwindow(self, func):
+        # XXX needed?
+        pass
+
 
 class BorderWindow(Window):
     """A window with borders."""
@@ -244,6 +264,11 @@ class BorderWindow(Window):
         wg = Window._retrieve_window_geometry(self)
         BorderWindow.border_width.set_cache(self, wg.border_width)
         return wg
+
+    def _update_window_geometry(self, signal, sender):
+        """Update window geometry from an event."""
+        Window._update_window_geometry(self, signal, sender)
+        BorderWindow.border_width.set_cache(self, signal.border_width)
 
 
 class MappableWindow(Window):
