@@ -13,7 +13,6 @@ class CachedProperty(object):
             return self
 
         value = getattr(inst, self.key, self)
-        print "GET CACHE", inst, self.key, value
 
         if value is not self:
             # We have a cached value
