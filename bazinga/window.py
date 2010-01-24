@@ -298,3 +298,9 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         self._add_event(xcb.xproto.EventMask.KeyRelease)
         self.connect_signal(func, xcb.xproto.KeyReleaseEvent)
         return func
+
+    def on_pointer_motion(self, func):
+        """Connect a function to a pointer motion."""
+        self._add_event(xcb.xproto.EventMask.PointerMotion)
+        self.connect_signal(func, xcb.xproto.MotionNotifyEvent)
+        return func
