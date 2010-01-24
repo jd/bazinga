@@ -158,6 +158,18 @@ class Window(Object):
                                            self.xid,
                                            xcb.xproto.Time.CurrentTime)
 
+    def on_enter(self, func):
+        """Connect a function to a enter event."""
+        self._add_event(xcb.xproto.EventMask.EnterWindow)
+        self.connect_signal(func, xcb.xproto.EnterNotifyEvent)
+        return func
+
+    def on_leave(self, func):
+        """Connect a function to a leave event."""
+        self._add_event(xcb.xproto.EventMask.LeaveWindow)
+        self.connect_signal(func, xcb.xproto.LeaveNotifyEvent)
+        return func
+
 
 class BorderWindow(Window):
     """A window with borders."""
