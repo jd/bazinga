@@ -43,7 +43,7 @@ class Connection(Object, xcb.Connection):
         self.roots = []
         from window import Window
         for root in self.get_setup().roots:
-            root_window = Window(connection=self, xid=root.root)
+            root_window = Window(xid=root.root)
             Window.x.set_cache(root_window, 0)
             Window.y.set_cache(root_window, 0)
             Window.width.set_cache(root_window, root.width_in_pixels)
@@ -160,13 +160,3 @@ class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""
 
     pass
-
-
-class XObject(Object):
-    """A generic X object."""
-
-    def __init__(self, connection=None):
-        if connection is None:
-            connection = MainConnection()
-        self.connection = connection
-        Object.__init__(self)

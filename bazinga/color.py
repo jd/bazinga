@@ -1,9 +1,10 @@
 import xcb.xproto
 
-from x import XObject
+from x import MainConnection
+from base.object import Object
 from base.memoize import memoize
 
-class Color(XObject):
+class Color(Object):
     """Generic color class."""
 
     def read_reply(self):
@@ -56,13 +57,13 @@ class Color(XObject):
 class NamedColor(Color):
     """A named color."""
 
-    def __init__(self, colormap, name, alpha=65535, **kw):
-        Color.__init__(self, **kw)
+    def __init__(self, colormap, name, alpha=65535):
+        Color.__init__(self)
 
         if alpha < 0 or alpha > 65535:
             raise ValueError("Bad alpha value.")
 
-        self.cookie = self.connection.core.AllocNamedColor(colormap, len(name), name)
+        self.cookie = MainConnection().core.AllocNamedColor(colormap, len(name), name)
         self._name = name
         self._alpha = alpha
 
@@ -81,15 +82,16 @@ class NamedColor(Color):
 class ValueColor(Color):
     """A color by value."""
 
-    def __init__(self, colormap, red=0, green=0, blue=0, alpha=65535, **kw):
-        Color.__init__(self, **kw)
+    def __init__(self, colormap, red=0, green=0, blue=0, alpha=65535):
 
         for value in [ red, blue, green, alpha ]:
             if value < 0 or value > 65535:
                 raise ValueError("Color attribute value is too high.")
 
-        self.cookie = self.connection.core.AllocColor(colormap, red, green, blue)
+        self.cookie = MainConnection().core.AllocColor(colormap, red, green, blue)
         self._alpha = alpha
+
+        super(ValueColor, self).__init__()
 
     def read_reply(self):
         reply = Color.read_reply(self)
@@ -116,17 +118,17 @@ class HexColor(ValueColor):
         if len_name == 9:
             alpha = int(name[7:9], 16) * 257
 
-        ValueColor.__init__(self, colormap, red, green, blue, alpha, **kw)
+        super(HexColor, self).__init__(colormap, red, green, blue, alpha, **kw)
 
 
 @memoize
-def make_color(colormap, name=None, red=0, green=0, blue=0, alpha=65535, **kw):
+def make_color(colormap, name=None, red=0, green=0, blue=0, alpha=65535):
     """Create a color. You should specify name, or RGB value."""
 
     if name:
         if name[0] == '#':
-            return HexColor(colormap, name[1:], alpha, **kw)
+            return HexColor(colormap, name[1:], alpha)
         else:
-            return NamedColor(colormap, name, alpha, **kw)
+            return NamedColor(colormap, name, alpha)
     else:
-        return ValueColor(colormap, red, green, blue, alpha, **kw)
+        return ValueColor(colormap, red, green, blue, alpha)

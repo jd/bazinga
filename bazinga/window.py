@@ -1,6 +1,6 @@
 from base.property import cachedproperty
-import base.signal as signal
-from x import XObject
+from base.object import Object
+from x import MainConnection
 import color
 
 import xcb.xproto
@@ -55,7 +55,7 @@ def xcb_dict_to_value(values, xcb_dict):
     return value_mask, value_list
 
 
-class Window(XObject):
+class Window(Object):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
@@ -93,13 +93,13 @@ class Window(XObject):
             raise AttributeError("read-only attribute")
 
 
-    def __init__(self, connection, xid):
+    def __init__(self, xid):
         self.xid = xid
-        super(Window, self).__init__(connection)
+        super(Window, self).__init__()
 
         # Receive events from the X connection
-        self.connection.connect_signal(self._dispatch_signals,
-                                       signal=xcb.Event)
+        MainConnection().connect_signal(self._dispatch_signals,
+                                        signal=xcb.Event)
 
     # XXX Should be cached?
     def get_root(self):
@@ -133,7 +133,7 @@ class Window(XObject):
     def _set_events(self, events):
         """Set events that shall be received by the window."""
         if events != self.__events:
-            self.connection.core.ChangeWindowAttributes(self.xid,
+            MainConnection().core.ChangeWindowAttributes(self.xid,
                                                         xcb.xproto.CW.EventMask,
                                                         [ events ])
             self.__events = events
@@ -144,7 +144,7 @@ class Window(XObject):
 
     def _retrieve_window_geometry(self):
         """Update window geometry."""
-        wg = self.connection.core.GetGeometry(self.xid).reply()
+        wg = MainConnection().core.GetGeometry(self.xid).reply()
         Window.x.set_cache(self, wg.x)
         Window.y.set_cache(self, wg.y)
         Window.width.set_cache(self, wg.width)
@@ -154,7 +154,7 @@ class Window(XObject):
     def focus(self):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
-        self.connection.core.SetInputFocus(xcb.xproto.InputFocus.Parent,
+        MainConnection().core.SetInputFocus(xcb.xproto.InputFocus.Parent,
                                            self.xid,
                                            xcb.xproto.Time.CurrentTime)
 
@@ -168,7 +168,7 @@ class BorderWindow(Window):
             self._retrieve_window_geometry()
 
         def __set__(self, value):
-            self.connection.core.ConfigureWindowChecked(self.xid,
+            MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.BorderWidth,
                                                         [ value ]).check()
 
@@ -181,8 +181,9 @@ class BorderWindow(Window):
             if isinstance(value, color.Color):
                 bcolor = value
             else:
-                bcolor = color.make_color(self.get_root().default_colormap, value)
-            self.connection.core.ChangeWindowAttributesChecked(self.xid,
+                bcolor = color.make_color(self.get_root().default_colormap,
+                                          value)
+            MainConnection().core.ChangeWindowAttributesChecked(self.xid,
                                                                xcb.xproto.CW.BorderPixel,
                                                                [ bcolor.pixel ]).check()
             return bcolor
@@ -199,11 +200,11 @@ class MappableWindow(Window):
 
     def map(self):
         """Map a window on the screen."""
-        self.connection.core.MapWindow(self.xid)
+        MainConnection().core.MapWindow(self.xid)
 
     def unmap(self):
         """Unmap a window from the screen."""
-        self.connection.core.UnmapWindow(self.xid)
+        MainConnection().core.UnmapWindow(self.xid)
 
 
 class MovableWindow(Window):
@@ -213,14 +214,14 @@ class MovableWindow(Window):
         __get__ = Window.x.getter
 
         def __set__(self, value):
-            self.connection.core.ConfigureWindowChecked(self.xid,
+            MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.X,
                                                         [ value ]).check()
     class y(cachedproperty):
         __get__ = Window.y.getter
 
         def __set__(self, value):
-            self.connection.core.ConfigureWindowChecked(self.xid,
+            MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Y,
                                                         [ value ]).check()
 
@@ -231,7 +232,7 @@ class ResizableWindow(Window):
         __get__ = Window.width.getter
 
         def __set__(self, value):
-            self.connection.core.ConfigureWindowChecked(self.xid,
+            MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.Width,
                                                          [ value ]).check()
 
@@ -239,7 +240,7 @@ class ResizableWindow(Window):
         __get__ = Window.height.getter
 
         def __set__(self, value):
-            self.connection.core.ConfigureWindowChecked(self.xid,
+            MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Height,
                                                         [ self.height ]).check()
 
@@ -249,18 +250,15 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
     def __init__(self, connection=None, x=0, y=0, width=1, height=1,
                  border_width=0, parent=None, values={}):
 
-        # Build self.connection
-        XObject.__init__(self, connection)
-
         if parent is None:
-            self.parent = self.connection.roots[self.connection.pref_screen]
+            self.parent = MainConnection().roots[MainConnection().pref_screen]
         else:
             self.parent = parent
 
-        xid = self.connection.generate_id()
+        xid = MainConnection().generate_id()
 
         create_window = \
-        self.connection.core.CreateWindowChecked(self.get_root().root_depth,
+        MainConnection().core.CreateWindowChecked(self.get_root().root_depth,
                                                  xid,
                                                  self.parent.xid,
                                                  x, y, width, height,
@@ -275,8 +273,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         CreatedWindow.height.set_cache(self, height)
 
         create_window.check()
-        super(CreatedWindow, self).__init__(connection, xid)
-
+        super(CreatedWindow, self).__init__(xid)
 
     def on_button_press(self, func):
         """Connect a function to a button press event on that window."""
