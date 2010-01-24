@@ -252,6 +252,11 @@ class Window(Object):
         # XXX DO ME
         pass
 
+    def on_property_change(self, func):
+        """Connect a function to a reparent notify event."""
+        self._add_event(xcb.xproto.EventMask.PropertyChange)
+        self.connect_signal(func, xcb.xproto.PropertyNotifyEvent)
+        return func
 
 
 class BorderWindow(Window):
