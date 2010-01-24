@@ -235,6 +235,17 @@ class Window(Object):
         # XXX needed?
         pass
 
+    def on_reparent(self, func):
+        """Connect a function to a reparent notify event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
+        return func
+
+    def on_reparent_subwindow(self, func):
+        """Connect a function to a subwindow reparent notify event."""
+        # XXX DO ME
+        pass
+
 
 class BorderWindow(Window):
     """A window with borders."""
