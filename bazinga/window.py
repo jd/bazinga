@@ -22,7 +22,7 @@ events_window_attribute = {
     xcb.xproto.DestroyNotifyEvent: "parent",
     xcb.xproto.UnmapNotifyEvent: "window",
     xcb.xproto.MapNotifyEvent: "window",
-    xcb.xproto.MapRequestEvent: "window",
+    xcb.xproto.MapRequestEvent: "parent",
     xcb.xproto.ReparentNotifyEvent: "window",
     xcb.xproto.ConfigureNotifyEvent: "window",
     xcb.xproto.ConfigureRequestEvent: "window",
@@ -218,6 +218,12 @@ class Window(Object):
     def on_unmap_subwindow(self, func):
         # XXX DO ME
         pass
+
+    def on_map_subwindow_request(self, func):
+        """Connect a function to a subwindow mapping request event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.MapRequestEvent)
+        return func
 
     def on_configure(self, func):
         """Connect a function to a configure notify event."""
