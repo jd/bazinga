@@ -187,12 +187,16 @@ class MappableWindow(Window):
 class MovableWindow(Window):
     """A window that can be moved."""
 
-    class x(Window.x):
+    class x(cachedproperty):
+        __get__ = Window.x.getter
+
         def __set__(self, value):
             self.connection.core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.X,
                                                         [ value ]).check()
-    class y(Window.y):
+    class y(cachedproperty):
+        __get__ = Window.y.getter
+
         def __set__(self, value):
             self.connection.core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Y,
@@ -201,13 +205,17 @@ class MovableWindow(Window):
 class ResizableWindow(Window):
     """A window that can be resized."""
 
-    class width(Window.width):
+    class width(cachedproperty):
+        __get__ = Window.width.getter
+
         def __set__(self, value):
             self.connection.core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.Width,
                                                          [ value ]).check()
 
-    class height(Window.height):
+    class height(cachedproperty):
+        __get__ = Window.height.getter
+
         def __set__(self, value):
             self.connection.core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Height,

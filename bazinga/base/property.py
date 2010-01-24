@@ -1,6 +1,6 @@
 ncaches = 0L
 
-class CachedProperty(property):
+class CachedProperty(object):
     """Cached Properties."""
 
     def __init__(self, getter, setter, doc):
@@ -52,10 +52,8 @@ class CachedProperty(property):
 class CachedPropertyType(CachedProperty):
 
     def __init__(self, name, bases=(), members={}):
-        return super(CachedPropertyType, self).__init__(
-            members.get('__get__'),
-            members.get('__set__'),
-            members.get('__doc__')
-            )
+        return super(CachedPropertyType, self).__init__(members.get('__get__'),
+                                                        members.get('__set__'),
+                                                        members.get('__doc__'))
 
 cachedproperty = CachedPropertyType('cachedproperty')
