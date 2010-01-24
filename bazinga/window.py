@@ -246,11 +246,11 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  xcb.xproto.WindowClass.CopyFromParent,
                                                  self.get_root().root_visual,
                                                  *xcb_dict_to_value(kw, xcb.xproto.CW))
-        BorderWindow.border_width.set_cache(self, border_width)
-        MovableWindow.x.set_cache(self, x)
-        MovableWindow.y.set_cache(self, y)
-        ResizableWindow.width.set_cache(self, width)
-        ResizableWindow.height.set_cache(self, height)
+        CreatedWindow.border_width.set_cache(self, border_width)
+        CreatedWindow.x.set_cache(self, x)
+        CreatedWindow.y.set_cache(self, y)
+        CreatedWindow.width.set_cache(self, width)
+        CreatedWindow.height.set_cache(self, height)
 
         create_window.check()
         super(CreatedWindow, self).__init__(connection, xid)
