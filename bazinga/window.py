@@ -25,7 +25,7 @@ events_window_attribute = {
     xcb.xproto.MapRequestEvent: "parent",
     xcb.xproto.ReparentNotifyEvent: "window",
     xcb.xproto.ConfigureNotifyEvent: "window",
-    xcb.xproto.ConfigureRequestEvent: "window",
+    xcb.xproto.ConfigureRequestEvent: "parent",
     xcb.xproto.GravityNotifyEvent: "window",
     xcb.xproto.CirculateNotifyEvent: "window",
     xcb.xproto.CirculateRequestEvent: "window",
@@ -235,6 +235,12 @@ class Window(Object):
         # XXX needed?
         pass
 
+    def on_configure_subwindow_request(self, func):
+        """Connect a function to a configure request event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.ConfigureRequestEvent)
+        return func
+
     def on_reparent(self, func):
         """Connect a function to a reparent notify event."""
         self._add_event(xcb.xproto.EventMask.StructureNotify)
@@ -245,6 +251,7 @@ class Window(Object):
         """Connect a function to a subwindow reparent notify event."""
         # XXX DO ME
         pass
+
 
 
 class BorderWindow(Window):
