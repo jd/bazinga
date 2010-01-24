@@ -4,7 +4,7 @@ from x import MainConnection
 from base.object import Object
 from base.memoize import memoize
 
-class Color(Object):
+class _Color(Object):
     """Generic color class."""
 
     def read_reply(self):
@@ -54,12 +54,10 @@ class Color(Object):
         return self.name
 
 
-class NamedColor(Color):
+class NamedColor(_Color):
     """A named color."""
 
     def __init__(self, colormap, name, alpha=65535):
-        Color.__init__(self)
-
         if alpha < 0 or alpha > 65535:
             raise ValueError("Bad alpha value.")
 
@@ -67,8 +65,10 @@ class NamedColor(Color):
         self._name = name
         self._alpha = alpha
 
+        super(NamedColor, self).__init__()
+
     def read_reply(self):
-        reply = Color.read_reply(self)
+        reply = _Color.read_reply(self)
         if reply:
             self._red = reply.exact_red
             self._green = reply.exact_green
@@ -79,7 +79,7 @@ class NamedColor(Color):
     def name(self):
         return self._name
 
-class ValueColor(Color):
+class ValueColor(_Color):
     """A color by value."""
 
     def __init__(self, colormap, red=0, green=0, blue=0, alpha=65535):
@@ -94,7 +94,7 @@ class ValueColor(Color):
         super(ValueColor, self).__init__()
 
     def read_reply(self):
-        reply = Color.read_reply(self)
+        reply = _Color.read_reply(self)
         if reply:
             self._red = reply.red
             self._green = reply.green
@@ -122,13 +122,17 @@ class HexColor(ValueColor):
 
 
 @memoize
-def make_color(colormap, name=None, red=0, green=0, blue=0, alpha=65535):
+def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
     """Create a color. You should specify name, or RGB value."""
 
-    if name:
-        if name[0] == '#':
-            return HexColor(colormap, name[1:], alpha)
+    if color:
+        # Already color type :-)
+        if isinstance(color, _Color):
+            return color
         else:
-            return NamedColor(colormap, name, alpha)
+            if color[0] == '#':
+                return HexColor(colormap, color[1:], alpha)
+            else:
+                return NamedColor(colormap, color, alpha)
     else:
         return ValueColor(colormap, red, green, blue, alpha)

@@ -2,7 +2,7 @@ from base.property import cachedproperty
 from base.object import Object
 from x import MainConnection, byte_list_to_str
 from atom import Atom
-import color
+from color import Color
 
 import xcb.xproto
 
@@ -307,15 +307,11 @@ class BorderWindow(Window):
             raise AttributeError("Border color cannot be uncached.")
 
         def __set__(self, value):
-            if isinstance(value, color.Color):
-                bcolor = value
-            else:
-                bcolor = color.make_color(self.get_root().default_colormap,
-                                          value)
+            color = Color(self.get_root().default_colormap, value)
             MainConnection().core.ChangeWindowAttributesChecked(self.xid,
                                                                xcb.xproto.CW.BorderPixel,
-                                                               [ bcolor.pixel ])
-            return bcolor
+                                                               [ color.pixel ])
+            return color
 
     def _retrieve_window_geometry(self):
         """Update window geometry."""
