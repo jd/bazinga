@@ -241,7 +241,7 @@ class BorderWindow(Window):
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.BorderWidth,
-                                                        [ value ]).check()
+                                                        [ value ])
 
     class border_color(cachedproperty):
         """Border color."""
@@ -256,7 +256,7 @@ class BorderWindow(Window):
                                           value)
             MainConnection().core.ChangeWindowAttributesChecked(self.xid,
                                                                xcb.xproto.CW.BorderPixel,
-                                                               [ bcolor.pixel ]).check()
+                                                               [ bcolor.pixel ])
             return bcolor
 
     def _retrieve_window_geometry(self):
@@ -304,14 +304,14 @@ class MovableWindow(Window):
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.X,
-                                                        [ value ]).check()
+                                                        [ value ])
     class y(cachedproperty):
         __get__ = Window.y.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Y,
-                                                        [ value ]).check()
+                                                        [ value ])
 
 class ResizableWindow(Window):
     """A window that can be resized."""
@@ -322,7 +322,7 @@ class ResizableWindow(Window):
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.Width,
-                                                         [ value ]).check()
+                                                         [ value ])
 
     class height(cachedproperty):
         __get__ = Window.height.getter
@@ -330,7 +330,7 @@ class ResizableWindow(Window):
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                         xcb.xproto.ConfigWindow.Height,
-                                                        [ self.height ]).check()
+                                                        [ self.height ])
 
 
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
