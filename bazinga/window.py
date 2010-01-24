@@ -151,6 +151,13 @@ class Window(XObject):
         Window.height.set_cache(self, wg.height)
         return wg
 
+    def focus(self):
+        """Give focus to a window.
+        If focus is lost, it will go back to window's parent."""
+        self.connection.core.SetInputFocus(xcb.xproto.InputFocus.Parent,
+                                           self.xid,
+                                           xcb.xproto.Time.CurrentTime)
+
 
 class BorderWindow(Window):
     """A window with borders."""
