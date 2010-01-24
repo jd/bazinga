@@ -16,7 +16,7 @@ class _Atom(Object):
 
     def read_reply(self):
         if hasattr(self, "_cookie"):
-            self._value = _cookie.reply().atom
+            self._value = self._cookie.reply().atom
             del self._cookie
 
     @property
