@@ -18,8 +18,8 @@ events_window_attribute = {
     xcb.xproto.FocusOutEvent: "event",
     xcb.xproto.ExposeEvent: "window",
     xcb.xproto.VisibilityNotifyEvent: "window",
-    xcb.xproto.CreateNotifyEvent: "window",
-    xcb.xproto.DestroyNotifyEvent: "window",
+    xcb.xproto.CreateNotifyEvent: "parent",
+    xcb.xproto.DestroyNotifyEvent: "parent",
     xcb.xproto.UnmapNotifyEvent: "window",
     xcb.xproto.MapNotifyEvent: "window",
     xcb.xproto.MapRequestEvent: "window",
@@ -188,6 +188,19 @@ class Window(Object):
         self._add_event(xcb.xproto.EventMask.VisibilityChange)
         self.connect_signal(func, xcb.xproto.VisibilityNotifyEvent)
         return func
+
+    def on_create_subwindow(self, func):
+        """Connect a function to subwindow creation event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.CreateNotifyEvent)
+        return func
+
+    def on_destroy_subwindow(self, func):
+        """Connect a function to a subwindow destroy event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.DestroyNotifyEvent)
+        return func
+
 
 
 class BorderWindow(Window):
