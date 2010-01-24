@@ -201,6 +201,13 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.DestroyNotifyEvent)
         return func
 
+    def on_map_subwindow(self, func):
+        # XXX DO ME
+        pass
+
+    def on_unmap_subwindow(self, func):
+        # XXX DO ME
+        pass
 
 
 class BorderWindow(Window):
@@ -249,6 +256,18 @@ class MappableWindow(Window):
     def unmap(self):
         """Unmap a window from the screen."""
         MainConnection().core.UnmapWindow(self.xid)
+
+    def on_map(self, func):
+        """Connect a function to a map event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.MapNotifyEvent)
+        return func
+
+    def on_unmap(self, func):
+        """Connect a function to a unmap event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.UnmapNotifyEvent)
+        return func
 
 
 class MovableWindow(Window):
