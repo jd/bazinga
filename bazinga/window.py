@@ -224,8 +224,8 @@ class ResizableWindow(Window):
 
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
 
-    # XXX remove kw
-    def __init__(self, connection=None, x=0, y=0, width=1, height=1, border_width=0, parent=None, **kw):
+    def __init__(self, connection=None, x=0, y=0, width=1, height=1,
+                 border_width=0, parent=None, values={}):
 
         # Build self.connection
         XObject.__init__(self, connection)
@@ -245,7 +245,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  border_width,
                                                  xcb.xproto.WindowClass.CopyFromParent,
                                                  self.get_root().root_visual,
-                                                 *xcb_dict_to_value(kw, xcb.xproto.CW))
+                                                 *xcb_dict_to_value(values, xcb.xproto.CW))
         CreatedWindow.border_width.set_cache(self, border_width)
         CreatedWindow.x.set_cache(self, x)
         CreatedWindow.y.set_cache(self, y)
