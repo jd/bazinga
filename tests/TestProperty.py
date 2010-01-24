@@ -23,7 +23,7 @@ class TestCachedProperty(unittest.TestCase):
         self.p = self.Phone()
 
     def test_simple_caching(self):
-        self.p.number = 1
+        self.Phone.number.set_cache(self.p, 1)
         self.assert_(self.p.number == 1)
 
     def test_get(self):

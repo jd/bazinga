@@ -25,11 +25,13 @@ class CachedProperty(object):
         # We need to compute and cache the value
         if self.getter:
             # Update cache
-            self.getter(inst)
-            value = getattr(inst, self.key, self)
-            if value is self:
-                # Getter did not set any value
-                raise AttributeError
+            value = self.getter(inst)
+            # Returned nothing... see if cached has been updated
+            if not value:
+                value = getattr(inst, self.key, self)
+                if value is self:
+                    # Getter did not set any value
+                    raise AttributeError
         else:
             # No attribute value!
             raise AttributeError
@@ -55,6 +57,7 @@ class CachedProperty(object):
             pass
 
     def set_cache(self, inst, value):
+        print "SET CACHE", value
         setattr(inst, self.key, value)
 
 
