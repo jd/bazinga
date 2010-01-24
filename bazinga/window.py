@@ -15,6 +15,7 @@ events_window_attribute = {
     xcb.xproto.EnterNotifyEvent: "event",
     xcb.xproto.LeaveNotifyEvent: "event",
     xcb.xproto.FocusInEvent: "event",
+    xcb.xproto.FocusOutEvent: "event",
     xcb.xproto.ExposeEvent: "window",
     xcb.xproto.VisibilityNotifyEvent: "window",
     xcb.xproto.CreateNotifyEvent: "window",
