@@ -1,22 +1,19 @@
-ncaches = 0L
-
 class CachedProperty(object):
     """Cached Properties."""
 
-    def __init__(self, getter, setter, deleter, doc):
+    def __init__(self, name, getter, setter, deleter, doc):
         self.getter = getter
         self.setter = setter
         self.deleter = deleter
         self.__doc__ = doc
-        global ncaches
-        ncaches += 1
-        self.key = "_v_cached_property_value_%d" % ncaches
+        self.key = "_v_cached_property_value_%s" % name
 
     def __get__(self, inst, class_):
         if inst is None:
             return self
 
         value = getattr(inst, self.key, self)
+        print "GET CACHE", inst, self.key, value
 
         if value is not self:
             # We have a cached value
@@ -63,7 +60,8 @@ class CachedProperty(object):
 class CachedPropertyType(CachedProperty):
 
     def __init__(self, name, bases=(), members={}):
-        return super(CachedPropertyType, self).__init__(members.get('__get__'),
+        return super(CachedPropertyType, self).__init__(name,
+                                                        members.get('__get__'),
                                                         members.get('__set__'),
                                                         members.get('__delete__'),
                                                         members.get('__doc__'))
