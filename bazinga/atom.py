@@ -26,6 +26,4 @@ class _Atom(Object):
 
 @memoize
 def Atom(name):
-    atom =_Atom(name)
-    print atom
-    return atom.value
+    return _Atom(name).value
