@@ -134,7 +134,7 @@ class Window(Object):
         # Handle ConfigureNotify to update cached attributes
         self.on_configure(self._update_geometry)
         # Handle PropertyChange
-        self.on_configure(self._update_property)
+        self.on_property_change(self._update_property)
 
     # XXX Should be cached?
     def get_root(self):
