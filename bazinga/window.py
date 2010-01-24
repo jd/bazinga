@@ -183,6 +183,12 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.FocusOutEvent)
         return func
 
+    def on_visibility(self, func):
+        """Connect a function to a visibility change event."""
+        self._add_event(xcb.xproto.EventMask.VisibilityChange)
+        self.connect_signal(func, xcb.xproto.VisibilityNotifyEvent)
+        return func
+
 
 class BorderWindow(Window):
     """A window with borders."""
