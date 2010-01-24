@@ -94,17 +94,34 @@ class Window(Object):
         def __set__(self, value):
             raise AttributeError("read-only attribute")
 
-    class name(cachedproperty):
-        """Window name."""
+    class _icccm_name(cachedproperty):
+        """ICCCM window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
                                                      Atom("WM_NAME"),
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
-            Window.name.set_cache(self, byte_list_to_str(prop.value))
+            return byte_list_to_str(prop.value)
 
         def __set__(self, value):
             raise AttributeError("read-only attribute")
+
+    class _netwm_name(cachedproperty):
+        """EWMH window name."""
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("_NET_WM_NAME"),
+                                                     xcb.xproto.GetPropertyType.Any,
+                                                     0, 4096).reply()
+            return byte_list_to_str(prop.value)
+
+        def __set__(self, value):
+            raise AttributeError("read-only attribute")
+
+    @property
+    def name(self):
+        """Window name."""
+        return self._netwm_name or self._icccm_name
 
     def __init__(self, xid):
         self.xid = xid
