@@ -171,6 +171,18 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.LeaveNotifyEvent)
         return func
 
+    def on_focus(self, func):
+        """Connect a function to a leave event."""
+        self._add_event(xcb.xproto.EventMask.FocusChange)
+        self.connect_signal(func, xcb.xproto.FocusInEvent)
+        return func
+
+    def on_unfocus(self, func):
+        """Connect a function to a leave event."""
+        self._add_event(xcb.xproto.EventMask.FocusChange)
+        self.connect_signal(func, xcb.xproto.FocusOutEvent)
+        return func
+
 
 class BorderWindow(Window):
     """A window with borders."""
