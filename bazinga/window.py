@@ -1,6 +1,7 @@
 from base.property import cachedproperty
 from base.object import Object
-from x import MainConnection
+from x import MainConnection, byte_list_to_str
+from atom import Atom
 import color
 
 import xcb.xproto
@@ -29,7 +30,7 @@ events_window_attribute = {
     xcb.xproto.GravityNotifyEvent: "window",
     xcb.xproto.CirculateNotifyEvent: "window",
     xcb.xproto.CirculateRequestEvent: "window",
-    xcb.xproto.PropertyNotifyEvent: "window"
+    xcb.xproto.PropertyNotifyEvent: "window",
     xcb.xproto.ClientMessageEvent: "window"
 }
 
@@ -93,6 +94,17 @@ class Window(Object):
         def __set__(self, value):
             raise AttributeError("read-only attribute")
 
+    class name(cachedproperty):
+        """Window name."""
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("WM_NAME"),
+                                                     xcb.xproto.GetPropertyType.Any,
+                                                     0, 4096).reply()
+            Window.name.set_cache(self, byte_list_to_str(prop.value))
+
+        def __set__(self, value):
+            raise AttributeError("read-only attribute")
 
     def __init__(self, xid):
         self.xid = xid

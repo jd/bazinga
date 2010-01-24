@@ -4,7 +4,7 @@ from x import MainConnection
 
 import xcb.xproto
 
-class Atom(Object):
+class _Atom(Object):
     """Atom."""
 
     def __init__(self, name="Any"):
@@ -25,5 +25,7 @@ class Atom(Object):
         return self._value
 
 @memoize
-def make_atom(name):
-    return Atom(name)
+def Atom(name):
+    atom =_Atom(name)
+    print atom
+    return atom.value
