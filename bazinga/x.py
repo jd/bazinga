@@ -150,7 +150,13 @@ class Connection(Object, xcb.Connection):
         return cookies
 
     def _on_io(self, watcher, events):
-        self.emit_signal(self.poll_for_event())
+        try:
+            event = self.poll_for_event()
+        except xcb.Exception:
+            # Raise Disconnect ?
+            pass
+        else:
+            self.emit_signal(self.poll_for_event())
 
     def _prepare(self, watcher, events):
         self.flush()
