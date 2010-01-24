@@ -12,7 +12,7 @@ class Atom(Object):
             self._value = getattr(xcb.xproto.Atom, name)
         except AttributeError:
             # No pre-defined atom by that name
-            self._cookie = MainConnection.core.InternAtom(False, len(name), name)
+            self._cookie = MainConnection().core.InternAtom(False, len(name), name)
 
     def read_reply(self):
         if hasattr(self, "_cookie"):
