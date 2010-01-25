@@ -11,10 +11,10 @@ class TestObject(unittest.TestCase):
 
     def test_property(self):
         self.k.has_changed = False
+        @self.k.on_notify("some_value")
         def x(sender, signal):
             self.assert_(signal.value == "some_value")
             sender.has_changed = True
-        self.k.connect_notify(x, "some_value")
         self.k.some_value = 1
         self.assert_(self.k.has_changed)
 

@@ -37,3 +37,15 @@ class Object(object):
     def connect_notify(self, receiver, key):
         """Connect a function to a Notify signal matching key."""
         return self.connect_signal(receiver, self.__get_notify_slot(key))
+
+    def on_notify(self, key):
+        """Return a function that can be called with a receiver as argument.
+        This function will connect the receiver to the notify event matching that key.
+        You typically use that as a decorator:
+            @object.on_notify("some_attribute")
+            def my_function(sender, signal):
+                ..."""
+        def _on_notify(func):
+            self.connect_notify(func, key)
+            return func
+        return _on_notify
