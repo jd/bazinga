@@ -44,7 +44,15 @@ class Object(object):
 
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
-        self.emit_signal(self.__get_notify_slot(key))
+        # Do not emit signal on private attributes
+        if len(key) > 0 and key[0] != "_":
+            self.emit_signal(self.__get_notify_slot(key))
+
+    def __delattr__(self, key):
+        super(Object, self).__delattr__(key)
+        # Do not emit signal on private attributes
+        if len(key) > 0 and key[0] != "_":
+            self.emit_signal(self.__get_notify_slot(key))
 
     def connect_notify(self, receiver, key):
         """Connect a function to a Notify signal matching key."""
