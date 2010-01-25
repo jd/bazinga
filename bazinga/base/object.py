@@ -37,7 +37,7 @@ class Object(object):
         return _on_signal
 
     @staticmethod
-    def __get_notify_slot(key):
+    def get_notify(key):
         """Get the notify object corresponding to a key."""
         if not _notify_slots.has_key(key):
             _notify_slots[key] = Notify()
@@ -46,7 +46,7 @@ class Object(object):
     def _emit_notify(self, key):
         # Do not emit signal on private attributes
         if len(key) > 0 and key[0] != "_":
-            self.emit_signal(self.__class__.__get_notify_slot(key))
+            self.emit_signal(self.get_notify(key))
 
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
@@ -58,7 +58,7 @@ class Object(object):
 
     def connect_notify(self, receiver, key):
         """Connect a function to a Notify signal matching key."""
-        return self.connect_signal(receiver, self.__get_notify_slot(key))
+        return self.connect_signal(receiver, self.get_notify(key))
 
     def on_notify(self, key):
         """Return a function that can be called with a receiver as argument.
@@ -67,4 +67,4 @@ class Object(object):
             @object.on_notify("some_attribute")
             def my_function(sender, signal):
                 ..."""
-        return self.on_signal(self.__get_notify_slot(key))
+        return self.on_signal(self.get_notify(key))
