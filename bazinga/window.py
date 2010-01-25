@@ -208,7 +208,6 @@ class Window(Object):
         # If this a atom property we care?
         if _atom_to_property.has_key(signal.atom):
             # Erase cache
-            print "ERASING CACHE", _atom_to_property[signal.atom]
             delattr(self, _atom_to_property[signal.atom])
 
     _property_renotify_map = {
@@ -219,11 +218,7 @@ class Window(Object):
     def _property_renotify(self, sender, signal):
         """Reemit some notify events differently."""
         if self._property_renotify_map.has_key(signal):
-            print "REEMIT"
             self.emit_signal(self._property_renotify_map[signal])
-        else:
-            print "NO REEMIT"
-
 
     def focus(self):
         """Give focus to a window.
