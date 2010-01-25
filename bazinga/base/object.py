@@ -1,16 +1,15 @@
 from . import signal as bsignal
 
+_notify_slots = {}
+
+class Notify(bsignal.Signal):
+    """Notify signal.
+    This is sent when an object see one of its attribute changed.
+    On object[key] = value, Notify object is emitted on the object."""
+    pass
+
 class Object(object):
     """Base class of many bazinga objects."""
-
-    __notify_slots = {}
-
-    class Notify(bsignal.Signal):
-        """Notify signal.
-        This is sent when an object see one of its attribute changed.
-        On object[key] = value, Notify("key") is emitted on the object."""
-        def __init__(self, value):
-            self.value = value
 
     def connect_signal(self, receiver, signal=bsignal.signal.All):
         """Connect a signal."""
@@ -36,12 +35,12 @@ class Object(object):
             return func
         return _on_signal
 
-    @classmethod
-    def __get_notify_slot(cls, key):
+    @staticmethod
+    def __get_notify_slot(key):
         """Get the notify object corresponding to a key."""
-        if not cls.__notify_slots.has_key(key):
-            cls.__notify_slots[key] = cls.Notify(key)
-        return cls.__notify_slots[key]
+        if not _notify_slots.has_key(key):
+            _notify_slots[key] = Notify()
+        return _notify_slots[key]
 
     def _emit_notify(self, key):
         # Do not emit signal on private attributes
