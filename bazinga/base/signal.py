@@ -1,7 +1,7 @@
 from louie import *
 from louie.dispatcher import live_receivers, get_receivers, plugins, sends
 
-def get_all_receivers_mro(sender=Any, signal=All):
+def _get_all_receivers_mro(sender=Any, signal=All):
     """Get list of all receivers from global tables.
 
     This gets all receivers which should receive the given signal from
@@ -45,7 +45,7 @@ def emit(signal=signal.All, sender=sender.Anonymous, *arguments, **named):
     # Call each receiver with whatever arguments it can accept.
     # Return a list of tuple pairs [(receiver, response), ... ].
     responses = []
-    for receiver in live_receivers(get_all_receivers_mro(sender, signal)):
+    for receiver in live_receivers(_get_all_receivers_mro(sender, signal)):
         # Wrap receiver using installed plugins.
         original = receiver
         for plugin in plugins:
