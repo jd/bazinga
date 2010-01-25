@@ -1,5 +1,6 @@
 from . import signal as bsignal
 
+# XXX store notify objects with weak refs
 _notify_slots = {}
 
 class Notify(bsignal.Signal):
