@@ -1,7 +1,10 @@
+from object import Object
+
 class CachedProperty(object):
     """Cached Properties."""
 
     def __init__(self, name, getter, setter, deleter, doc):
+        self.name = name
         self.getter = getter
         self.setter = setter
         self.deleter = deleter
@@ -33,6 +36,9 @@ class CachedProperty(object):
             raise AttributeError
 
         setattr(inst, self.key, value)
+        # Emit signal if object is a Bazinga Object
+        if isinstance(inst, Object):
+            inst.emit_notify(self.name)
 
         return value
 
