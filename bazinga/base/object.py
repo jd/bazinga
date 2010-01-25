@@ -36,16 +36,17 @@ class Object(object):
             return func
         return _on_signal
 
-    def __get_notify_slot(self, key):
+    @classmethod
+    def __get_notify_slot(cls, key):
         """Get the notify object corresponding to a key."""
-        if not self.__notify_slots.has_key(key):
-            self.__notify_slots[key] = self.Notify(key)
-        return self.__notify_slots[key]
+        if not cls.__notify_slots.has_key(key):
+            cls.__notify_slots[key] = cls.Notify(key)
+        return cls.__notify_slots[key]
 
     def _emit_notify(self, key):
         # Do not emit signal on private attributes
         if len(key) > 0 and key[0] != "_":
-            self.emit_signal(self.__get_notify_slot(key))
+            self.emit_signal(self.__class__.__get_notify_slot(key))
 
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
