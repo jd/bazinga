@@ -24,6 +24,18 @@ class Object(object):
         """Emit a signal on an object."""
         return bsignal.emit(signal, self, *args, **kw)
 
+    def on_signal(self, signal):
+        """Return a function that can be called with a receiver as argument.
+        This function will connect the receiver to the signal.
+        You typically use that as a decorator:
+            @object.on_signal(some_signal)
+            def my_function(sender, signal):
+                ..."""
+        def _on_signal(self, func):
+            self.connection(func, signal):
+            return func
+        return _on_signal
+
     def __get_notify_slot(self, key):
         """Get the notify object corresponding to a key."""
         if not self.__notify_slots.has_key(key):
