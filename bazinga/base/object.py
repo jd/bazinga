@@ -31,8 +31,8 @@ class Object(object):
             @object.on_signal(some_signal)
             def my_function(sender, signal):
                 ..."""
-        def _on_signal(self, func):
-            self.connection(func, signal):
+        def _on_signal(func):
+            self.connect_signal(func, signal)
             return func
         return _on_signal
 
@@ -57,7 +57,4 @@ class Object(object):
             @object.on_notify("some_attribute")
             def my_function(sender, signal):
                 ..."""
-        def _on_notify(func):
-            self.connect_notify(func, key)
-            return func
-        return _on_notify
+        return self.on_signal(self.__get_notify_slot(key))
