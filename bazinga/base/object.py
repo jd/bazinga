@@ -1,28 +1,28 @@
-import signal as bsignal
-
+from . import signal
 
 class Object(object):
     """Base class of many bazinga objects."""
 
     __notify_slots = {}
 
-    class Notify(bsignal.Signal):
+    class Notify(signal.Signal):
         """Notify signal.
-        This is sent when an object see on of its attribute changed."""
+        This is sent when an object see one of its attribute changed.
+        On object[key] = value, Notify("key") is emitted on the object."""
         def __init__(self, value):
             self.value = value
 
-    def connect_signal(self, receiver, signal=bsignal.signal.All):
+    def connect_signal(self, receiver, signal=signal.signal.All):
         """Connect a signal."""
-        return bsignal.connect(receiver, signal=signal, sender=self)
+        return signal.connect(receiver, signal=signal, sender=self)
 
-    def disconnect_signal(self, receiver, signal=bsignal.signal.All):
+    def disconnect_signal(self, receiver, signal=signal.signal.All):
         """Disconnect a signal."""
-        return bsignal.disconnect(receiver, signal=signal, sender=self)
+        return signal.disconnect(receiver, signal=signal, sender=self)
 
-    def emit_signal(self, signal=bsignal.signal.All, *args, **kw):
+    def emit_signal(self, signal=signal.signal.All, *args, **kw):
         """Emit a signal on an object."""
-        return bsignal.emit(signal, self, *args, **kw)
+        return signal.emit(signal, self, *args, **kw)
 
     def on_signal(self, signal):
         """Return a function that can be called with a receiver as argument.

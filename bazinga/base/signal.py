@@ -1,5 +1,8 @@
+"""Bazinga signal system. This is a simple extension to Louie."""
+
 from louie import *
 from louie.dispatcher import live_receivers, get_receivers, plugins, sends
+
 
 def _get_all_receivers_mro(sender=Any, signal=All):
     """Get list of all receivers from global tables.
