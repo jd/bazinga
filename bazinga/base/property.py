@@ -35,10 +35,7 @@ class CachedProperty(object):
             # No attribute value!
             raise AttributeError
 
-        setattr(inst, self.key, value)
-        # Emit signal if object is a Bazinga Object
-        if isinstance(inst, Object):
-            inst.emit_notify(self.name)
+        self.set_cache(inst, value)
 
         return value
 
@@ -60,6 +57,9 @@ class CachedProperty(object):
 
     def set_cache(self, inst, value):
         setattr(inst, self.key, value)
+        # Emit signal if object is a Bazinga Object
+        if isinstance(inst, Object):
+            inst.emit_notify(self.name)
 
 
 class CachedPropertyType(CachedProperty):
