@@ -1,5 +1,5 @@
 from base.property import cachedproperty
-from base.object import Object
+from base.object import Object, Notify
 from x import MainConnection, byte_list_to_str
 from atom import Atom
 from color import Color
@@ -136,6 +136,9 @@ class Window(Object):
         # Handle PropertyChange
         self.on_property_change(self._update_property)
 
+        # Transforme and reemit some notify signals into other
+        self.connect_signal(self._property_renotify, Notify)
+
     # XXX Should be cached?
     def get_root(self):
         """Get the root window the window is attached on."""
@@ -205,7 +208,22 @@ class Window(Object):
         # If this a atom property we care?
         if _atom_to_property.has_key(signal.atom):
             # Erase cache
+            print "ERASING CACHE", _atom_to_property[signal.atom]
             delattr(self, _atom_to_property[signal.atom])
+
+    _property_renotify_map = {
+        Object.get_notify("_icccm_name"): Object.get_notify("name"),
+        Object.get_notify("_netwm_name"): Object.get_notify("name"),
+    }
+
+    def _property_renotify(self, sender, signal):
+        """Reemit some notify events differently."""
+        if self._property_renotify_map.has_key(signal):
+            print "REEMIT"
+            self.emit_signal(self._property_renotify_map[signal])
+        else:
+            print "NO REEMIT"
+
 
     def focus(self):
         """Give focus to a window.

@@ -43,22 +43,24 @@ class Object(object):
             _notify_slots[key] = Notify()
         return _notify_slots[key]
 
-    def _emit_notify(self, key):
-        # Do not emit signal on private attributes
-        if len(key) > 0 and key[0] != "_":
-            self.emit_signal(self.get_notify(key))
-
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
-        self._emit_notify(key)
+        self.emit_notify(key)
 
     def __delattr__(self, key):
         super(Object, self).__delattr__(key)
-        self._emit_notify(key)
+        self.emit_notify(key)
 
     def connect_notify(self, receiver, key):
         """Connect a function to a Notify signal matching key."""
         return self.connect_signal(receiver, self.get_notify(key))
+
+    def connect_notify(self, receiver, key):
+        """Disconnect a function to a Notify signal matching key."""
+        return self.disconnect_signal(receiver, self.get_notify(key))
+
+    def emit_notify(self, key):
+        self.emit_signal(self.get_notify(key))
 
     def on_notify(self, key):
         """Return a function that can be called with a receiver as argument.
