@@ -342,7 +342,7 @@ class Window(Object):
         self.xid = None
         # Remove parent/child relationship
         if self.parent:
-            self.parent.remove(self)
+            self.parent.childs.remove(self)
             del self.parent
 
 class BorderWindow(Window):
