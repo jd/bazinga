@@ -283,6 +283,7 @@ class Window(Object):
 
     def on_destroy_subwindow(self, func):
         # XXX DO ME
+        pass
 
     def on_map_subwindow(self, func):
         # XXX DO ME
