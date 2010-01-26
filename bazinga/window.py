@@ -172,8 +172,8 @@ class Window(Object):
         """Set events that shall be received by the window."""
         if events != self.__events:
             MainConnection().core.ChangeWindowAttributes(self.xid,
-                                                        xcb.xproto.CW.EventMask,
-                                                        [ events ])
+                                                         xcb.xproto.CW.EventMask,
+                                                         [ events ])
             self.__events = events
 
     def _add_event(self, event):
@@ -224,8 +224,8 @@ class Window(Object):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
         MainConnection().core.SetInputFocus(xcb.xproto.InputFocus.Parent,
-                                           self.xid,
-                                           xcb.xproto.Time.CurrentTime)
+                                            self.xid,
+                                            xcb.xproto.Time.CurrentTime)
 
     def on_enter(self, func):
         """Connect a function to a enter event."""
@@ -386,15 +386,15 @@ class MovableWindow(Window):
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                        xcb.xproto.ConfigWindow.X,
-                                                        [ value ])
+                                                         xcb.xproto.ConfigWindow.X,
+                                                         [ value ])
     class y(cachedproperty):
         __get__ = Window.y.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                        xcb.xproto.ConfigWindow.Y,
-                                                        [ value ])
+                                                         xcb.xproto.ConfigWindow.Y,
+                                                         [ value ])
 
 class ResizableWindow(Window):
     """A window that can be resized."""
@@ -404,16 +404,16 @@ class ResizableWindow(Window):
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                         xcb.xproto.ConfigWindow.Width,
-                                                         [ value ])
+                                                          xcb.xproto.ConfigWindow.Width,
+                                                          [ value ])
 
     class height(cachedproperty):
         __get__ = Window.height.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                        xcb.xproto.ConfigWindow.Height,
-                                                        [ self.height ])
+                                                         xcb.xproto.ConfigWindow.Height,
+                                                         [ self.height ])
 
 
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
@@ -435,14 +435,14 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
 
         create_window = \
         MainConnection().core.CreateWindowChecked(self.get_root().root_depth,
-                                                 xid,
-                                                 self.parent.xid,
-                                                 x, y, width, height,
-                                                 border_width,
-                                                 xcb.xproto.WindowClass.CopyFromParent,
-                                                 self.get_root().root_visual,
-                                                 xcb.xproto.CW.EventMask,
-                                                 [ self.__events ])
+                                                  xid,
+                                                  self.parent.xid,
+                                                  x, y, width, height,
+                                                  border_width,
+                                                  xcb.xproto.WindowClass.CopyFromParent,
+                                                  self.get_root().root_visual,
+                                                  xcb.xproto.CW.EventMask,
+                                                  [ self.__events ])
 
         CreatedWindow.border_width.set_cache(self, border_width)
         CreatedWindow.x.set_cache(self, x)
