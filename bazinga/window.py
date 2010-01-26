@@ -137,6 +137,8 @@ class Window(Object):
         self.on_configure(self._update_geometry)
         # Handle PropertyChange
         self.on_property_change(self._update_property)
+        # Handle DestroyNotify
+        self.on_destroy(self._destroy)
 
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
@@ -273,11 +275,14 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.CreateNotifyEvent)
         return func
 
-    def on_destroy_subwindow(self, func):
-        """Connect a function to a subwindow destroy event."""
-        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+    def on_destroy(self, func):
+        """Connect a function to a destroy event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
         self.connect_signal(func, xcb.xproto.DestroyNotifyEvent)
         return func
+
+    def on_destroy_subwindow(self, func):
+        # XXX DO ME
 
     def on_map_subwindow(self, func):
         # XXX DO ME
@@ -329,6 +334,15 @@ class Window(Object):
     def destroy(self):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
+
+    def _destroy(self):
+        """Called when a window destroy signal is received."""
+        # Clear XID
+        self.xid = None
+        # Remove parent/child relationship
+        if self.parent:
+            self.parent.remove(self)
+            del self.parent
 
 class BorderWindow(Window):
     """A window with borders."""
