@@ -125,9 +125,9 @@ class Window(Object):
         """Window name."""
         return self._netwm_name or self._icccm_name
 
-    def __init__(self, xid):
+    def __init__(self, xid, parent=None):
         self.xid = xid
-        super(Window, self).__init__()
+        self.childrens = []
 
         # Receive events from the X connection
         MainConnection().connect_signal(self._dispatch_signals,
@@ -138,8 +138,16 @@ class Window(Object):
         # Handle PropertyChange
         self.on_property_change(self._update_property)
 
-        # Transforme and reemit some notify signals into other
+        # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
+
+        super(Window, self).__init__()
+
+        # Add to parent
+        if parent:
+            self.parent = parent
+            # Do this last so we are sure no error happened
+            parent.append(self)
 
     # XXX Should be cached?
     def get_root(self):
@@ -424,9 +432,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                  border_width=0, parent=None, values={}):
 
         if parent is None:
-            self.parent = MainConnection().roots[MainConnection().pref_screen]
-        else:
-            self.parent = parent
+            parent = MainConnection().roots[MainConnection().pref_screen]
 
         xid = MainConnection().generate_id()
 
@@ -438,7 +444,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         create_window = \
         MainConnection().core.CreateWindowChecked(self.get_root().root_depth,
                                                   xid,
-                                                  self.parent.xid,
+                                                  parent.xid,
                                                   x, y, width, height,
                                                   border_width,
                                                   xcb.xproto.WindowClass.CopyFromParent,
@@ -453,7 +459,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         CreatedWindow.height.set_cache(self, height)
 
         create_window.check()
-        super(CreatedWindow, self).__init__(xid)
+        super(CreatedWindow, self).__init__(xid, parent)
 
     def on_button_press(self, func):
         """Connect a function to a button press event on that window."""
