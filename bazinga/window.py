@@ -127,7 +127,7 @@ class Window(Object):
 
     def __init__(self, xid, parent=None):
         self.xid = xid
-        self.childrens = []
+        self.children = []
 
         # Receive events from the X connection
         MainConnection().connect_signal(self._dispatch_signals,
@@ -147,7 +147,7 @@ class Window(Object):
         if parent:
             self.parent = parent
             # Do this last so we are sure no error happened
-            parent.append(self)
+            parent.children.append(self)
 
     # XXX Should be cached?
     def get_root(self):
@@ -428,7 +428,7 @@ class ResizableWindow(Window):
 
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
 
-    def __init__(self, connection=None, x=0, y=0, width=1, height=1,
+    def __init__(self, x=0, y=0, width=1, height=1,
                  border_width=0, parent=None, values={}):
 
         if parent is None:
@@ -441,14 +441,15 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         self.__events = xcb.xproto.EventMask.StructureNotify \
                         | xcb.xproto.EventMask.PropertyChange
 
+
         create_window = \
-        MainConnection().core.CreateWindowChecked(self.get_root().root_depth,
+        MainConnection().core.CreateWindowChecked(parent.get_root().root_depth,
                                                   xid,
                                                   parent.xid,
                                                   x, y, width, height,
                                                   border_width,
                                                   xcb.xproto.WindowClass.CopyFromParent,
-                                                  self.get_root().root_visual,
+                                                  parent.get_root().root_visual,
                                                   xcb.xproto.CW.EventMask,
                                                   [ self.__events ])
 
