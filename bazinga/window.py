@@ -326,6 +326,9 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.PropertyNotifyEvent)
         return func
 
+    def destroy(self):
+        """Destroy a window."""
+        MainConnection().core.DestroyWindow(self.xid)
 
 class BorderWindow(Window):
     """A window with borders."""
