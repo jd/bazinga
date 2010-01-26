@@ -1,7 +1,8 @@
+import weakref
+
 from . import signal as bsignal
 
-# XXX store notify objects with weak refs
-_notify_slots = {}
+_notify_slots = weakref.WeakValueDictionary()
 
 class Notify(bsignal.Signal):
     """Notify signal.
@@ -40,7 +41,9 @@ class Object(object):
     def get_notify(key):
         """Get the notify object corresponding to a key."""
         if not _notify_slots.has_key(key):
-            _notify_slots[key] = Notify()
+            notify = Notify()
+            _notify_slots[key] = notify
+            return notify
         return _notify_slots[key]
 
     def __setattr__(self, key, value):
