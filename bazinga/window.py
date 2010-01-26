@@ -457,6 +457,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
         self.__events = xcb.xproto.EventMask.StructureNotify \
+                        | xcb.xproto.EventMask.SubstructureNotify \
                         | xcb.xproto.EventMask.PropertyChange
 
 
