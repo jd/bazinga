@@ -22,7 +22,7 @@ events_window_attribute = {
     xcb.xproto.ExposeEvent: "window",
     xcb.xproto.VisibilityNotifyEvent: "window",
     xcb.xproto.CreateNotifyEvent: "parent",
-    xcb.xproto.DestroyNotifyEvent: "parent",
+    xcb.xproto.DestroyNotifyEvent: "window",
     xcb.xproto.UnmapNotifyEvent: "window",
     xcb.xproto.MapNotifyEvent: "window",
     xcb.xproto.MapRequestEvent: "parent",
