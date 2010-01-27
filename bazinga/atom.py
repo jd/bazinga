@@ -1,10 +1,10 @@
-from base.memoize import memoize
+from base.memoize import memoize, Memoized
 from base.object import Object
 from x import MainConnection
 
 import xcb.xproto
 
-class _Atom(Object):
+class Atom(Object, Memoized):
     """Atom."""
 
     def __init__(self, name="Any"):
@@ -23,7 +23,3 @@ class _Atom(Object):
     def value(self):
         self.read_reply()
         return self._value
-
-@memoize
-def Atom(name):
-    return _Atom(name).value

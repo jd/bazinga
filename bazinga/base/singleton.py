@@ -1,5 +1,7 @@
 from threading import Lock
 
+from memoize import memoize
+
 class SingletonMeta(type):
     """Singleton metaclass."""
 
@@ -21,7 +23,6 @@ class Singleton(object):
 
     def __new__(cls, *args, **kwargs):
         """Create a singleton. Return always the same instance of a class."""
-
         with cls.__instance_lock:
             if cls.__instance is None:
                 cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
