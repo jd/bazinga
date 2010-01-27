@@ -116,7 +116,7 @@ class _Window(Object):
         """ICCCM window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_NAME").value,
+                                                     Atom("WM_NAME"),
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
             return byte_list_to_str(prop.value)
@@ -128,7 +128,7 @@ class _Window(Object):
         """EWMH window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("_NET_WM_NAME").value,
+                                                     Atom("_NET_WM_NAME"),
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
             return byte_list_to_str(prop.value)
@@ -484,8 +484,8 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
                                                  self.xid,
-                                                 Atom("_NET_WM_NAME").value,
-                                                 Atom("STRING").value,
+                                                 Atom("_NET_WM_NAME"),
+                                                 Atom("STRING"),
                                                  8, len(value), value)
 
 

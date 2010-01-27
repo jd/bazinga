@@ -4,8 +4,8 @@ from x import MainConnection
 
 import xcb.xproto
 
-class Atom(Object, Memoized):
-    """Atom."""
+class XAtom(Object, Memoized):
+    """X Atom."""
 
     def __init__(self, name="Any"):
         try:
@@ -23,3 +23,6 @@ class Atom(Object, Memoized):
     def value(self):
         self.read_reply()
         return self._value
+
+def Atom(*args, **kwargs):
+    return AAtom(*args, **kwargs).value
