@@ -466,11 +466,14 @@ class ResizableWindow(_Window):
 
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
 
-    def __init__(self, x=0, y=0, width=1, height=1,
-                 border_width=0, parent=None, values={}):
+    def __init__(self, parent, x=0, y=0, width=1, height=1,
+                 border_width=0, values={}):
 
         if parent is None:
-            parent = MainConnection().roots[MainConnection().pref_screen]
+            raise
+
+        if parent is self:
+            raise
 
         xid = MainConnection().generate_id()
 
