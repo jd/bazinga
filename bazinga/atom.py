@@ -25,4 +25,4 @@ class XAtom(Object, Memoized):
         return self._value
 
 def Atom(*args, **kwargs):
-    return AAtom(*args, **kwargs).value
+    return XAtom(*args, **kwargs).value
