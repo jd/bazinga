@@ -25,7 +25,6 @@ events_window_attribute = {
     xcb.xproto.DestroyNotifyEvent: "window",
     xcb.xproto.UnmapNotifyEvent: "window",
     xcb.xproto.MapNotifyEvent: "window",
-    xcb.xproto.MapRequestEvent: "parent",
     xcb.xproto.ReparentNotifyEvent: "window",
     xcb.xproto.ConfigureNotifyEvent: "window",
     xcb.xproto.ConfigureRequestEvent: "parent",
@@ -34,6 +33,22 @@ events_window_attribute = {
     xcb.xproto.CirculateRequestEvent: "window",
     xcb.xproto.PropertyNotifyEvent: "window",
     xcb.xproto.ClientMessageEvent: "window"
+}
+
+# This event are also for a window but
+# are about a subwindow
+events_subwindow_attribute = {
+    xcb.xproto.CreateNotifyEvent: "parent",
+    xcb.xproto.DestroyNotifyEvent: "event",
+    xcb.xproto.UnmapNotifyEvent: "event",
+    xcb.xproto.MapNotifyEvent: "event",
+    xcb.xproto.MapRequestEvent: "parent",
+    xcb.xproto.ReparentNotifyEvent: "window",
+    xcb.xproto.ConfigureNotifyEvent: "window",
+    xcb.xproto.ConfigureRequestEvent: "parent",
+    xcb.xproto.GravityNotifyEvent: "window",
+    xcb.xproto.CirculateNotifyEvent: "window",
+    xcb.xproto.CirculateRequestEvent: "window",
 }
 
 
