@@ -116,7 +116,7 @@ class _Window(Object):
         """ICCCM window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_NAME"),
+                                                     Atom("WM_NAME").value,
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
             return byte_list_to_str(prop.value)
@@ -128,7 +128,7 @@ class _Window(Object):
         """EWMH window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("_NET_WM_NAME"),
+                                                     Atom("_NET_WM_NAME").value,
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
             return byte_list_to_str(prop.value)
@@ -465,6 +465,38 @@ class ResizableWindow(_Window):
 
 
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
+
+    class _icccm_name(cachedproperty):
+        """ICCCM window name."""
+        __get__ = _Window._icccm_name.getter
+
+        def __set__(self, value):
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("WM_NAME"),
+                                                 Atom("STRING"),
+                                                 8, len(value), value)
+
+    class _netwm_name(cachedproperty):
+        """EWMH window name."""
+        __get__ = _Window._netwm_name.getter
+
+        def __set__(self, value):
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("_NET_WM_NAME").value,
+                                                 Atom("STRING").value,
+                                                 8, len(value), value)
+
+
+    @property
+    def name(self):
+        """Window name."""
+        return self._netwm_name or self._icccm_name
+
+    @name.setter
+    def name(self, value):
+        self._icccm_name = self._netwm_name = value
 
     def __init__(self, parent, x=0, y=0, width=1, height=1,
                  border_width=0, values={}):
