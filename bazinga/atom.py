@@ -24,6 +24,6 @@ class _Atom(Object):
         self.read_reply()
         return self._value
 
-@memoize
+@memoize()
 def Atom(name):
     return _Atom(name).value

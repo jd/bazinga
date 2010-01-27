@@ -10,9 +10,9 @@ def _memoize(func, *args, **kwargs):
         func.cache[key] = func(*args, **kwargs)
         return func.cache[key]
 
-
-def memoize(func):
+def memoize(cache={}):
     """Decorator to memoize a function."""
-
-    func.cache = {}
-    return decorator(_memoize, func)
+    def memoize_decorator(func):
+        func.cache = cache
+        return decorator(_memoize, func)
+    return memoize_decorator

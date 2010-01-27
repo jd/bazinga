@@ -121,7 +121,7 @@ class HexColor(ValueColor):
         super(HexColor, self).__init__(colormap, red, green, blue, alpha, **kw)
 
 
-@memoize
+@memoize()
 def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
     """Create a color. You should specify name, or RGB value."""
 

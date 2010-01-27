@@ -8,7 +8,7 @@ class TestMemoize(unittest.TestCase):
 
     def test_memoize(self):
 
-        @memoize
+        @memoize()
         def memoized_func(x, y=1):
 
             self.executed += 1
