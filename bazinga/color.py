@@ -4,7 +4,7 @@ from x import MainConnection
 from base.object import Object
 from base.memoize import memoize
 
-class _Color(Object):
+class XColor(Object):
     """Generic color class."""
 
     def read_reply(self):
@@ -54,7 +54,7 @@ class _Color(Object):
         return self.name
 
 
-class NamedColor(_Color):
+class NamedColor(XColor):
     """A named color."""
 
     def __init__(self, colormap, name, alpha=65535):
@@ -68,7 +68,7 @@ class NamedColor(_Color):
         super(NamedColor, self).__init__()
 
     def read_reply(self):
-        reply = _Color.read_reply(self)
+        reply = XColor.read_reply(self)
         if reply:
             self._red = reply.exact_red
             self._green = reply.exact_green
@@ -79,7 +79,7 @@ class NamedColor(_Color):
     def name(self):
         return self._name
 
-class ValueColor(_Color):
+class ValueColor(XColor):
     """A color by value."""
 
     def __init__(self, colormap, red=0, green=0, blue=0, alpha=65535):
@@ -94,7 +94,7 @@ class ValueColor(_Color):
         super(ValueColor, self).__init__()
 
     def read_reply(self):
-        reply = _Color.read_reply(self)
+        reply = XColor.read_reply(self)
         if reply:
             self._red = reply.red
             self._green = reply.green
@@ -127,7 +127,7 @@ def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
 
     if color:
         # Already color type :-)
-        if isinstance(color, _Color):
+        if isinstance(color, XColor):
             return color
         else:
             if color[0] == '#':
