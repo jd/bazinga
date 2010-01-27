@@ -38,13 +38,13 @@ class Connection(Object, xcb.Connection):
         """Root windows."""
         def __get__(self):
             roots = []
-            from window import Window
+            from window import ExistingWindow
             for root in self.get_setup().roots:
-                root_window = Window(xid=root.root)
-                Window.x.set_cache(root_window, 0)
-                Window.y.set_cache(root_window, 0)
-                Window.width.set_cache(root_window, root.width_in_pixels)
-                Window.height.set_cache(root_window, root.height_in_pixels)
+                root_window = ExistingWindow(xid=root.root)
+                ExistingWindow.x.set_cache(root_window, 0)
+                ExistingWindow.y.set_cache(root_window, 0)
+                ExistingWindow.width.set_cache(root_window, root.width_in_pixels)
+                ExistingWindow.height.set_cache(root_window, root.height_in_pixels)
                 # Extra attributes
                 root_window.default_colormap = root.default_colormap
                 root_window.root_depth = root.root_depth

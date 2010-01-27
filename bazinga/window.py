@@ -75,7 +75,7 @@ def xcb_dict_to_value(values, xcb_dict):
     return value_mask, value_list
 
 
-class Window(Object, Memoized):
+class _Window(Object):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
@@ -159,7 +159,7 @@ class Window(Object, Memoized):
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
-        super(Window, self).__init__()
+        super(_Window, self).__init__()
 
         # Add to parent
         if parent:
@@ -211,18 +211,18 @@ class Window(Object, Memoized):
     def _retrieve_geometry(self):
         """Update window geometry."""
         wg = MainConnection().core.GetGeometry(self.xid).reply()
-        Window.x.set_cache(self, wg.x)
-        Window.y.set_cache(self, wg.y)
-        Window.width.set_cache(self, wg.width)
-        Window.height.set_cache(self, wg.height)
+        _Window.x.set_cache(self, wg.x)
+        _Window.y.set_cache(self, wg.y)
+        _Window.width.set_cache(self, wg.width)
+        _Window.height.set_cache(self, wg.height)
         return wg
 
     def _update_geometry(self, signal, sender):
         """Update window geometry from an event."""
-        Window.x.set_cache(self, signal.x)
-        Window.y.set_cache(self, signal.y)
-        Window.width.set_cache(self, signal.width)
-        Window.height.set_cache(self, signal.height)
+        _Window.x.set_cache(self, signal.x)
+        _Window.y.set_cache(self, signal.y)
+        _Window.width.set_cache(self, signal.width)
+        _Window.height.set_cache(self, signal.height)
 
     def _update_property(self, signal, sender):
 
@@ -361,7 +361,11 @@ class Window(Object, Memoized):
             self.parent.children.remove(self)
             del self.parent
 
-class BorderWindow(Window):
+class ExistingWindow(_Window, Memoized):
+    """An already existing window."""
+    pass
+
+class BorderWindow(_Window):
     """A window with borders."""
 
     class border_width(cachedproperty):
@@ -394,11 +398,11 @@ class BorderWindow(Window):
 
     def _update_geometry(self, signal, sender):
         """Update window geometry from an event."""
-        Window._update_geometry(self, signal, sender)
+        _Window._update_geometry(self, signal, sender)
         BorderWindow.border_width.set_cache(self, signal.border_width)
 
 
-class MappableWindow(Window):
+class MappableWindow(_Window):
     """A window that can be mapped or unmaped on screen."""
 
     def map(self):
@@ -422,29 +426,29 @@ class MappableWindow(Window):
         return func
 
 
-class MovableWindow(Window):
+class MovableWindow(_Window):
     """A window that can be moved."""
 
     class x(cachedproperty):
-        __get__ = Window.x.getter
+        __get__ = _Window.x.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.X,
                                                          [ value ])
     class y(cachedproperty):
-        __get__ = Window.y.getter
+        __get__ = _Window.y.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.Y,
                                                          [ value ])
 
-class ResizableWindow(Window):
+class ResizableWindow(_Window):
     """A window that can be resized."""
 
     class width(cachedproperty):
-        __get__ = Window.width.getter
+        __get__ = _Window.width.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -452,7 +456,7 @@ class ResizableWindow(Window):
                                                           [ value ])
 
     class height(cachedproperty):
-        __get__ = Window.height.getter
+        __get__ = _Window.height.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
