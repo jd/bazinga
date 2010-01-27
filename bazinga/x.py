@@ -1,8 +1,9 @@
 import pyev
-import xcb
+import xcb.xproto
 
 from screen import Screen, Output
 from base.singleton import Singleton
+from base.property import cachedproperty
 from base.object import Object
 from loop import MainLoop
 
@@ -18,103 +19,7 @@ class Connection(Object, xcb.Connection):
     def __init__(self, loop=MainLoop(), *args, **kw):
         """Initialize a X connection."""
 
-        import xcb.xproto
-        import xcb.randr
-        import xcb.xinerama
-
-        xcb.Connection.__init__(self, *args, **kw)
-
-        try:
-            self.randr = self(xcb.randr.key)
-        except xcb.ExtensionException:
-            randr_queryversion_c = None
-        else:
-            # Check that RandR extension is at least 1.1
-            randr_queryversion_c = self.randr.QueryVersion(1, 1)
-
-        try:
-            self.xinerama = self(xcb.xinerama.key)
-        except xcb.ExtensionException:
-            xinerama_isactive_c = None
-        else:
-            # Check that Xinerama is active
-            xinerama_isactive_c = self.xinerama.IsActive()
-
-        self.roots = []
-        from window import Window
-        for root in self.get_setup().roots:
-            root_window = Window(xid=root.root)
-            Window.x.set_cache(root_window, 0)
-            Window.y.set_cache(root_window, 0)
-            Window.width.set_cache(root_window, root.width_in_pixels)
-            Window.height.set_cache(root_window, root.height_in_pixels)
-            # Extra attributes
-            root_window.default_colormap = root.default_colormap
-            root_window.root_depth = root.root_depth
-            root_window.root_visual = root.root_visual
-            self.roots.append(root_window)
-
-        self.screens = []
-
-        # Does it have RandR ?
-        if randr_queryversion_c and randr_queryversion_c.reply():
-            screen_resources_c = zip(self.roots, Connection.prepare_requests(self.randr.GetScreenResources,
-                                                                             list(root.xid for root in self.roots), 0))
-            for root, screen_resources_cookie in screen_resources_c:
-                screen_resources = screen_resources_cookie.reply()
-
-                crtc_info_c = Connection.prepare_requests(self.randr.GetCrtcInfo,
-                                                          screen_resources.crtcs, 0,
-                                                          xcb.xproto.Time.CurrentTime)
-
-                for crtc_info_cookie in crtc_info_c:
-                    crtc_info = crtc_info_cookie.reply()
-                    # Does the CRTC have outputs?
-                    if len(crtc_info.outputs):
-                        screen = Screen()
-                        screen.x = crtc_info.x
-                        screen.y = crtc_info.y
-                        screen.width = crtc_info.width
-                        screen.height = crtc_info.height
-                        screen.root = root
-                        screen.outputs = []
-                        self.screens.append(screen)
-
-                        # Prepare output info requests
-                        output_info_c = Connection.prepare_requests(self.randr.GetOutputInfo,
-                                crtc_info.outputs, 0, xcb.xproto.Time.CurrentTime)
-
-                        for output_info_cookie in output_info_c:
-                            output_info = output_info_cookie.reply()
-                            output = Output()
-                            output.name = byte_list_to_str(output_info.name)
-                            output.mm_width = output_info.mm_width
-                            output.mm_height = output_info.mm_height
-                            screen.outputs.append(output)
-
-        elif xinerama_isactive_c and xinerama_isactive_c.reply().state:
-            screens_info = self.xinerama.QueryScreens().reply()
-            for screen_info in screens_info.screen_info:
-                screen = Screen()
-                screen.x = screen_info.x_org
-                screen.y = screen_info.y_org
-                screen.width = screen_info.width
-                screen.height = screen_info.height
-                # There is only one root if we have Xinerama
-                root = self.roots[0]
-                self.screens.append(screen)
-        else:
-            for root, xroot in zip(self.roots, self.get_setup().roots):
-                screen = Screen()
-                screen.x = screen.y = 0
-                screen.width = root.width_in_pixels
-                screen.height = root.height_in_pixels
-                screen.root = root
-                output = Output()
-                output.mm_width = xroot.width_in_millimeters
-                output.mm_height = xroot.height_in_millimeters
-                screen.outputs = [ output ]
-                self.screens.append(screen)
+        super(Connection, self).__init__(*args, **kw)
 
         # Initialize IO watcher
         self._io = pyev.Io(self.get_file_descriptor(),
@@ -128,6 +33,111 @@ class Connection(Object, xcb.Connection):
 
         # Store loop
         self.loop = loop
+
+    class roots(cachedproperty):
+        """Root windows."""
+        def __get__(self):
+            roots = []
+            from window import Window
+            for root in self.get_setup().roots:
+                root_window = Window(xid=root.root)
+                Window.x.set_cache(root_window, 0)
+                Window.y.set_cache(root_window, 0)
+                Window.width.set_cache(root_window, root.width_in_pixels)
+                Window.height.set_cache(root_window, root.height_in_pixels)
+                # Extra attributes
+                root_window.default_colormap = root.default_colormap
+                root_window.root_depth = root.root_depth
+                root_window.root_visual = root.root_visual
+                roots.append(root_window)
+
+            return roots
+
+    class screens(cachedproperty):
+        """Screens connection."""
+        def __get__(self):
+            screens = []
+
+            try:
+                import xcb.randr
+                self.randr = self(xcb.randr.key)
+            except:
+                randr_queryversion_c = None
+            else:
+                # Check that RandR extension is at least 1.1
+                randr_queryversion_c = self.randr.QueryVersion(1, 1)
+
+            try:
+                import xcb.xinerama
+                self.xinerama = self(xcb.xinerama.key)
+            except:
+                xinerama_isactive_c = None
+            else:
+                # Check that Xinerama is active
+                xinerama_isactive_c = self.xinerama.IsActive()
+
+            # Does it have RandR ?
+            if randr_queryversion_c and randr_queryversion_c.reply():
+                screen_resources_c = zip(self.roots, Connection.prepare_requests(self.randr.GetScreenResources,
+                                                                                 list(root.xid for root in self.roots), 0))
+                for root, screen_resources_cookie in screen_resources_c:
+                    screen_resources = screen_resources_cookie.reply()
+
+                    crtc_info_c = Connection.prepare_requests(self.randr.GetCrtcInfo,
+                                                              screen_resources.crtcs, 0,
+                                                              xcb.xproto.Time.CurrentTime)
+
+                    for crtc_info_cookie in crtc_info_c:
+                        crtc_info = crtc_info_cookie.reply()
+                        # Does the CRTC have outputs?
+                        if len(crtc_info.outputs):
+                            screen = Screen()
+                            screen.x = crtc_info.x
+                            screen.y = crtc_info.y
+                            screen.width = crtc_info.width
+                            screen.height = crtc_info.height
+                            screen.root = root
+                            screen.outputs = []
+                            screens.append(screen)
+
+                            # Prepare output info requests
+                            output_info_c = Connection.prepare_requests(self.randr.GetOutputInfo,
+                                    crtc_info.outputs, 0, xcb.xproto.Time.CurrentTime)
+
+                            for output_info_cookie in output_info_c:
+                                output_info = output_info_cookie.reply()
+                                output = Output()
+                                output.name = byte_list_to_str(output_info.name)
+                                output.mm_width = output_info.mm_width
+                                output.mm_height = output_info.mm_height
+                                screen.outputs.append(output)
+
+            elif xinerama_isactive_c and xinerama_isactive_c.reply().state:
+                screens_info = self.xinerama.QueryScreens().reply()
+                for screen_info in screens_info.screen_info:
+                    screen = Screen()
+                    screen.x = screen_info.x_org
+                    screen.y = screen_info.y_org
+                    screen.width = screen_info.width
+                    screen.height = screen_info.height
+                    # There is only one root if we have Xinerama
+                    root = self.roots[0]
+                    screens.append(screen)
+            else:
+                for root, xroot in zip(self.roots, self.get_setup().roots):
+                    screen = Screen()
+                    screen.x = screen.y = 0
+                    screen.width = root.width_in_pixels
+                    screen.height = root.height_in_pixels
+                    screen.root = root
+                    output = Output()
+                    output.mm_width = xroot.width_in_millimeters
+                    output.mm_height = xroot.height_in_millimeters
+                    screen.outputs = [ output ]
+                    screens.append(screen)
+
+            return screens
+
 
     def _set_events(self, events):
         """Set events that shall be received by the X connection."""
