@@ -1,4 +1,4 @@
-from base.memoize import memoize
+from base.memoize import memoize, Memoized
 from base.object import Object
 from x import MainConnection
 
