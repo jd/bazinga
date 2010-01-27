@@ -2,6 +2,7 @@
 
 from base.property import cachedproperty
 from base.object import Object, Notify
+from base.memoize import Memoized
 from x import MainConnection, byte_list_to_str
 from atom import Atom
 from color import Color
@@ -74,7 +75,7 @@ def xcb_dict_to_value(values, xcb_dict):
     return value_mask, value_list
 
 
-class Window(Object):
+class Window(Object, Memoized):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
