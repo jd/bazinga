@@ -28,20 +28,3 @@ class Singleton(object):
                 cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
                 return cls.__instance, True
         return cls.__instance, False
-
-
-class MemoizedMeta(type):
-    """Singleton metaclass."""
-
-    __lock = Lock()
-
-    @memoize()
-    def __call__(cls, *args, **kwargs):
-        with MemoizedMeta.__lock:
-            return super(MemoizedMeta, cls).__call__(*args, **kwargs)
-
-
-class Memoized(object):
-    """Pool of memoized object. Like a big bag of singletons."""
-
-    __metaclass__ = MemoizedMeta

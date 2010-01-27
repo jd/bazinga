@@ -1,4 +1,5 @@
 import cPickle
+from threading import Lock
 from decorator import decorator
 
 def _memoize(func, *args, **kwargs):
@@ -20,3 +21,20 @@ def memoize(cache={}, ignore_first=True):
         func._ignore_first = ignore_first
         return decorator(_memoize, func)
     return memoize_decorator
+
+
+class MemoizedMeta(type):
+    """Singleton metaclass."""
+
+    __lock = Lock()
+
+    @memoize()
+    def __call__(cls, *args, **kwargs):
+        with MemoizedMeta.__lock:
+            return super(MemoizedMeta, cls).__call__(*args, **kwargs)
+
+
+class Memoized(object):
+    """Pool of memoized object. Like a big bag of singletons."""
+
+    __metaclass__ = MemoizedMeta
