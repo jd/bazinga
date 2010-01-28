@@ -352,6 +352,65 @@ class _Window(Object):
         self.connect_signal(func, xcb.xproto.PropertyNotifyEvent)
         return func
 
+    def on_reparent(self,func):
+        """Connection a function to a reparent notify event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
+        return func
+
+    def on_reparent_subwindow(self,func):
+        """Connection a function to a reparent notify event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
+        return func
+
+    def on_reparent_subwindow(self,func):
+        """Connection a function to a reparent notify event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
+        return func
+
+    def on_configure_subwindow_request(self, func):
+        """Connection a function to a configure subwindow request event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureRedirect)
+        self.connect_signal(func, xcb.xproto.ConfigureRequestEvent)
+        return func
+
+    def on_gravity(self, func):
+        """Connection a function to a gravity event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.GravityNotifyEvent)
+        return func
+
+    def on_gravity_subwindow(self, func):
+        """Connection a function to a gravity event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.GravityNotifyEvent)
+        return func
+
+    def on_circulate(self, func):
+        """Connection a function to a circulate event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.CirculateNotifyEvent)
+        return func
+
+    def on_circulate_subwindow(self, func):
+        """Connection a function to a circulate subwindow event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.CirculateNotifyEvent)
+        return func
+
+    def on_circulate_subwindow_request(self, func):
+        """Connection a function to a circulate subwindow event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureRedirect)
+        self.connect_signal(func, xcb.xproto.CirculateRequestEvent)
+        return func
+
+    def on_client_message(self, func):
+        """Connect a function to a client message event."""
+        self.connect_signal(func, xcb.xproto.ClientMessageEvent)
+        return func
+
     def destroy(self):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
