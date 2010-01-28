@@ -139,6 +139,7 @@ class _Window(Object):
         self.on_property_change(self._on_property_change)
         # Handle DestroyNotify
         self.on_destroy(self._on_destroy)
+        self.on_destroy_subwindow(self._on_destroy_subwindow)
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
@@ -232,9 +233,10 @@ class _Window(Object):
         if signal.window == self.xid:
             # Clear XID
             del self.xid
+
+    def _on_destroy_subwindow(self, sender, signal):
         # One of our child is destroyed
-        else:
-            self.children.remove(ExistingWindow(signal.window))
+        self.children.remove(ExistingWindow(signal.window))
 
     def _on_create(self, sender, signal):
         """Called when a window creation signal is received."""
