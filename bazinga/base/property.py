@@ -71,4 +71,24 @@ class CachedPropertyType(CachedProperty):
                                                         members.get('__delete__'),
                                                         members.get('__doc__'))
 
+
 cachedproperty = CachedPropertyType('cachedproperty')
+
+def _ro_deleter(self):
+    raise AttributeError("read-only attribute")
+
+
+def _ro_setter(self, value):
+    return _ro_deleter(self)
+
+
+class RoCachedPropertyType(CachedProperty):
+
+    def __init__(self, name, bases=(), members={}):
+        return super(RoCachedPropertyType, self).__init__(name,
+                                                          members.get('__get__'),
+                                                          _ro_setter,
+                                                          _ro_deleter,
+                                                          members.get('__doc__'))
+
+rocachedproperty = RoCachedPropertyType('rocachedproperty')

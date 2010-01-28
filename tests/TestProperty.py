@@ -2,7 +2,7 @@
 
 import unittest
 
-from bazinga.base.property import cachedproperty
+from bazinga.base.property import cachedproperty, rocachedproperty
 
 
 class TestCachedProperty(unittest.TestCase):
@@ -18,6 +18,8 @@ class TestCachedProperty(unittest.TestCase):
             def __set__(self, value):
                 return value + "!"
 
+        class roprop(rocachedproperty):
+            pass
 
     def setUp(self):
         self.p = self.Phone()
@@ -41,6 +43,19 @@ class TestCachedProperty(unittest.TestCase):
     def test_set_cache(self):
         self.Phone.name.set_cache(self.p, "Clash...")
         self.assert_(self.p.name == "Clash...")
+
+    def test_ro_property(self):
+        try:
+            self.p.roprop = 2
+            self.assert_(False) # never reached
+        except AttributeError:
+            pass
+
+        try:
+            del self.p.roprop
+            self.assert_(False) # never reached
+        except AttributeError:
+            pass
 
 if __name__ == "__main__":
     import sys
