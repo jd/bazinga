@@ -138,7 +138,6 @@ class _Window(Object):
         # Handle PropertyChange
         self.on_property_change(self._on_property_change)
         # Handle DestroyNotify
-        self.on_destroy(self._on_destroy)
         self.on_destroy_subwindow(self._on_destroy_subwindow)
         # Handle CreateNotify
         self.on_create_subwindow(self._on_create_subwindow)
@@ -165,9 +164,8 @@ class _Window(Object):
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 
-        if hasattr(self, "xid"):
-            if event.__class__ in events_window_attribute.keys():
-                return getattr(event, events_window_attribute[event.__class__]) == self.xid
+        if event.__class__ in events_window_attribute.keys():
+            return getattr(event, events_window_attribute[event.__class__]) == self.xid
         return False
 
     def _dispatch_signals(self, signal, sender):
@@ -230,23 +228,15 @@ class _Window(Object):
         if self._property_renotify_map.has_key(signal):
             self.emit_signal(self._property_renotify_map[signal])
 
-    def _on_destroy(self, sender, signal):
-        """Called when a window destroy signal is received."""
-        # We are destroyed
-        if signal.window == self.xid:
-            # Clear XID
-            try:
-                del self.xid
-            except AttributeError:
-                # Already deleted
-                pass
-
     def _on_destroy_subwindow(self, sender, signal):
+        """Remove a subwindow from our children list."""
         # One of our child is destroyed
-        try:
-            self.children.remove(ExistingWindow(signal.window))
-        except KeyError:
-            pass
+        # Do not try ExistingWindow(xid) here, because it will start to
+        # handle the window whereas it has been destroyed!
+        for window in self.children:
+            if window.xid == signal.window:
+                self.children.remove(window)
+                break
 
     def _on_create_subwindow(self, sender, signal):
         """Called when a window creation signal is received."""
@@ -365,8 +355,10 @@ class _Window(Object):
     def destroy(self):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
-        # Do it right now, it's safer
-        del self.xid
+
+    def __str__(self):
+        return "<{0} {1}>".format(self.__class__.__name__,
+                                              hex(self.xid))
 
 
 class ExistingWindow(_Window, Memoized):
