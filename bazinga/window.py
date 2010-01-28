@@ -181,8 +181,6 @@ class Window(Object):
             return obj, True
 
     def __init__(self, xid, parent=None):
-        self.children = set()
-
         # Receive events from the X connection
         MainConnection().connect_signal(self._dispatch_signals,
                                         signal=xcb.Event)
@@ -191,13 +189,6 @@ class Window(Object):
         self.on_configure(self._on_configure)
         # Handle PropertyChange
         self.on_property_change(self._on_property_change)
-        # Handle DestroyNotify
-        self.on_destroy_subwindow(self._on_destroy_subwindow)
-        # Handle CreateNotify
-        self.on_create_subwindow(self._on_create_subwindow)
-        # Handle reparent
-        self.on_reparent(self._on_reparent)
-        self.on_reparent_subwindow(self._on_reparent_subwindow)
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
@@ -206,17 +197,6 @@ class Window(Object):
         # Set parent
         if parent:
             self.parent = parent
-
-    # XXX Should be cached?
-    def get_root(self):
-        """Get the root window the window is attached on."""
-        try:
-            while self.parent:
-                self = self.parent
-        except AttributeError:
-            # No parent
-            pass
-        return self
 
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
@@ -286,32 +266,17 @@ class Window(Object):
         if self._property_renotify_map.has_key(signal):
             self.emit_signal(self._property_renotify_map[signal])
 
-    def _on_destroy_subwindow(self, sender, signal):
-        """Remove a subwindow from our children list."""
-        # One of our child is destroyed
-        # Do not try Window(xid) here, because it will start to
-        # handle the window whereas it has been destroyed!
-        for window in self.children:
-            if window.xid == signal.window:
-                self.children.remove(window)
-                break
-
-    def _on_create_subwindow(self, sender, signal):
-        """Called when a window creation signal is received."""
-        # We're having a baby window! Congratulations!
-        self.children.add(Window(signal.window))
-
-    def _on_reparent(self, sender, signal):
-        """Update parenting links."""
-        # Are we getting reparented?
-        if signal.window == self.xid:
-            self.parent = Window(signal.window)
-
-    def _on_reparent_subwindow(self, sender, signal):
-        """Update parenting links."""
-        # A child of us is being reparented?
-        if signal.window != self.xid:
-            self.children.remove(Window(signal.window))
+    # Methods
+    # XXX Should be cached?
+    def get_root(self):
+        """Get the root window the window is attached on."""
+        try:
+            while self.parent:
+                self = self.parent
+        except AttributeError:
+            # No parent
+            pass
+        return self
 
     def focus(self):
         """Give focus to a window.
@@ -320,6 +285,19 @@ class Window(Object):
                                             self.xid,
                                             xcb.xproto.Time.CurrentTime)
 
+    def map(self):
+        """Map a window on the screen."""
+        MainConnection().core.MapWindow(self.xid)
+
+    def unmap(self):
+        """Unmap a window from the screen."""
+        MainConnection().core.UnmapWindow(self.xid)
+
+    def destroy(self):
+        """Destroy a window."""
+        MainConnection().core.DestroyWindow(self.xid)
+
+    # Events handling
     def on_enter(self, func):
         """Connect a function to a enter event."""
         self._add_event(xcb.xproto.EventMask.EnterWindow)
@@ -366,6 +344,18 @@ class Window(Object):
         """Connect a function to a subwindow destroy event."""
         self._add_event(xcb.xproto.EventMask.SubstructureNotify)
         self.connect_signal(func, xcb.xproto.DestroyNotifyEvent)
+        return func
+
+    def on_map(self, func):
+        """Connect a function to a map event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.MapNotifyEvent)
+        return func
+
+    def on_unmap(self, func):
+        """Connect a function to a unmap event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.UnmapNotifyEvent)
         return func
 
     def on_map_subwindow(self, func):
@@ -434,12 +424,6 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
         return func
 
-    def on_reparent_subwindow(self,func):
-        """Connection a function to a reparent notify event."""
-        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
-        self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
-        return func
-
     def on_configure_subwindow_request(self, func):
         """Connection a function to a configure subwindow request event."""
         self._add_event(xcb.xproto.EventMask.SubstructureRedirect)
@@ -481,33 +465,9 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.ClientMessageEvent)
         return func
 
-    def destroy(self):
-        """Destroy a window."""
-        MainConnection().core.DestroyWindow(self.xid)
-
     def __str__(self):
         return "<{0} {1}>".format(self.__class__.__name__,
                                               hex(self.xid))
-
-    def map(self):
-        """Map a window on the screen."""
-        MainConnection().core.MapWindow(self.xid)
-
-    def unmap(self):
-        """Unmap a window from the screen."""
-        MainConnection().core.UnmapWindow(self.xid)
-
-    def on_map(self, func):
-        """Connect a function to a map event."""
-        self._add_event(xcb.xproto.EventMask.StructureNotify)
-        self.connect_signal(func, xcb.xproto.MapNotifyEvent)
-        return func
-
-    def on_unmap(self, func):
-        """Connect a function to a unmap event."""
-        self._add_event(xcb.xproto.EventMask.StructureNotify)
-        self.connect_signal(func, xcb.xproto.UnmapNotifyEvent)
-        return func
 
 
 class CreatedWindow(Window):
