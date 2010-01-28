@@ -293,6 +293,14 @@ class Window(Object):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
 
+    def get_children(self):
+        """Get children of a window."""
+        qt = MainConnection().core.QueryTree(self.xid)
+        children = set()
+        for w in qt.reply().children:
+            children.add(Window(w))
+        return children
+
     # Events handling
     def on_enter(self, func):
         """Connect a function to a enter event."""
