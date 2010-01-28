@@ -23,7 +23,7 @@ events_window_attribute = {
     xcb.xproto.ExposeEvent: "window",
     xcb.xproto.VisibilityNotifyEvent: "window",
     xcb.xproto.CreateNotifyEvent: "parent",
-    xcb.xproto.DestroyNotifyEvent: "window",
+    xcb.xproto.DestroyNotifyEvent: "event",
     xcb.xproto.UnmapNotifyEvent: "window",
     xcb.xproto.MapNotifyEvent: "window",
     xcb.xproto.ReparentNotifyEvent: "window",
@@ -165,8 +165,9 @@ class _Window(Object):
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 
-        if event.__class__ in events_window_attribute.keys():
-            return getattr(event, events_window_attribute[event.__class__]) == self.xid
+        if hasattr(self, "xid"):
+            if event.__class__ in events_window_attribute.keys():
+                return getattr(event, events_window_attribute[event.__class__]) == self.xid
         return False
 
     def _dispatch_signals(self, signal, sender):
@@ -242,7 +243,10 @@ class _Window(Object):
 
     def _on_destroy_subwindow(self, sender, signal):
         # One of our child is destroyed
-        self.children.remove(ExistingWindow(signal.window))
+        try:
+            self.children.remove(ExistingWindow(signal.window))
+        except KeyError:
+            pass
 
     def _on_create_subwindow(self, sender, signal):
         """Called when a window creation signal is received."""
@@ -363,9 +367,6 @@ class _Window(Object):
         MainConnection().core.DestroyWindow(self.xid)
         # Do it right now, it's safer
         del self.xid
-
-    def __iter__(self):
-        return self.children
 
 
 class ExistingWindow(_Window, Memoized):
