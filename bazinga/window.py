@@ -466,6 +466,26 @@ class Window(Object):
         return "<{0} {1}>".format(self.__class__.__name__,
                                               hex(self.xid))
 
+    def map(self):
+        """Map a window on the screen."""
+        MainConnection().core.MapWindow(self.xid)
+
+    def unmap(self):
+        """Unmap a window from the screen."""
+        MainConnection().core.UnmapWindow(self.xid)
+
+    def on_map(self, func):
+        """Connect a function to a map event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.MapNotifyEvent)
+        return func
+
+    def on_unmap(self, func):
+        """Connect a function to a unmap event."""
+        self._add_event(xcb.xproto.EventMask.StructureNotify)
+        self.connect_signal(func, xcb.xproto.UnmapNotifyEvent)
+        return func
+
 
 class BorderWindow(Window):
     """A window with borders."""
@@ -504,31 +524,7 @@ class BorderWindow(Window):
         BorderWindow.border_width.set_cache(self, signal.border_width)
 
 
-class MappableWindow(Window):
-    """A window that can be mapped or unmaped on screen."""
-
-    def map(self):
-        """Map a window on the screen."""
-        MainConnection().core.MapWindow(self.xid)
-
-    def unmap(self):
-        """Unmap a window from the screen."""
-        MainConnection().core.UnmapWindow(self.xid)
-
-    def on_map(self, func):
-        """Connect a function to a map event."""
-        self._add_event(xcb.xproto.EventMask.StructureNotify)
-        self.connect_signal(func, xcb.xproto.MapNotifyEvent)
-        return func
-
-    def on_unmap(self, func):
-        """Connect a function to a unmap event."""
-        self._add_event(xcb.xproto.EventMask.StructureNotify)
-        self.connect_signal(func, xcb.xproto.UnmapNotifyEvent)
-        return func
-
-
-class CreatedWindow(MappableWindow):
+class CreatedWindow(BorderWindow):
     """Created window."""
 
     def __new__(cls, xid, *args, **kwargs):
