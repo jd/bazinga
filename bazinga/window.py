@@ -140,6 +140,8 @@ class _Window(Object):
         # Handle DestroyNotify
         self.on_destroy(self._on_destroy)
         self.on_destroy_subwindow(self._on_destroy_subwindow)
+        # Handle CreateNotify
+        self.on_create_subwindow(self._on_create_subwindow)
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
@@ -238,7 +240,7 @@ class _Window(Object):
         # One of our child is destroyed
         self.children.remove(ExistingWindow(signal.window))
 
-    def _on_create(self, sender, signal):
+    def _on_create_subwindow(self, sender, signal):
         """Called when a window creation signal is received."""
         # We're having a baby window! Congratulations!
         self.children.add(ExistingWindow(signal.window))
