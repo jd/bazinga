@@ -231,9 +231,9 @@ class _Window(Object):
 
     def _update_property(self, signal, sender):
 
-        if _atom_to_property.has_key(signal.atom):
+        if self._atom_to_property.has_key(signal.atom):
             # Erase cache
-            delattr(self, _atom_to_property[signal.atom])
+            delattr(self, self._atom_to_property[signal.atom])
 
     _property_renotify_map = {
         Object.get_notify("_icccm_name"): Object.get_notify("name"),

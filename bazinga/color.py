@@ -3,52 +3,56 @@ import xcb.xproto
 from x import MainConnection
 from base.object import Object
 from base.memoize import memoize
+from base.property import rocachedproperty
 
 class XColor(Object):
     """Generic color class."""
 
-    def read_reply(self):
-        if hasattr(self, "cookie"):
-            reply = self.cookie.reply()
-            del self.cookie
-            self._pixel = reply.pixel
+    class pixel(rocachedproperty):
+        """Pixel value of the color."""
+        def __get__(self):
+            self._read_reply()
+
+    class red(rocachedproperty):
+        """Red value of the color."""
+        def __get__(self):
+            self._read_reply()
+
+    class green(rocachedproperty):
+        """Green value of the color."""
+        def __get__(self):
+            self._read_reply()
+
+    class blue(rocachedproperty):
+        """Blue value of the color."""
+        def __get__(self):
+            self._read_reply()
+
+    class alpha(rocachedproperty):
+        """Alpha value of the color."""
+        def __get__(self):
+            self._read_reply()
+
+    class hex(rocachedproperty):
+        """Hexadecimal representation of the color."""
+        def __get__(self):
+            return "#{0:<02x}{1:<02x}{2:<02x}{3:<02x}".format(self.red / 257,
+                                                              self.green / 257,
+                                                              self.blue / 257,
+                                                              self.alpha / 257)
+
+    def _read_reply(self):
+        if hasattr(self, "_cookie"):
+            reply = self._cookie.reply()
+            del self._cookie
+            XColor.pixel.set_cache(self, reply.pixel)
             return reply
 
-    @property
-    def hex(self):
-        self.read_reply()
-        return "#{0:<02x}{1:<02x}{2:<02x}{3:<02x}".format(self.red / 257,
-                                                          self.green / 257,
-                                                          self.blue / 257,
-                                                          self.alpha / 257)
 
     @property
     def name(self):
+        """Name of the color."""
         return self.hex
-
-    @property
-    def pixel(self):
-        self.read_reply()
-        return self._pixel
-
-    @property
-    def red(self):
-        self.read_reply()
-        return self._red
-
-    @property
-    def green(self):
-        self.read_reply()
-        return self._green
-
-    @property
-    def blue(self):
-        self.read_reply()
-        return self._blue
-
-    @property
-    def alpha(self):
-        return self._alpha
 
     def __str__(self):
         return self.name
@@ -57,27 +61,27 @@ class XColor(Object):
 class NamedColor(XColor):
     """A named color."""
 
+    class name(rocachedproperty):
+        __doc__  = XColor.name.__doc__
+
     def __init__(self, colormap, name, alpha=65535):
         if alpha < 0 or alpha > 65535:
             raise ValueError("Bad alpha value.")
 
-        self.cookie = MainConnection().core.AllocNamedColor(colormap, len(name), name)
-        self._name = name
-        self._alpha = alpha
+        self._cookie = MainConnection().core.AllocNamedColor(colormap, len(name), name)
+        NamedColor.name.set_cache(self, name)
+        NamedColor.alpha.set_cache(self, alpha)
 
         super(NamedColor, self).__init__()
 
-    def read_reply(self):
-        reply = XColor.read_reply(self)
+    def _read_reply(self):
+        reply = XColor._read_reply(self)
         if reply:
-            self._red = reply.exact_red
-            self._green = reply.exact_green
-            self._blue = reply.exact_blue
+            NamedColor.red.set_cache(self, reply.exact_red)
+            NamedColor.green.set_cache(self, reply.exact_green)
+            NamedColor.blue.set_cache(self, reply.exact_blue)
             return reply
 
-    @property
-    def name(self):
-        return self._name
 
 class ValueColor(XColor):
     """A color by value."""
@@ -88,17 +92,17 @@ class ValueColor(XColor):
             if value < 0 or value > 65535:
                 raise ValueError("Color attribute value is too high.")
 
-        self.cookie = MainConnection().core.AllocColor(colormap, red, green, blue)
-        self._alpha = alpha
+        self._cookie = MainConnection().core.AllocColor(colormap, red, green, blue)
+        ValueColor.alpha.set_cache(self, alpha)
 
         super(ValueColor, self).__init__()
 
-    def read_reply(self):
-        reply = XColor.read_reply(self)
+    def _read_reply(self):
+        reply = XColor._read_reply(self)
         if reply:
-            self._red = reply.red
-            self._green = reply.green
-            self._blue = reply.blue
+            ValueColor.red.set_cache(self, reply.red)
+            ValueColor.green.set_cache(self, reply.green)
+            ValueColor.blue.set_cache(self, reply.blue)
             return reply
 
 

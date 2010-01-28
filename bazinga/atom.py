@@ -1,5 +1,5 @@
 from base.memoize import Memoized
-from base.property import cachedproperty
+from base.property import rocachedproperty
 from base.object import Object
 from x import MainConnection
 
@@ -17,14 +17,10 @@ class Atom(Object, Memoized):
                                                             len(name),
                                                             name)
 
-    class value(cachedproperty):
+    class value(rocachedproperty):
         """X atom value."""
 
         def __get__(self):
-            return self._cookie.reply().atom
-
-        def __set__(self):
-            raise AttributeError("read-only attribute")
-
-        def __delete__(self):
-            raise AttributeError("undeletable attribute")
+            value = self._cookie.reply().atom
+            del self._cookie
+            return value
