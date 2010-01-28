@@ -291,20 +291,26 @@ class _Window(Object):
         return func
 
     def on_destroy_subwindow(self, func):
-        # XXX DO ME
-        pass
+        """Connect a function to a subwindow destroy event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.DestroyNotifyEvent)
+        return func
 
     def on_map_subwindow(self, func):
-        # XXX DO ME
-        pass
+        """Connect a function to a subwindow map event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.MapNotifyEvent)
+        return func
 
     def on_unmap_subwindow(self, func):
-        # XXX DO ME
-        pass
+        """Connect a function to a subwindow unmap event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.UnmapNotifyEvent)
+        return func
 
     def on_map_subwindow_request(self, func):
         """Connect a function to a subwindow mapping request event."""
-        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self._add_event(xcb.xproto.EventMask.SubstructureRedirectNotify)
         self.connect_signal(func, xcb.xproto.MapRequestEvent)
         return func
 
@@ -315,12 +321,14 @@ class _Window(Object):
         return func
 
     def on_configure_subwindow(self, func):
-        # XXX needed?
-        pass
+        """Connect a function to a configure subwindow notify event."""
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.ConfigureNotifyEvent)
+        return func
 
     def on_configure_subwindow_request(self, func):
         """Connect a function to a configure request event."""
-        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self._add_event(xcb.xproto.EventMask.SubstructureRedirect)
         self.connect_signal(func, xcb.xproto.ConfigureRequestEvent)
         return func
 
@@ -332,8 +340,9 @@ class _Window(Object):
 
     def on_reparent_subwindow(self, func):
         """Connect a function to a subwindow reparent notify event."""
-        # XXX DO ME
-        pass
+        self._add_event(xcb.xproto.EventMask.SubstructureNotify)
+        self.connect_signal(func, xcb.xproto.ReparentNotifyEvent)
+        return func
 
     def on_property_change(self, func):
         """Connect a function to a reparent notify event."""
