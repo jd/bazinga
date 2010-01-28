@@ -64,15 +64,7 @@ class Window(Object):
 
     __metaclass__ = SingletonMeta
 
-    _windows = weakref.WeakValueDictionary()
-
-    def __new__(cls, xid, *args, **kwargs):
-        try:
-            return cls._windows[xid], False
-        except KeyError:
-            obj = super(Window, cls).__new__(cls)
-            cls._windows[xid] = obj
-            return obj, True
+    __windows = weakref.WeakValueDictionary()
 
     __events = xcb.xproto.EventMask.NoEvent
 
@@ -179,8 +171,16 @@ class Window(Object):
     def name(self, value):
         self._icccm_name = self._netwm_name = value
 
+    def __new__(cls, xid, *args, **kwargs):
+        try:
+            return cls.__windows[xid], False
+        except KeyError:
+            obj = super(Window, cls).__new__(cls)
+            cls.__windows[xid] = obj
+            obj.xid = xid
+            return obj, True
+
     def __init__(self, xid, parent=None):
-        self.xid = xid
         self.children = set()
 
         # Receive events from the X connection
@@ -203,7 +203,7 @@ class Window(Object):
 
         super(Window, self).__init__()
 
-        # Add to parent
+        # Set parent
         if parent:
             self.parent = parent
 
@@ -516,15 +516,13 @@ class CreatedWindow(Window):
     def __new__(cls, xid, *args, **kwargs):
         xid = MainConnection().generate_id()
         obj, do_init = super(CreatedWindow, cls).__new__(cls, xid, *args, **kwargs)
-        Window._windows[xid] = obj
-        obj.xid = xid
-        return obj
+        return obj, do_init
 
     def __init__(self, parent, x=0, y=0, width=1, height=1,
                  border_width=0, values={}):
 
         if parent is None or parent is self:
-            raise
+            raise ValueError("you have to set a parent to create your window")
 
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
