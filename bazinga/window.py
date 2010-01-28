@@ -143,7 +143,7 @@ class _Window(Object):
 
     def __init__(self, xid, parent=None):
         self.xid = xid
-        self.children = []
+        self.children = set()
 
         # Receive events from the X connection
         MainConnection().connect_signal(self._dispatch_signals,
@@ -165,7 +165,7 @@ class _Window(Object):
         if parent:
             self.parent = parent
             # Do this last so we are sure no error happened
-            parent.children.append(self)
+            parent.children.add(self)
 
     # XXX Should be cached?
     def get_root(self):
