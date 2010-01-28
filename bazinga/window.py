@@ -353,6 +353,8 @@ class _Window(Object):
     def destroy(self):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
+        # Do it right now, it's safer
+        self.xid = None
 
 
 class ExistingWindow(_Window, Memoized):
