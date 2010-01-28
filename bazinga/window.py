@@ -464,7 +464,7 @@ class ResizableWindow(_Window):
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
 
     class _icccm_name(cachedproperty):
-        """ICCCM window name."""
+        __doc__ = _Window._icccm_name.__doc__
         __get__ = _Window._icccm_name.getter
 
         def __set__(self, value):
@@ -475,7 +475,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  8, len(value), value)
 
     class _netwm_name(cachedproperty):
-        """EWMH window name."""
+        __doc__ = _Window._netwm_name.__doc__
         __get__ = _Window._netwm_name.getter
 
         def __set__(self, value):
@@ -485,12 +485,7 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  Atom("STRING").value,
                                                  8, len(value), value)
 
-
-    @property
-    def name(self):
-        """Window name."""
-        return self._netwm_name or self._icccm_name
-
+    name = _Window.name
     @name.setter
     def name(self, value):
         self._icccm_name = self._netwm_name = value
