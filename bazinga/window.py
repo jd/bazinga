@@ -234,12 +234,12 @@ class _Window(Object):
             self.xid = None
         # One of our child is destroyed
         else:
-            self.children.remove(Window(signal.window))
+            self.children.remove(ExistingWindow(signal.window))
 
     def _on_create(self, sender, signal):
         """Called when a window creation signal is received."""
         # We're having a baby window! Congratulations!
-        self.children.add(Window(signal.window))
+        self.children.add(ExistingWindow(signal.window))
 
     def focus(self):
         """Give focus to a window.
