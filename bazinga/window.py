@@ -231,7 +231,7 @@ class _Window(Object):
         # We are destroyed
         if signal.window == self.xid:
             # Clear XID
-            self.xid = None
+            del self.xid
         # One of our child is destroyed
         else:
             self.children.remove(ExistingWindow(signal.window))
@@ -354,7 +354,7 @@ class _Window(Object):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
         # Do it right now, it's safer
-        self.xid = None
+        del self.xid
 
 
 class ExistingWindow(_Window, Memoized):
