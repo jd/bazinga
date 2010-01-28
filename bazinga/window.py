@@ -141,6 +141,9 @@ class _Window(Object):
         self.on_destroy_subwindow(self._on_destroy_subwindow)
         # Handle CreateNotify
         self.on_create_subwindow(self._on_create_subwindow)
+        # Handle reparent
+        self.on_reparent(self._on_reparent)
+        self.on_reparent_subwindow(self._on_reparent_subwindow)
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
@@ -242,6 +245,18 @@ class _Window(Object):
         """Called when a window creation signal is received."""
         # We're having a baby window! Congratulations!
         self.children.add(ExistingWindow(signal.window))
+
+    def _on_reparent(self, sender, signal):
+        """Update parenting links."""
+        # Are we getting reparented?
+        if signal.window == self.xid:
+            self.parent = ExistingWindow(signal.window)
+
+    def _on_reparent_subwindow(self, sender, signal):
+        """Update parenting links."""
+        # A child of us is being reparented?
+        if signal.window != self.xid:
+            self.children.remove(ExistingWindow(signal.window))
 
     def focus(self):
         """Give focus to a window.
