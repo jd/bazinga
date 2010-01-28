@@ -36,22 +36,6 @@ events_window_attribute = {
     xcb.xproto.ClientMessageEvent: "window"
 }
 
-# This event are also for a window but
-# are about a subwindow
-events_subwindow_attribute = {
-    xcb.xproto.CreateNotifyEvent: "parent",
-    xcb.xproto.DestroyNotifyEvent: "event",
-    xcb.xproto.UnmapNotifyEvent: "event",
-    xcb.xproto.MapNotifyEvent: "event",
-    xcb.xproto.MapRequestEvent: "parent",
-    xcb.xproto.ReparentNotifyEvent: "window",
-    xcb.xproto.ConfigureNotifyEvent: "window",
-    xcb.xproto.ConfigureRequestEvent: "parent",
-    xcb.xproto.GravityNotifyEvent: "window",
-    xcb.xproto.CirculateNotifyEvent: "window",
-    xcb.xproto.CirculateRequestEvent: "window",
-}
-
 
 def xcb_dict_to_value(values, xcb_dict):
     """Many X values are made from a mask indicating which values are present
@@ -150,12 +134,11 @@ class _Window(Object):
                                         signal=xcb.Event)
 
         # Handle ConfigureNotify to update cached attributes
-        self.on_configure(self._update_geometry)
+        self.on_configure(self._on_configure)
         # Handle PropertyChange
-        self.on_property_change(self._update_property)
+        self.on_property_change(self._on_property_change)
         # Handle DestroyNotify
-        self.on_destroy(self._destroy)
-
+        self.on_destroy(self._on_destroy)
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
@@ -164,8 +147,6 @@ class _Window(Object):
         # Add to parent
         if parent:
             self.parent = parent
-            # Do this last so we are sure no error happened
-            parent.children.add(self)
 
     # XXX Should be cached?
     def get_root(self):
@@ -217,7 +198,7 @@ class _Window(Object):
         _Window.height.set_cache(self, wg.height)
         return wg
 
-    def _update_geometry(self, signal, sender):
+    def _on_configure(self, signal, sender):
         """Update window geometry from an event."""
         _Window.x.set_cache(self, signal.x)
         _Window.y.set_cache(self, signal.y)
@@ -229,7 +210,7 @@ class _Window(Object):
         Atom("_NET_WM_NAME").value: "_netwm_name",
     }
 
-    def _update_property(self, signal, sender):
+    def _on_property_change(self, signal, sender):
 
         if self._atom_to_property.has_key(signal.atom):
             # Erase cache
@@ -244,6 +225,21 @@ class _Window(Object):
         """Reemit some notify events differently."""
         if self._property_renotify_map.has_key(signal):
             self.emit_signal(self._property_renotify_map[signal])
+
+    def _on_destroy(self, sender, signal):
+        """Called when a window destroy signal is received."""
+        # We are destroyed
+        if signal.window == self.xid:
+            # Clear XID
+            self.xid = None
+        # One of our child is destroyed
+        else:
+            self.children.remove(Window(signal.window))
+
+    def _on_create(self, sender, signal):
+        """Called when a window creation signal is received."""
+        # We're having a baby window! Congratulations!
+        self.children.add(Window(signal.window))
 
     def focus(self):
         """Give focus to a window.
@@ -349,14 +345,6 @@ class _Window(Object):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
 
-    def _destroy(self):
-        """Called when a window destroy signal is received."""
-        # Clear XID
-        self.xid = None
-        # Remove parent/child relationship
-        if self.parent:
-            self.parent.children.remove(self)
-            del self.parent
 
 class ExistingWindow(_Window, Memoized):
     """An already existing window."""
@@ -393,7 +381,7 @@ class BorderWindow(_Window):
         BorderWindow.border_width.set_cache(self, wg.border_width)
         return wg
 
-    def _update_geometry(self, signal, sender):
+    def _on_configure(self, signal, sender):
         """Update window geometry from an event."""
         _Window._update_geometry(self, signal, sender)
         BorderWindow.border_width.set_cache(self, signal.border_width)
