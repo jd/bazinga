@@ -116,7 +116,7 @@ class _Window(Object):
         """ICCCM window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_NAME"),
+                                                     Atom("WM_NAME").value,
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
             return byte_list_to_str(prop.value)
@@ -128,7 +128,7 @@ class _Window(Object):
         """EWMH window name."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("_NET_WM_NAME"),
+                                                     Atom("_NET_WM_NAME").value,
                                                      xcb.xproto.GetPropertyType.Any,
                                                      0, 4096).reply()
             return byte_list_to_str(prop.value)
@@ -224,16 +224,13 @@ class _Window(Object):
         _Window.width.set_cache(self, signal.width)
         _Window.height.set_cache(self, signal.height)
 
+    _atom_to_property = {
+        Atom("WM_NAME").value: "_icccm_name",
+        Atom("_NET_WM_NAME").value: "_netwm_name",
+    }
+
     def _update_property(self, signal, sender):
 
-        # XXX move this out
-        # But cannot be in class because it loop on import:
-        # Window -> Atom -> x.MainConn -> Window
-        _atom_to_property = {
-            Atom("WM_NAME"): "_icccm_name",
-            Atom("_NET_WM_NAME"): "_netwm_name",
-        }
-        # If this a atom property we care?
         if _atom_to_property.has_key(signal.atom):
             # Erase cache
             delattr(self, _atom_to_property[signal.atom])
@@ -473,8 +470,8 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
                                                  self.xid,
-                                                 Atom("WM_NAME"),
-                                                 Atom("STRING"),
+                                                 Atom("WM_NAME").value,
+                                                 Atom("STRING").value,
                                                  8, len(value), value)
 
     class _netwm_name(cachedproperty):
@@ -484,8 +481,8 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
                                                  self.xid,
-                                                 Atom("_NET_WM_NAME"),
-                                                 Atom("STRING"),
+                                                 Atom("_NET_WM_NAME").value,
+                                                 Atom("STRING").value,
                                                  8, len(value), value)
 
 
