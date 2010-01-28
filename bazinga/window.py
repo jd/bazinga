@@ -461,9 +461,9 @@ class Window(Object):
         self.connect_signal(func, xcb.xproto.ClientMessageEvent)
         return func
 
-    def __str__(self):
+    def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__,
-                                              hex(self.xid))
+                           hex(self.xid))
 
 
 class CreatedWindow(Window):
