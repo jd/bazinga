@@ -180,7 +180,7 @@ class Window(Object):
             obj.xid = xid
             return obj, True
 
-    def __init__(self, xid, parent=None):
+    def __init__(self, xid):
         # Receive events from the X connection
         MainConnection().connect_signal(self._dispatch_signals,
                                         signal=xcb.Event)
@@ -193,10 +193,6 @@ class Window(Object):
         self.connect_signal(self._property_renotify, Notify)
 
         super(Window, self).__init__()
-
-        # Set parent
-        if parent:
-            self.parent = parent
 
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
@@ -509,7 +505,7 @@ class CreatedWindow(Window):
         CreatedWindow.height.set_cache(self, height)
 
         create_window.check()
-        super(CreatedWindow, self).__init__(self.xid, parent)
+        super(CreatedWindow, self).__init__(self.xid)
 
     def on_button_press(self, func):
         """Connect a function to a button press event on that window."""
