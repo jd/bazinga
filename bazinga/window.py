@@ -2,13 +2,13 @@
 
 from base.property import cachedproperty
 from base.object import Object, Notify
-from base.memoize import Memoized
+from base.singleton import SingletonMeta
 from x import MainConnection, byte_list_to_str
 from atom import Atom
 from color import Color
 
 import xcb.xproto
-
+import weakref
 
 events_window_attribute = {
     xcb.xproto.KeyPressEvent: "event",
@@ -59,8 +59,20 @@ def xcb_dict_to_value(values, xcb_dict):
     return value_mask, value_list
 
 
-class _Window(Object):
+class Window(Object):
     """A basic X window."""
+
+    __metaclass__ = SingletonMeta
+
+    __windows = weakref.WeakValueDictionary()
+
+    def __new__(cls, xid, *args, **kwargs):
+        try:
+            return cls.__windows[xid], False
+        except KeyError:
+            obj = super(Window, cls).__new__(cls)
+            cls.__windows[xid] = obj
+            return obj, True
 
     __events = xcb.xproto.EventMask.NoEvent
 
@@ -147,7 +159,7 @@ class _Window(Object):
         # Transform and reemit some notify signals into other
         self.connect_signal(self._property_renotify, Notify)
 
-        super(_Window, self).__init__()
+        super(Window, self).__init__()
 
         # Add to parent
         if parent:
@@ -197,18 +209,18 @@ class _Window(Object):
     def _retrieve_geometry(self):
         """Update window geometry."""
         wg = MainConnection().core.GetGeometry(self.xid).reply()
-        _Window.x.set_cache(self, wg.x)
-        _Window.y.set_cache(self, wg.y)
-        _Window.width.set_cache(self, wg.width)
-        _Window.height.set_cache(self, wg.height)
+        Window.x.set_cache(self, wg.x)
+        Window.y.set_cache(self, wg.y)
+        Window.width.set_cache(self, wg.width)
+        Window.height.set_cache(self, wg.height)
         return wg
 
     def _on_configure(self, signal, sender):
         """Update window geometry from an event."""
-        _Window.x.set_cache(self, signal.x)
-        _Window.y.set_cache(self, signal.y)
-        _Window.width.set_cache(self, signal.width)
-        _Window.height.set_cache(self, signal.height)
+        Window.x.set_cache(self, signal.x)
+        Window.y.set_cache(self, signal.y)
+        Window.width.set_cache(self, signal.width)
+        Window.height.set_cache(self, signal.height)
 
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
@@ -234,7 +246,7 @@ class _Window(Object):
     def _on_destroy_subwindow(self, sender, signal):
         """Remove a subwindow from our children list."""
         # One of our child is destroyed
-        # Do not try ExistingWindow(xid) here, because it will start to
+        # Do not try Window(xid) here, because it will start to
         # handle the window whereas it has been destroyed!
         for window in self.children:
             if window.xid == signal.window:
@@ -244,19 +256,19 @@ class _Window(Object):
     def _on_create_subwindow(self, sender, signal):
         """Called when a window creation signal is received."""
         # We're having a baby window! Congratulations!
-        self.children.add(ExistingWindow(signal.window))
+        self.children.add(Window(signal.window))
 
     def _on_reparent(self, sender, signal):
         """Update parenting links."""
         # Are we getting reparented?
         if signal.window == self.xid:
-            self.parent = ExistingWindow(signal.window)
+            self.parent = Window(signal.window)
 
     def _on_reparent_subwindow(self, sender, signal):
         """Update parenting links."""
         # A child of us is being reparented?
         if signal.window != self.xid:
-            self.children.remove(ExistingWindow(signal.window))
+            self.children.remove(Window(signal.window))
 
     def focus(self):
         """Give focus to a window.
@@ -435,11 +447,7 @@ class _Window(Object):
                                               hex(self.xid))
 
 
-class ExistingWindow(_Window, Memoized):
-    """An already existing window."""
-    pass
-
-class BorderWindow(_Window):
+class BorderWindow(Window):
     """A window with borders."""
 
     class border_width(cachedproperty):
@@ -472,11 +480,11 @@ class BorderWindow(_Window):
 
     def _on_configure(self, signal, sender):
         """Update window geometry from an event."""
-        _Window._update_geometry(self, signal, sender)
+        Window._update_geometry(self, signal, sender)
         BorderWindow.border_width.set_cache(self, signal.border_width)
 
 
-class MappableWindow(_Window):
+class MappableWindow(Window):
     """A window that can be mapped or unmaped on screen."""
 
     def map(self):
@@ -500,29 +508,29 @@ class MappableWindow(_Window):
         return func
 
 
-class MovableWindow(_Window):
+class MovableWindow(Window):
     """A window that can be moved."""
 
     class x(cachedproperty):
-        __get__ = _Window.x.getter
+        __get__ = Window.x.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.X,
                                                          [ value ])
     class y(cachedproperty):
-        __get__ = _Window.y.getter
+        __get__ = Window.y.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.Y,
                                                          [ value ])
 
-class ResizableWindow(_Window):
+class ResizableWindow(Window):
     """A window that can be resized."""
 
     class width(cachedproperty):
-        __get__ = _Window.width.getter
+        __get__ = Window.width.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -530,7 +538,7 @@ class ResizableWindow(_Window):
                                                           [ value ])
 
     class height(cachedproperty):
-        __get__ = _Window.height.getter
+        __get__ = Window.height.getter
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -541,8 +549,8 @@ class ResizableWindow(_Window):
 class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow):
 
     class _icccm_name(cachedproperty):
-        __doc__ = _Window._icccm_name.__doc__
-        __get__ = _Window._icccm_name.getter
+        __doc__ = Window._icccm_name.__doc__
+        __get__ = Window._icccm_name.getter
 
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
@@ -552,8 +560,8 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  8, len(value), value)
 
     class _netwm_name(cachedproperty):
-        __doc__ = _Window._netwm_name.__doc__
-        __get__ = _Window._netwm_name.getter
+        __doc__ = Window._netwm_name.__doc__
+        __get__ = Window._netwm_name.getter
 
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
@@ -562,10 +570,16 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                                                  Atom("STRING").value,
                                                  8, len(value), value)
 
-    name = _Window.name
+    name = Window.name
     @name.setter
     def name(self, value):
         self._icccm_name = self._netwm_name = value
+
+    def __new__(cls, xid, *args, **kwargs):
+        xid = MainConnection().generate_id()
+        obj = super(Window, cls).__new__(cls, xid, *args, **kwargs)
+        cls.__windows[xid] = obj
+        return obj, True
 
     def __init__(self, parent, x=0, y=0, width=1, height=1,
                  border_width=0, values={}):
@@ -576,8 +590,6 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         if parent is self:
             raise
 
-        xid = MainConnection().generate_id()
-
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
         self.__events = xcb.xproto.EventMask.StructureNotify \
@@ -585,9 +597,9 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
                         | xcb.xproto.EventMask.PropertyChange
 
 
-        create_window = \
+        createWindow = \
         MainConnection().core.CreateWindowChecked(parent.get_root().root_depth,
-                                                  xid,
+                                                  self.xid,
                                                   parent.xid,
                                                   x, y, width, height,
                                                   border_width,
@@ -602,8 +614,8 @@ class CreatedWindow(BorderWindow, MappableWindow, MovableWindow, ResizableWindow
         CreatedWindow.width.set_cache(self, width)
         CreatedWindow.height.set_cache(self, height)
 
-        create_window.check()
-        super(CreatedWindow, self).__init__(xid, parent)
+        createWindow.check()
+        super(CreatedWindow, self).__init__(self.xid, parent)
 
     def on_button_press(self, func):
         """Connect a function to a button press event on that window."""

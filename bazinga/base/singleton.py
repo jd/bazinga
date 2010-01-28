@@ -1,7 +1,5 @@
 from threading import Lock
 
-from memoize import memoize
-
 class SingletonMeta(type):
     """Singleton metaclass."""
 
