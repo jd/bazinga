@@ -79,7 +79,7 @@ class Window(Object):
     class x(cachedproperty):
         """X coordinate."""
         def __get__(self):
-            self._retrieve_window_geometry()
+            self._retrieve_geometry()
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -89,7 +89,7 @@ class Window(Object):
     class y(cachedproperty):
         """Y coordinate."""
         def __get__(self):
-            self._retrieve_window_geometry()
+            self._retrieve_geometry()
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -99,7 +99,7 @@ class Window(Object):
     class width(cachedproperty):
         """Width."""
         def __get__(self):
-            self._retrieve_window_geometry()
+            self._retrieve_geometry()
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
@@ -109,12 +109,34 @@ class Window(Object):
     class height(cachedproperty):
         """Height."""
         def __get__(self):
-            self._retrieve_window_geometry()
+            self._retrieve_geometry()
 
         def __set__(self, value):
             MainConnection().core.ConfigureWindowChecked(self.xid,
                                                          xcb.xproto.ConfigWindow.Height,
                                                          [ self.height ])
+
+    class border_width(cachedproperty):
+        """Border width."""
+        def __get__(self):
+            self._retrieve_geometry()
+
+        def __set__(self, value):
+            MainConnection().core.ConfigureWindowChecked(self.xid,
+                                                         xcb.xproto.ConfigWindow.BorderWidth,
+                                                         [ value ])
+
+    class border_color(cachedproperty):
+        """Border color."""
+        def __delete__(self):
+            raise AttributeError("Border color cannot be uncached.")
+
+        def __set__(self, value):
+            color = Color(self.get_root().default_colormap, value)
+            MainConnection().core.ChangeWindowAttributesChecked(self.xid,
+                                                                xcb.xproto.CW.BorderPixel,
+                                                                [ color.pixel ])
+            return color
 
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
@@ -233,7 +255,7 @@ class Window(Object):
         Window.y.set_cache(self, wg.y)
         Window.width.set_cache(self, wg.width)
         Window.height.set_cache(self, wg.height)
-        return wg
+        Window.border_width.set_cache(self, wg.border_width)
 
     def _on_configure(self, signal, sender):
         """Update window geometry from an event."""
@@ -241,6 +263,7 @@ class Window(Object):
         Window.y.set_cache(self, signal.y)
         Window.width.set_cache(self, signal.width)
         Window.height.set_cache(self, signal.height)
+        Window.border_width.set_cache(self, signal.border_width)
 
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
@@ -487,44 +510,7 @@ class Window(Object):
         return func
 
 
-class BorderWindow(Window):
-    """A window with borders."""
-
-    class border_width(cachedproperty):
-        """Border width."""
-        def __get__(self):
-            self._retrieve_geometry()
-
-        def __set__(self, value):
-            MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                         xcb.xproto.ConfigWindow.BorderWidth,
-                                                         [ value ])
-
-    class border_color(cachedproperty):
-        """Border color."""
-        def __delete__(self):
-            raise AttributeError("Border color cannot be uncached.")
-
-        def __set__(self, value):
-            color = Color(self.get_root().default_colormap, value)
-            MainConnection().core.ChangeWindowAttributesChecked(self.xid,
-                                                                xcb.xproto.CW.BorderPixel,
-                                                                [ color.pixel ])
-            return color
-
-    def _retrieve_geometry(self):
-        """Update window geometry."""
-        wg = Window._retrieve_geometry(self)
-        BorderWindow.border_width.set_cache(self, wg.border_width)
-        return wg
-
-    def _on_configure(self, signal, sender):
-        """Update window geometry from an event."""
-        Window._on_configure(self, signal, sender)
-        BorderWindow.border_width.set_cache(self, signal.border_width)
-
-
-class CreatedWindow(BorderWindow):
+class CreatedWindow(Window):
     """Created window."""
 
     def __new__(cls, xid, *args, **kwargs):
