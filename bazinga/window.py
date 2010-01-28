@@ -234,7 +234,11 @@ class _Window(Object):
         # We are destroyed
         if signal.window == self.xid:
             # Clear XID
-            del self.xid
+            try:
+                del self.xid
+            except AttributeError:
+                # Already deleted
+                pass
 
     def _on_destroy_subwindow(self, sender, signal):
         # One of our child is destroyed
@@ -359,6 +363,9 @@ class _Window(Object):
         MainConnection().core.DestroyWindow(self.xid)
         # Do it right now, it's safer
         del self.xid
+
+    def __iter__(self):
+        return self.children
 
 
 class ExistingWindow(_Window, Memoized):

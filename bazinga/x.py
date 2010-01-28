@@ -1,5 +1,6 @@
 import pyev
 import xcb.xproto
+import traceback
 
 from screen import Screen, Output
 from base.singleton import Singleton
@@ -160,12 +161,15 @@ class Connection(Object, xcb.Connection):
         return cookies
 
     def _on_io(self, watcher, events):
-        while True:
-            event = self.poll_for_event()
-            if event:
-                self.emit_signal(event)
-            else:
-                break
+        try:
+            while True:
+                event = self.poll_for_event()
+                if event:
+                    self.emit_signal(event)
+                else:
+                    break
+        except Exception:
+            traceback.print_exc()
 
     def _prepare(self, watcher, events):
         self.flush()
