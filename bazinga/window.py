@@ -181,16 +181,29 @@ class Window(Object):
             return obj, True
 
     def __init__(self, xid):
-        # Receive events from the X connection
-        MainConnection().connect_signal(self._dispatch_signals,
-                                        signal=xcb.Event)
+        # Avoid missing events
+        with MainConnection():
 
-        # Handle ConfigureNotify to update cached attributes
-        self.on_configure(self._on_configure)
-        # Handle PropertyChange
-        self.on_property_change(self._on_property_change)
-        # Transform and reemit some notify signals into other
-        self.connect_signal(self._property_renotify, Notify)
+            # Request children
+            qt = MainConnection().core.QueryTree(self.xid)
+
+            # Receive events from the X connection
+            MainConnection().connect_signal(self._dispatch_signals,
+                                            signal=xcb.Event)
+
+            # Handle ConfigureNotify to update cached attributes
+            self.on_configure(self._on_configure)
+            self.on_reparent(lambda signal, sender: sender)
+            # Handle PropertyChange
+            self.on_property_change(self._on_property_change)
+            # Transform and reemit some notify signals into other
+            self.connect_signal(self._property_renotify, Notify)
+
+            reply = qt.reply()
+
+        self.children = set()
+        for w in reply.children:
+            children.add(Window(w))
 
         super(Window, self).__init__()
 
@@ -292,14 +305,6 @@ class Window(Object):
     def destroy(self):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
-
-    def get_children(self):
-        """Get children of a window."""
-        qt = MainConnection().core.QueryTree(self.xid)
-        children = set()
-        for w in qt.reply().children:
-            children.add(Window(w))
-        return children
 
     # Events handling
     def on_enter(self, func):
