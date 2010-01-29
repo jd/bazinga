@@ -206,7 +206,7 @@ class Window(Object):
 
         self.children = set()
         for w in reply.children:
-            children.add(Window(w))
+            self.children.add(Window(w))
 
         super(Window, self).__init__()
 
