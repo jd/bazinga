@@ -139,25 +139,32 @@ class Connection(Object, xcb.Connection):
 
             return screens
 
+    def sync(self):
+        """Synchronize connection."""
+        self.core.GetInputFocus().reply()
 
-    def _set_events(self, events):
-        """Set events that shall be received by the X connection."""
+    def grab(self):
+        self.core.GrabServer()
+        self.sync()
 
-        for root in self.roots:
-            root.set_events(events)
+    def ungrab(self):
+        self.core.UngrabServer()
 
+    def __enter__(self):
+        self.grab()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.ungrab()
 
     @staticmethod
     def prepare_requests(method, variable_list, position, *args):
         """Prepare a bunch of requests."""
-
         cookies = []
-
         for var in variable_list:
             arguments = list(args)
             arguments.insert(position, var)
             cookies.append(method(*arguments))
-
         return cookies
 
     def _on_io(self, watcher, events):
