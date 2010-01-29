@@ -275,18 +275,6 @@ class Window(Object):
         if self._property_renotify_map.has_key(signal):
             self.emit_signal(self._property_renotify_map[signal])
 
-    # Methods
-    # XXX Should be cached?
-    def get_root(self):
-        """Get the root window the window is attached on."""
-        try:
-            while self.parent:
-                self = self.parent
-        except AttributeError:
-            # No parent
-            pass
-        return self
-
     def focus(self):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
