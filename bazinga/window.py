@@ -26,7 +26,7 @@ events_window_attribute = {
     xcb.xproto.DestroyNotifyEvent: "event",
     xcb.xproto.UnmapNotifyEvent: "window",
     xcb.xproto.MapNotifyEvent: "window",
-    xcb.xproto.ReparentNotifyEvent: "window",
+    xcb.xproto.ReparentNotifyEvent: "event",
     xcb.xproto.ConfigureNotifyEvent: "window",
     xcb.xproto.ConfigureRequestEvent: "parent",
     xcb.xproto.GravityNotifyEvent: "window",
@@ -192,12 +192,15 @@ class Window(Object):
                                             signal=xcb.Event)
 
             # Handle ConfigureNotify to update cached attributes
-            self.on_configure(self._on_configure)
-            self.on_reparent(lambda signal, sender: sender)
+            self.on_configure(Window._on_configure)
             # Handle PropertyChange
-            self.on_property_change(self._on_property_change)
+            self.on_property_change(Window._on_property_change)
             # Transform and reemit some notify signals into other
-            self.connect_signal(self._property_renotify, Notify)
+            self.connect_signal(Window._property_renotify, Notify)
+            # Build children tree correctly
+            self.on_reparent(Window._on_reparent)
+            self.on_create_subwindow(Window._on_create_subwindow)
+            self.on_destroy_subwindow(Window._on_destroy_subwindow)
 
             reply = qt.reply()
 
@@ -246,35 +249,60 @@ class Window(Object):
         Window.height.set_cache(self, wg.height)
         Window.border_width.set_cache(self, wg.border_width)
 
-    def _on_configure(self, signal, sender):
+    @staticmethod
+    def _on_configure(sender, signal):
         """Update window geometry from an event."""
-        Window.x.set_cache(self, signal.x)
-        Window.y.set_cache(self, signal.y)
-        Window.width.set_cache(self, signal.width)
-        Window.height.set_cache(self, signal.height)
-        Window.border_width.set_cache(self, signal.border_width)
+        Window.x.set_cache(sender, signal.x)
+        Window.y.set_cache(sender, signal.y)
+        Window.width.set_cache(sender, signal.width)
+        Window.height.set_cache(sender, signal.height)
+        Window.border_width.set_cache(sender, signal.border_width)
+
+    @staticmethod
+    def _on_reparent(sender, signal):
+        # Make sure we are not the one reparented
+        if signal.window != sender.xid:
+            if signal.parent == sender.xid:
+                # We are adopting
+                sender.children.add(Window(signal.window))
+            else:
+                sender.children.remove(Window(signal.window))
 
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
         Atom("_NET_WM_NAME").value: "_netwm_name",
     }
 
-    def _on_property_change(self, signal, sender):
-
-        if self._atom_to_property.has_key(signal.atom):
+    @staticmethod
+    def _on_property_change(sender, signal):
+        if sender._atom_to_property.has_key(signal.atom):
             # Erase cache
-            delattr(self, self._atom_to_property[signal.atom])
+            delattr(sender, sender._atom_to_property[signal.atom])
 
     _property_renotify_map = {
         Object.get_notify("_icccm_name"): Object.get_notify("name"),
         Object.get_notify("_netwm_name"): Object.get_notify("name"),
     }
 
-    def _property_renotify(self, sender, signal):
+    @staticmethod
+    def _property_renotify(sender, signal):
         """Reemit some notify events differently."""
-        if self._property_renotify_map.has_key(signal):
-            self.emit_signal(self._property_renotify_map[signal])
+        if sender._property_renotify_map.has_key(signal):
+            sender.emit_signal(sender._property_renotify_map[signal])
 
+    @staticmethod
+    def _on_create_subwindow(sender, signal):
+        """Add children when subwindows are created."""
+        sender.children.add(Window(signal.window))
+
+    @staticmethod
+    def _on_destroy_subwindow(sender, signal):
+        """Remove subwindow."""
+        # Check it's not 'sender/self' that is being destroyed
+        if signal.window != sender.xid:
+            sender.children.remove(Window(signal.window))
+
+    # Methods
     def focus(self):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
