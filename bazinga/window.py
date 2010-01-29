@@ -483,11 +483,13 @@ class CreatedWindow(Window):
 
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
+        # XXX or grab while creating and calling super()
         self.__events = xcb.xproto.EventMask.StructureNotify \
                         | xcb.xproto.EventMask.SubstructureNotify \
                         | xcb.xproto.EventMask.PropertyChange
 
 
+        # XXX fix, no get_root
         create_window = \
         MainConnection().core.CreateWindowChecked(parent.get_root().root_depth,
                                                   self.xid,
