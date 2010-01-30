@@ -74,9 +74,9 @@ class Window(Object):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                         xcb.xproto.ConfigWindow.X,
-                                                         [ value ])
+            MainConnection().core.ConfigureWindow(self.xid,
+                                                  xcb.xproto.ConfigWindow.X,
+                                                  [ value ])
 
     class y(cachedproperty):
         """Y coordinate."""
@@ -84,9 +84,9 @@ class Window(Object):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                         xcb.xproto.ConfigWindow.Y,
-                                                         [ value ])
+            MainConnection().core.ConfigureWindow(self.xid,
+                                                  xcb.xproto.ConfigWindow.Y,
+                                                  [ value ])
 
     class width(cachedproperty):
         """Width."""
@@ -94,9 +94,9 @@ class Window(Object):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                          xcb.xproto.ConfigWindow.Width,
-                                                          [ value ])
+            MainConnection().core.ConfigureWindow(self.xid,
+                                                  xcb.xproto.ConfigWindow.Width,
+                                                  [ value ])
 
     class height(cachedproperty):
         """Height."""
@@ -104,9 +104,9 @@ class Window(Object):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                         xcb.xproto.ConfigWindow.Height,
-                                                         [ self.height ])
+            MainConnection().core.ConfigureWindow(self.xid,
+                                                  xcb.xproto.ConfigWindow.Height,
+                                                  [ self.height ])
 
     class border_width(cachedproperty):
         """Border width."""
@@ -114,21 +114,27 @@ class Window(Object):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindowChecked(self.xid,
-                                                         xcb.xproto.ConfigWindow.BorderWidth,
+            MainConnection().core.ConfigureWindow(self.xid,
+                                                  xcb.xproto.ConfigWindow.BorderWidth,
                                                          [ value ])
 
     class border_color(cachedproperty):
         """Border color."""
-        def __delete__(self):
-            raise AttributeError("Border color cannot be uncached.")
+        def __get__(self):
+            raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
             color = Color(self.get_root().default_colormap, value)
-            MainConnection().core.ChangeWindowAttributesChecked(self.xid,
-                                                                xcb.xproto.CW.BorderPixel,
-                                                                [ color.pixel ])
+            MainConnection().core.ChangeWindowAttributes(self.xid,
+                                                         xcb.xproto.CW.BorderPixel,
+                                                         [ color.pixel ])
             return color
+
+    class mapped(rocachedproperty):
+        """Window mapping state."""
+        def __get__(self):
+            reply = MainConnection().core.GetWindowAttributes(self.xid).reply()
+            return reply.map_state
 
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
