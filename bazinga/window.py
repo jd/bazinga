@@ -1,6 +1,6 @@
 """Bazinga window objects."""
 
-from base.property import cachedproperty
+from base.property import cachedproperty, rocachedproperty
 from base.object import Object, Notify
 from base.singleton import SingletonMeta
 from x import MainConnection, byte_list_to_str
