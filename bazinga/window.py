@@ -329,6 +329,40 @@ class Window(Object):
         """Destroy a window."""
         MainConnection().core.DestroyWindow(self.xid)
 
+    def grab_key(self, modifiers, keycode):
+        """Grab a key on a window."""
+        MainConnection().core.GrabKey(True,
+                                      self.xid,
+                                      modifiers,
+                                      keycode,
+                                      xcb.xproto.GrabMode.Async,
+                                      xcb.xproto.GrabMode.Async)
+
+    def ungrab_key(self, modifiers, keycode):
+        """Ungrab a key on a window."""
+        MainConnection().core.UngrabKey(keycode,
+                                        self.xid,
+                                        modifiers)
+
+    def grab_button(self, modifiers, button):
+        """Grab a button on a window."""
+        MainConnection().core.GrabButton(False,
+                                         self.xid,
+                                         xcb.xproto.EventMask.ButtonPress
+                                         | xcb.xproto.EventMask.ButtonRelease,
+                                         # XXX Sync?
+                                         xcb.xproto.GrabMode.Async,
+                                         xcb.xproto.GrabMode.Async,
+                                         xcb.xproto.NONE,
+                                         xcb.xproto.NONE,
+                                         button, modifiers)
+
+    def ungrab_button(self, modifiers, button):
+        """Ungrab a button on a window."""
+        MainConnectino().core.UngrabButton(button,
+                                           self.xid,
+                                           modifiers)
+
     # Events handling
     def on_enter(self, func):
         """Connect a function to a enter event."""
