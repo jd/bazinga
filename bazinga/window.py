@@ -187,34 +187,34 @@ class Window(Object):
             return obj, True
 
     def __init__(self, xid):
+        # Receive events from the X connection
+        MainConnection().connect_signal(self._dispatch_signals,
+                                        signal=xcb.Event)
+
+        # Handle ConfigureNotify to update cached attributes
+        self.on_configure(self._on_configure)
+        # Handle PropertyChange
+        self.on_property_change(self._on_property_change)
+        # Transform and reemit some notify signals into other
+        self.connect_signal(self._property_renotify, Notify)
+
+        super(Window, self).__init__()
+
+    def watch_children(self):
+        """Maintain a list of children window."""
         # Avoid missing events
         with MainConnection():
-
             # Request children
             qt = MainConnection().core.QueryTree(self.xid)
-
-            # Receive events from the X connection
-            MainConnection().connect_signal(self._dispatch_signals,
-                                            signal=xcb.Event)
-
-            # Handle ConfigureNotify to update cached attributes
-            self.on_configure(Window._on_configure)
-            # Handle PropertyChange
-            self.on_property_change(Window._on_property_change)
-            # Transform and reemit some notify signals into other
-            self.connect_signal(Window._property_renotify, Notify)
             # Build children tree correctly
-            self.on_reparent(Window._on_reparent)
-            self.on_create_subwindow(Window._on_create_subwindow)
-            self.on_destroy_subwindow(Window._on_destroy_subwindow)
-
+            self.on_reparent(self._on_reparent)
+            self.on_create_subwindow(self._on_create_subwindow)
+            self.on_destroy_subwindow(self._on_destroy_subwindow)
             reply = qt.reply()
 
         self.children = set()
         for w in reply.children:
             self.children.add(Window(w))
-
-        super(Window, self).__init__()
 
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
@@ -519,7 +519,6 @@ class CreatedWindow(Window):
         # Otherwise our cache might not be up to date.
         # XXX or grab while creating and calling super()
         self.__events = xcb.xproto.EventMask.StructureNotify \
-                        | xcb.xproto.EventMask.SubstructureNotify \
                         | xcb.xproto.EventMask.PropertyChange
 
 
