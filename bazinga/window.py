@@ -200,6 +200,7 @@ class Window(Object):
 
         super(Window, self).__init__()
 
+    # I'm still not sure it belongs here, but well at least it's a good test
     def watch_children(self):
         """Maintain a list of children window."""
         # Avoid missing events
