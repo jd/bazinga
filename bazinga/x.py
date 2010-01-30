@@ -170,11 +170,16 @@ class Connection(Object, xcb.Connection):
     def _on_io(self, watcher, events):
         try:
             while True:
-                event = self.poll_for_event()
-                if event:
-                    self.emit_signal(event)
+                try:
+                    event = self.poll_for_event()
+                except xcb.ProtocolException as error:
+                    self.emit_signal(error.args[0])
                 else:
-                    break
+                    if event:
+                        self.emit_signal(event)
+                    else:
+                        # No more event
+                        break
         except Exception:
             traceback.print_exc()
 

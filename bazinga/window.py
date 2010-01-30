@@ -187,9 +187,11 @@ class Window(Object):
             return obj, True
 
     def __init__(self, xid):
-        # Receive events from the X connection
-        MainConnection().connect_signal(self._dispatch_signals,
+        # Receive events and errors from the X connection
+        MainConnection().connect_signal(self._dispatch_events,
                                         signal=xcb.Event)
+        MainConnection().connect_signal(self._dispatch_errors,
+                                        signal=xcb.Error)
 
         # Handle ConfigureNotify to update cached attributes
         self.on_configure(self._on_configure)
@@ -224,10 +226,14 @@ class Window(Object):
             return getattr(event, events_window_attribute[event.__class__]) == self.xid
         return False
 
-    def _dispatch_signals(self, signal, sender):
+    def _dispatch_events(self, signal, sender):
         """Dipatch signals that belongs to us."""
-
         if self._is_event_for_me(signal):
+            self.emit_signal(signal)
+
+    def _dispatch_errors(self, signal, sender):
+        """Dispatch errors that belongs to us."""
+        if signal.bad_value == self.xid:
             self.emit_signal(signal)
 
     def on_event(self, func):
