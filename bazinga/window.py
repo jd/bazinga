@@ -130,7 +130,7 @@ class Window(Object):
                                                          [ color.pixel ])
             return color
 
-    class mapped(rocachedproperty):
+    class map_state(rocachedproperty):
         """Window mapping state."""
         def __get__(self):
             reply = MainConnection().core.GetWindowAttributes(self.xid).reply()
