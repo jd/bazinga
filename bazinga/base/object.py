@@ -1,14 +1,14 @@
-import weakref
-
 from . import signal as bsignal
+from singleton import SingletonPool
 
-_notify_slots = weakref.WeakValueDictionary()
-
-class Notify(bsignal.Signal):
+class Notify(SingletonPool):
     """Notify signal.
     This is sent when an object see one of its attribute changed.
     On object[key] = value, Notify object is emitted on the object."""
-    pass
+
+    def __init__(self, attribute):
+        self.attribute = attribute
+
 
 class Object(object):
     """Base class of many bazinga objects."""
@@ -52,15 +52,6 @@ class Object(object):
             return func
         return _on_signal
 
-    @staticmethod
-    def get_notify(key):
-        """Get the notify object corresponding to a key."""
-        if not _notify_slots.has_key(key):
-            notify = Notify()
-            _notify_slots[key] = notify
-            return notify
-        return _notify_slots[key]
-
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
         self.emit_notify(key)
@@ -71,14 +62,14 @@ class Object(object):
 
     def connect_notify(self, receiver, key):
         """Connect a function to a Notify signal matching key."""
-        return self.connect_signal(receiver, self.get_notify(key))
+        return self.connect_signal(receiver, Notify(key))
 
     def connect_notify(self, receiver, key):
         """Disconnect a function to a Notify signal matching key."""
-        return self.disconnect_signal(receiver, self.get_notify(key))
+        return self.disconnect_signal(receiver, Notify(key))
 
     def emit_notify(self, key):
-        self.emit_signal(self.get_notify(key))
+        self.emit_signal(Notify(key))
 
     def on_notify(self, key):
         """Return a function that can be called with a receiver as argument.
@@ -87,4 +78,4 @@ class Object(object):
             @object.on_notify("some_attribute")
             def my_function(sender, signal):
                 ..."""
-        return self.on_signal(self.get_notify(key))
+        return self.on_signal(Notify(key))

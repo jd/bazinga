@@ -2,7 +2,7 @@
 
 from base.property import cachedproperty, rocachedproperty
 from base.object import Object, Notify
-from base.singleton import SingletonMeta
+from base.singleton import SingletonPool
 from x import MainConnection, byte_list_to_str
 from atom import Atom
 from color import Color
@@ -59,12 +59,8 @@ def xcb_dict_to_value(values, xcb_dict):
     return value_mask, value_list
 
 
-class Window(Object):
+class Window(Object, SingletonPool):
     """A basic X window."""
-
-    __metaclass__ = SingletonMeta
-
-    __windows = weakref.WeakValueDictionary()
 
     __events = xcb.xproto.EventMask.NoEvent
 
@@ -177,16 +173,8 @@ class Window(Object):
     def name(self, value):
         self._icccm_name = self._netwm_name = value
 
-    def __new__(cls, xid, *args, **kwargs):
-        try:
-            return cls.__windows[xid], False
-        except KeyError:
-            obj = super(Window, cls).__new__(cls)
-            cls.__windows[xid] = obj
-            obj.xid = xid
-            return obj, True
-
     def __init__(self, xid):
+        self.xid = xid
         # Mandatory, we except this.
         self._set_events(xcb.xproto.EventMask.StructureNotify
                          | xcb.xproto.EventMask.PropertyChange)

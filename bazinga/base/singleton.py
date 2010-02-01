@@ -1,4 +1,6 @@
 from threading import Lock
+import weakref
+import cPickle
 
 class SingletonMeta(type):
     """Singleton metaclass."""
@@ -26,3 +28,21 @@ class Singleton(object):
                 cls.__instance = super(Singleton, cls).__new__(cls, *args, **kwargs)
                 return cls.__instance, True
         return cls.__instance, False
+
+class SingletonPool(object):
+
+    __metaclass__ = SingletonMeta
+
+    __lock = Lock()
+    # Can be overriden
+    __instances = weakref.WeakValueDictionary()
+
+    def __new__(cls, *args, **kwargs):
+        with cls.__lock:
+            key = cPickle.dumps((args, kwargs))
+            try:
+                return cls.__instances[key], False
+            except KeyError:
+                obj = super(SingletonPool, cls).__new__(cls)
+                cls.__instances[key] = obj
+                return obj, True
