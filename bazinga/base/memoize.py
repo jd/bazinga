@@ -25,17 +25,3 @@ def memoize(cache={}, ignore_first=True):
         func._memoize_ignore_first = ignore_first
         return decorator(_memoize, func)
     return memoize_decorator
-
-
-class MemoizedMeta(type):
-    """Singleton metaclass."""
-
-    @memoize()
-    def __call__(cls, *args, **kwargs):
-        return super(MemoizedMeta, cls).__call__(*args, **kwargs)
-
-
-class Memoized(object):
-    """Pool of memoized object. Like a big bag of singletons."""
-
-    __metaclass__ = MemoizedMeta
