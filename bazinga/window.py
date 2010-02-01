@@ -265,7 +265,7 @@ class Window(Object, SingletonPool):
         Window.border_width.set_cache(self, wg.border_width)
 
     @staticmethod
-    def _on_configure(sender, signal):
+    def _on_configure_update_geometry(sender, signal):
         """Update window geometry from an event."""
         Window.x.set_cache(sender, signal.x)
         Window.y.set_cache(sender, signal.y)
@@ -289,7 +289,7 @@ class Window(Object, SingletonPool):
     }
 
     @staticmethod
-    def _on_property_change(sender, signal):
+    def _on_property_change_del_cache(sender, signal):
         if sender._atom_to_property.has_key(signal.atom):
             # Erase cache
             delattr(sender, sender._atom_to_property[signal.atom])
@@ -318,7 +318,7 @@ class Window(Object, SingletonPool):
             sender.children.remove(Window(signal.window))
 
     @staticmethod
-    def _on_visibility(sender, signal):
+    def _on_visibility_set_value(sender, signal):
         """Update visibility value."""
         Window.visibility.set_cache(sender, signal.state)
 
@@ -550,11 +550,13 @@ class Window(Object, SingletonPool):
 
 
 # Handle ConfigureNotify to update cached attributes
-Window.connect_class_signal(Window._on_configure, xcb.xproto.ConfigureNotifyEvent)
+Window.connect_class_signal(Window._on_configure_update_geometry,
+                            xcb.xproto.ConfigureNotifyEvent)
 # Handle PropertyNotify to update properties
-Window.connect_class_signal(Window._on_property_change, xcb.xproto.PropertyNotifyEvent)
+Window.connect_class_signal(Window._on_property_change_del_cache,
+                            xcb.xproto.PropertyNotifyEvent)
 # Build visibility value
-Window.connect_class_signal(Window._on_visibility,
+Window.connect_class_signal(Window._on_visibility_set_value,
                             xcb.xproto.VisibilityNotifyEvent)
 # Reemit some Notify signals
 Window.connect_class_signal(Window._property_renotify, Notify)
