@@ -64,6 +64,9 @@ class Window(Object, SingletonPool):
 
     __events = xcb.xproto.EventMask.NoEvent
 
+    Visibility = xcb.xproto.Visibility
+    Visibility.Unmapped = -1
+
     class x(cachedproperty):
         """X coordinate."""
         def __get__(self):
@@ -113,6 +116,16 @@ class Window(Object, SingletonPool):
             MainConnection().core.ConfigureWindow(self.xid,
                                                   xcb.xproto.ConfigWindow.BorderWidth,
                                                          [ value ])
+
+    class visibility(rocachedproperty):
+        """Visibility of the window.
+        This can be either:
+            * Window.Visibility.Unmapped
+            * Window.Visibility.Unobscured
+            * Window.Visibility.PartiallyObscured
+            * Window.Visibility.FullyObscured"""
+        def __get__(self):
+            return Window.Visibility.Unmapped
 
     class border_color(cachedproperty):
         """Border color."""
@@ -177,7 +190,8 @@ class Window(Object, SingletonPool):
         self.xid = xid
         # Mandatory, we except this.
         self._set_events(xcb.xproto.EventMask.StructureNotify
-                         | xcb.xproto.EventMask.PropertyChange)
+                         | xcb.xproto.EventMask.PropertyChange
+                         | xcb.xproto.EventMask.VisibilityChange)
         # Receive events and errors from the X connection
         MainConnection().connect_signal(self._dispatch_events,
                                         signal=xcb.Event)
@@ -302,6 +316,11 @@ class Window(Object, SingletonPool):
         # Check it's not 'sender/self' that is being destroyed
         if signal.window != sender.xid:
             sender.children.remove(Window(signal.window))
+
+    @staticmethod
+    def _on_visibility(sender, signal):
+        """Update visibility value."""
+        Window.visibility.set_cache(sender, signal.state)
 
     # Methods
     def focus(self):
@@ -534,6 +553,9 @@ class Window(Object, SingletonPool):
 Window.connect_class_signal(Window._on_configure, xcb.xproto.ConfigureNotifyEvent)
 # Handle PropertyNotify to update properties
 Window.connect_class_signal(Window._on_property_change, xcb.xproto.PropertyNotifyEvent)
+# Build visibility value
+Window.connect_class_signal(Window._on_visibility,
+                            xcb.xproto.VisibilityNotifyEvent)
 # Reemit some Notify signals
 Window.connect_class_signal(Window._property_renotify, Notify)
 
@@ -557,7 +579,8 @@ class CreatedWindow(Window):
         # Otherwise our cache might not be up to date.
         # XXX or grab while creating and calling super()
         self.__events = xcb.xproto.EventMask.StructureNotify \
-                        | xcb.xproto.EventMask.PropertyChange
+                        | xcb.xproto.EventMask.PropertyChange \
+                        | xcb.xproto.EventMask.VisibilityChange
 
 
         # XXX fix, no get_root
