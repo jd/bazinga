@@ -109,7 +109,7 @@ class ValueColor(XColor):
 class HexColor(ValueColor):
     """An hexadecimal color."""
 
-    def __init__(self, colormap, name, alpha=65535, **kw):
+    def __init__(self, colormap, name, alpha=65535):
         len_name = len(name)
 
         if len_name != 6 and len_name != 8:
@@ -122,7 +122,7 @@ class HexColor(ValueColor):
         if len_name == 9:
             alpha = int(name[7:9], 16) * 257
 
-        super(HexColor, self).__init__(colormap, red, green, blue, alpha, **kw)
+        super(HexColor, self).__init__(colormap, red, green, blue, alpha)
 
 
 @memoize(ignore_first=False)
