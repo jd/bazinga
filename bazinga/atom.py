@@ -1,12 +1,16 @@
-from base.memoize import Memoized
 from base.property import rocachedproperty
 from base.object import Object
+from base.singleton import SingletonPool
 from x import MainConnection
 
 import xcb.xproto
 
-class Atom(Object, Memoized):
+class Atom(Object, SingletonPool):
     """X atom."""
+
+    # Keep references for ever.
+    # That should be a LRU in the future, or it may grow too large.
+    _SingletonPool__instances = dict()
 
     def __init__(self, name="Any"):
         self.name = name
