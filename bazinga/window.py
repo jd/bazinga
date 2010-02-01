@@ -186,6 +186,10 @@ class Window(Object, SingletonPool):
 
         super(Window, self).__init__()
 
+    def get_root(self):
+        # XXX lol...
+        return MainConnection().roots[0]
+
     # I'm still not sure it belongs here, but well at least it's a good test
     def watch_children(self):
         """Maintain a list of children window."""
