@@ -543,7 +543,8 @@ class CreatedWindow(Window):
 
     def __new__(cls, xid, *args, **kwargs):
         xid = MainConnection().generate_id()
-        obj, do_init = super(CreatedWindow, cls).__new__(cls, xid, *args, **kwargs)
+        obj, do_init = super(CreatedWindow, cls).__new__(cls, xid)
+        obj.xid = xid
         return obj, do_init
 
     def __init__(self, parent, x=0, y=0, width=1, height=1,
