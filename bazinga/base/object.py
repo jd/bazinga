@@ -13,6 +13,21 @@ class Notify(bsignal.Signal):
 class Object(object):
     """Base class of many bazinga objects."""
 
+    @classmethod
+    def connect_class_signal(cls, receiver, signal=bsignal.signal.All):
+        """Connect a signal to all object of this class."""
+        return bsignal.connect(receiver, signal=signal, sender=cls)
+
+    @classmethod
+    def disconnect_class_signal(cls, receiver, signal=bsignal.signal.All):
+        """Disconnect a class signal."""
+        return bsignal.disconnect(receiver, signal=signal, sender=cls)
+
+    @classmethod
+    def emit_class_signal(cls, signal=bsignal.signal.All, *args, **kw):
+        """Emit a signal on all object of this class."""
+        return bsignal.emit(signal, cls, *args, **kw)
+
     def connect_signal(self, receiver, signal=bsignal.signal.All):
         """Connect a signal."""
         return bsignal.connect(receiver, signal=signal, sender=self)
