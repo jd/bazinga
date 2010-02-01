@@ -2,10 +2,10 @@ import xcb.xproto
 
 from x import MainConnection
 from base.object import Object
-from base.memoize import memoize
+from base.singleton import SingletonPool
 from base.property import rocachedproperty
 
-class XColor(Object):
+class XColor(Object, SingletonPool):
     """Generic color class."""
 
     class pixel(rocachedproperty):
@@ -125,7 +125,6 @@ class HexColor(ValueColor):
         super(HexColor, self).__init__(colormap, red, green, blue, alpha)
 
 
-@memoize(ignore_first=False)
 def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
     """Create a color. You should specify name, or RGB value."""
 
