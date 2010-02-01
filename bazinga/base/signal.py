@@ -14,21 +14,11 @@ def _get_all_receivers_mro(sender=Any, signal=All):
     This also returns receivers matchin the sender and signal MRO.
     """
     yielded = set()
-    _receivers = [
-        # Get receivers that receive *this* signal from *this* sender.
-        get_receivers(sender, signal),
-        # Add receivers that receive *all* signals from *this* sender.
-        get_receivers(sender, All),
-        # Add receivers that receive *this* signal from *any* sender.
-        get_receivers(Any, signal),
-        # Add receivers that receive *all* signals from *any* sender.
-        get_receivers(Any, All) ]
+    _receivers = []
 
-    for cls in sender.__class__.__mro__:
-        _receivers.append(get_receivers(cls, signal))
-
-    for cls in signal.__class__.__mro__:
-        _receivers.append(get_receivers(sender, cls))
+    for sender_iter in [ Any, sender ] + list(sender.__class__.__mro__):
+        for signal_iter in [ All, signal ] + list(signal.__class__.__mro__):
+            _receivers.append(get_receivers(sender_iter, signal_iter))
 
     for receivers in _receivers:
         for receiver in receivers:
