@@ -277,8 +277,8 @@ class Window(Object, SingletonPool):
             delattr(sender, sender._atom_to_property[signal.atom])
 
     _property_renotify_map = {
-        Object.get_notify("_icccm_name"): Object.get_notify("name"),
-        Object.get_notify("_netwm_name"): Object.get_notify("name"),
+        Notify("_icccm_name"): Notify("name"),
+        Notify("_netwm_name"): Notify("name"),
     }
 
     @staticmethod
