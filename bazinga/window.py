@@ -187,18 +187,14 @@ class Window(Object):
             return obj, True
 
     def __init__(self, xid):
+        # Mandatory, we except this.
+        self._set_events(xcb.xproto.EventMask.StructureNotify
+                         | xcb.xproto.EventMask.PropertyChange)
         # Receive events and errors from the X connection
         MainConnection().connect_signal(self._dispatch_events,
                                         signal=xcb.Event)
         MainConnection().connect_signal(self._dispatch_errors,
                                         signal=xcb.Error)
-
-        # Handle ConfigureNotify to update cached attributes
-        self.on_configure(self._on_configure)
-        # Handle PropertyChange
-        self.on_property_change(self._on_property_change)
-        # Transform and reemit some notify signals into other
-        self.connect_signal(self._property_renotify, Notify)
 
         super(Window, self).__init__()
 
@@ -540,6 +536,14 @@ class Window(Object):
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__,
                            hex(self.xid))
+
+
+# Handle ConfigureNotify to update cached attributes
+Window.connect_class_signal(Window._on_configure, xcb.xproto.ConfigureNotifyEvent)
+# Handle PropertyNotify to update properties
+Window.connect_class_signal(Window._on_property_change, xcb.xproto.PropertyNotifyEvent)
+# Reemit some Notify signals
+Window.connect_class_signal(Window._property_renotify, Notify)
 
 
 class CreatedWindow(Window):
