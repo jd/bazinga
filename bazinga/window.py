@@ -8,7 +8,6 @@ from atom import Atom
 from color import Color
 
 import xcb.xproto
-import weakref
 
 events_window_attribute = {
     xcb.xproto.KeyPressEvent: "event",
