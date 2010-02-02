@@ -6,6 +6,7 @@ from base.singleton import SingletonPool
 from x import MainConnection, byte_list_to_str
 from atom import Atom
 from color import Color
+import event
 
 import xcb.xproto
 
@@ -329,6 +330,22 @@ class Window(Object, SingletonPool):
     def _on_visibility_set_value(sender, signal):
         """Update visibility value."""
         Window.visibility.set_cache(sender, signal.state)
+
+    @staticmethod
+    def _on_key_press(sender, signal):
+        sender.emit_signal(event.KeyPress(signal))
+
+    @staticmethod
+    def _on_key_release(sender, signal):
+        sender.emit_signal(event.KeyRelease(signal))
+
+    @staticmethod
+    def _on_button_press(sender, signal):
+        sender.emit_signal(event.ButtonPress(signal))
+
+    @staticmethod
+    def _on_button_release(sender, signal):
+        sender.emit_signal(event.ButtonRelease(signal))
 
     # Methods
     def focus(self):
