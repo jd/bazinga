@@ -3,7 +3,7 @@
 from base.property import cachedproperty, rocachedproperty
 from base.object import Object, Notify
 from base.singleton import SingletonPool
-from x import MainConnection, byte_list_to_str, byte_list_to_int
+from x import MainConnection, byte_list_to_int
 from atom import Atom
 from color import Color
 import event
@@ -159,7 +159,8 @@ class Window(Object, SingletonPool):
                                                      Atom("WM_TRANSIENT_FOR").value,
                                                      Atom("WINDOW").value,
                                                      0, 1).reply()
-            return Window(byte_list_to_int(prop.value))
+            if prop.value:
+                return Window(byte_list_to_int(prop.value))
 
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
@@ -170,50 +171,26 @@ class Window(Object, SingletonPool):
 
     class machine(rocachedproperty):
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_CLIENT_MACHINE").value,
-                                                     xcb.xproto.GetPropertyType.Any,
-                                                     0, 4096).reply()
-            return byte_list_to_str(prop.value)
+            return MainConnection().get_text_property(self, "WM_CLIENT_MACHINE")
 
         def __set__(self, value):
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("WM_CLIENT_MACHINE").value,
-                                                 Atom("STRING").value,
-                                                 8, len(value), value)
+            MainConnection().set_text_property(self, "WM_CLIENT_MACHINE", value)
 
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_NAME").value,
-                                                     xcb.xproto.GetPropertyType.Any,
-                                                     0, 4096).reply()
-            return byte_list_to_str(prop.value)
+            return MainConnection().get_text_property(self, "WM_NAME")
 
         def __set__(self, value):
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("WM_NAME").value,
-                                                 Atom("STRING").value,
-                                                 8, len(value), value)
+            MainConnection().set_text_property(self, "WM_NAME", value)
 
     class _netwm_name(cachedproperty):
         """EWMH window name."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("_NET_WM_NAME").value,
-                                                     xcb.xproto.GetPropertyType.Any,
-                                                     0, 4096).reply()
-            return byte_list_to_str(prop.value)
+            return MainConnection().get_text_property(self, "_NET_WM_NAME")
 
         def __set__(self, value):
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("_NET_WM_NAME").value,
-                                                 Atom("STRING").value,
-                                                 8, len(value), value)
+            MainConnection().set_text_property(self, "_NET_WM_NAME", value)
 
     @property
     def name(self):
@@ -227,34 +204,18 @@ class Window(Object, SingletonPool):
     class _icccm_icon_name(cachedproperty):
         """ICCCM window name."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_ICON_NAME").value,
-                                                     xcb.xproto.GetPropertyType.Any,
-                                                     0, 4096).reply()
-            return byte_list_to_str(prop.value)
+            return MainConnection().get_text_property(self, "WM_ICON_NAME")
 
         def __set__(self, value):
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("WM_ICON_NAME").value,
-                                                 Atom("STRING").value,
-                                                 8, len(value), value)
+            MainConnection().set_text_property(self, "WM_ICON_NAME", value)
 
     class _netwm_icon_name(cachedproperty):
         """EWMH window icon name."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("_NET_WM_ICON_NAME").value,
-                                                     xcb.xproto.GetPropertyType.Any,
-                                                     0, 4096).reply()
-            return byte_list_to_str(prop.value)
+            return MainConnection().get_text_property(self, "_NET_WM_ICON_NAME")
 
         def __set__(self, value):
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("_NET_WM_ICON_NAME").value,
-                                                 Atom("STRING").value,
-                                                 8, len(value), value)
+            MainConnection().set_text_property(self, "_NET_WM_ICON_NAME", value)
 
     @property
     def icon_name(self):

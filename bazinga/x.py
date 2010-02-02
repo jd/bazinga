@@ -7,18 +7,25 @@ from base.singleton import Singleton
 from base.property import cachedproperty
 from base.object import Object
 from loop import MainLoop
+from atom import Atom
 
 def byte_list_to_str(blist):
     """Convert a byte list to a string."""
     return "".join(map(chr, blist))
 
 
+def byte_list_to_unicode(blist):
+    """Convert a byte list to a unicode string."""
+    return u"".join(map(unichr, blist))
+
+
 def byte_list_to_int(blist):
     """Convert a byte list to a integer."""
-    value = 0
-    for i in range(len(blist)):
-        value |= blist[i] << i * 8
-    return value
+    if len(blist) > 0:
+        value = 0
+        for i in range(len(blist)):
+            value |= blist[i] << i * 8
+        return value
 
 
 class Connection(Object, xcb.Connection):
@@ -192,6 +199,28 @@ class Connection(Object, xcb.Connection):
 
     def _prepare(self, watcher, events):
         self.flush()
+
+    def set_text_property(self, window, atom_name, value):
+        if isinstance(value, unicode):
+            string_atom = Atom("UTF8_STRING")
+            value = value.encode("UTF-8")
+        else:
+            string_atom = Atom("STRING")
+        self.core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                 window.xid,
+                                 Atom(atom_name).value,
+                                 string_atom,
+                                 8, len(value), value)
+
+    def get_text_property(self, window, atom_name):
+        prop = MainConnection().core.GetProperty(False, window.xid,
+                                                 Atom(atom_name).value,
+                                                 xcb.xproto.GetPropertyType.Any,
+                                                 0, 4096).reply()
+        if prop.type == Atom("UTF8_STRING").value:
+            return byte_list_to_unicode(prop.value)
+        elif prop.type == Atom("STRING").value:
+            return byte_list_to_str(prop.value)
 
 
 class MainConnection(Singleton, Connection):

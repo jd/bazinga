@@ -1,7 +1,6 @@
 from base.property import rocachedproperty
 from base.object import Object
 from base.singleton import SingletonPool
-from x import MainConnection
 
 import xcb.xproto
 
@@ -17,6 +16,7 @@ class Atom(Object, SingletonPool):
         try:
             Atom.value.set_cache(self, getattr(xcb.xproto.Atom, name))
         except AttributeError:
+            from x import MainConnection
             self._cookie = MainConnection().core.InternAtom(False,
                                                             len(name),
                                                             name)
