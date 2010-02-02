@@ -64,7 +64,7 @@ class Window(Object, SingletonPool):
     __events = xcb.xproto.EventMask.NoEvent
 
     Visibility = xcb.xproto.Visibility
-    Visibility.Unmapped = -1
+    Visibility.Unknown = -1
 
     class x(cachedproperty):
         """X coordinate."""
@@ -119,12 +119,12 @@ class Window(Object, SingletonPool):
     class visibility(rocachedproperty):
         """Visibility of the window.
         This can be either:
-            * Window.Visibility.Unmapped
+            * Window.Visibility.Unknown
             * Window.Visibility.Unobscured
             * Window.Visibility.PartiallyObscured
             * Window.Visibility.FullyObscured"""
         def __get__(self):
-            return Window.Visibility.Unmapped
+            return Window.Visibility.Unknown
 
     class border_color(cachedproperty):
         """Border color."""
