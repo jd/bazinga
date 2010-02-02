@@ -43,6 +43,7 @@ def emit(signal=signal.All, sender=sender.Anonymous, *arguments, **named):
         original = receiver
         for plugin in plugins:
             receiver = plugin.wrap_receiver(receiver)
+        # XXX make it robust?
         response = robustapply.robust_apply(
             receiver, original,
             signal=signal,
