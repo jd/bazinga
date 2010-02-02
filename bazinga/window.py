@@ -161,6 +161,13 @@ class Window(Object, SingletonPool):
                                                      0, 1).reply()
             return Window(byte_list_to_int(prop.value))
 
+        def __set__(self, value):
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("WM_TRANSIENT_FOR").value,
+                                                 Atom("WINDOW").value,
+                                                 32, 1, self.xid)
+
     class machine(rocachedproperty):
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
