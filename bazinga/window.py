@@ -161,6 +161,21 @@ class Window(Object, SingletonPool):
                                                      0, 1).reply()
             return Window(byte_list_to_int(prop.value))
 
+    class machine(rocachedproperty):
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("WM_CLIENT_MACHINE").value,
+                                                     xcb.xproto.GetPropertyType.Any,
+                                                     0, 4096).reply()
+            return byte_list_to_str(prop.value)
+
+        def __set__(self, value):
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("WM_CLIENT_MACHINE").value,
+                                                 Atom("STRING").value,
+                                                 8, len(value), value)
+
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
         def __get__(self):
@@ -299,6 +314,8 @@ class Window(Object, SingletonPool):
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
         Atom("_NET_WM_NAME").value: "_netwm_name",
+        Atom("WM_TRANSIENT_FOR").value: "transient_for",
+        Atom("WM_CLIENT_MACHINE").value: "machine",
     }
 
     @staticmethod
