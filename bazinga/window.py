@@ -153,6 +153,14 @@ class Window(Object, SingletonPool):
             reply = MainConnection().core.GetWindowAttributes(self.xid).reply()
             return reply.map_state
 
+    class transient_for(rocachedproperty):
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("WM_TRANSIENT_FOR").value,
+                                                     Atom("WINDOW").value,
+                                                     0, 1).reply()
+            return Window(prop.value)
+
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
         def __get__(self):
