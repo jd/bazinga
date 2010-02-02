@@ -1,25 +1,24 @@
-import base.signal
+from base.singleton import SingletonPool
+import weakref
 
-class Event(base.signal.Signal):
+class Event(object):
     pass
 
-class KeyButtonEvent(Event):
-    def __init__(self, xevent):
-        self.detail = xevent.detail
-        self.state = xevent.state
-        self.root_x = xevent.root_x
-        self.root_y = xevent.root_y
-        self.x = xevent.event_x
-        self.y = xevent.event_y
+class KeyButtonEvent(Event, SingletonPool):
+    def __init__(self, state, detail):
+        self.state = state
+        self.detail = detail
 
+# Note:
+# Each class has its own pool.
 class KeyPress(KeyButtonEvent):
-    pass
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
 class KeyRelease(KeyButtonEvent):
-    pass
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
 class ButtonPress(KeyButtonEvent):
-    pass
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
 class ButtonRelease(KeyButtonEvent):
-    pass
+    _SingletonPool__instances = weakref.WeakValueDictionary()

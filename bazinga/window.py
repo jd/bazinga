@@ -332,20 +332,24 @@ class Window(Object, SingletonPool):
         Window.visibility.set_cache(sender, signal.state)
 
     @staticmethod
-    def _on_key_press(sender, signal):
-        sender.emit_signal(event.KeyPress(signal))
+    def _on_key_press_emit_event(sender, signal):
+        print signal.state, signal.detail
+        print "EMIT", event.KeyPress(signal.state, signal.detail)
+        print "EMIT", event.KeyPress(signal.state, signal.detail)
+        print "EMIT", event.KeyPress(signal.state, signal.detail)
+        sender.emit_signal(event.KeyPress(signal.state, signal.detail))
 
     @staticmethod
-    def _on_key_release(sender, signal):
-        sender.emit_signal(event.KeyRelease(signal))
+    def _on_key_release_emit_event(sender, signal):
+        sender.emit_signal(event.KeyRelease(signal.state, signal.detail))
 
     @staticmethod
-    def _on_button_press(sender, signal):
-        sender.emit_signal(event.ButtonPress(signal))
+    def _on_button_press_emit_event(sender, signal):
+        sender.emit_signal(event.ButtonPress(signal.state, signal.detail))
 
     @staticmethod
-    def _on_button_release(sender, signal):
-        sender.emit_signal(event.ButtonRelease(signal))
+    def _on_button_release_emit_event(sender, signal):
+        sender.emit_signal(event.ButtonRelease(signal.state, signal.detail))
 
     # Methods
     def focus(self):
@@ -381,6 +385,26 @@ class Window(Object, SingletonPool):
         MainConnection().core.UngrabKey(keycode,
                                         self.xid,
                                         modifiers)
+
+    def connect_key_press(self,
+                          modifiers=xcb.xproto.ModMask.Any,
+                          keycode=0):
+        self.grab_key(modifiers, keycode)
+        def _on_key(func):
+            print "CONNECT"
+            print event.KeyPress(modifiers, keycode)
+            self.connect_signal(func, event.KeyPress(modifiers, keycode))
+            return func
+        return _on_key
+
+    def connect_key_release(self,
+                            modifiers=xcb.xproto.ModMask.Any,
+                            keycode=0):
+        self.grab_key(modifiers, keycode)
+        def _on_key(func):
+            self.connect_signal(func, event.KeyRelease(modifiers, keycode))
+            return func
+        return _on_key
 
     def grab_button(self, modifiers, button):
         """Grab a button on a window."""
@@ -583,6 +607,11 @@ Window.connect_class_signal(Window._on_property_change_del_cache,
 # Build visibility value
 Window.connect_class_signal(Window._on_visibility_set_value,
                             xcb.xproto.VisibilityNotifyEvent)
+# Handle key/button press/release
+Window.connect_class_signal(Window._on_key_press_emit_event, xcb.xproto.KeyPressEvent)
+Window.connect_class_signal(Window._on_key_release_emit_event, xcb.xproto.KeyReleaseEvent)
+Window.connect_class_signal(Window._on_button_press_emit_event, xcb.xproto.ButtonPressEvent)
+Window.connect_class_signal(Window._on_button_release_emit_event, xcb.xproto.ButtonReleaseEvent)
 # Reemit some Notify signals
 Window.connect_class_signal(Window._property_renotify, Notify)
 
