@@ -33,7 +33,7 @@ events_window_attribute = {
     xcb.xproto.CirculateNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
     xcb.xproto.CirculateRequestEvent: (xcb.xproto.EventMask.SubstructureRedirect, "window"),
     xcb.xproto.PropertyNotifyEvent: (xcb.xproto.EventMask.PropertyChange, "window"),
-    xcb.xproto.ClientMessageEvent: (, "window")
+    xcb.xproto.ClientMessageEvent: (None, "window")
 }
 
 
@@ -237,12 +237,12 @@ class Window(Object, SingletonPool):
             return getattr(event, events_window_attribute[event.__class__][1]) == self.xid
         return False
 
-    def _dispatch_events(self, signal, sender):
+    def _dispatch_events(self, signal):
         """Dipatch signals that belongs to us."""
         if self._is_event_for_me(signal):
             self.emit_signal(signal)
 
-    def _dispatch_errors(self, signal, sender):
+    def _dispatch_errors(self, signal):
         """Dispatch errors that belongs to us."""
         if signal.bad_value == self.xid:
             self.emit_signal(signal)
@@ -399,7 +399,8 @@ class Window(Object, SingletonPool):
 
     # Events handling
     def _on_event(self, event):
-        self._add_event(events_window_attribute[event][0])
+        if events_window_attribute[event][0]:
+            self._add_event(events_window_attribute[event][0])
         def _on_event(func):
             self.connect_signal(func, event)
             return func
