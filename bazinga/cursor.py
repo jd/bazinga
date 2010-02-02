@@ -86,7 +86,7 @@ _name_to_id = {
     "xterm" = 152,
 }
 
-class Cursor(Object, SingletonPool):
+class XCursor(Object, SingletonPool):
     """Pointer cursor."""
 
     _font = None
@@ -110,3 +110,8 @@ class Cursor(Object, SingletonPool):
 
     def __del__(self):
         MainConnection().core.FreeCursor(self.xid)
+
+def Cursor(value):
+    if isinstance(value, XColor):
+        return value
+    return XCursor(value)
