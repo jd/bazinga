@@ -107,3 +107,6 @@ class Cursor(Object, SingletonPool):
                                                 cursor_id, cursor_id + 1,
                                                 0, 0, 0,
                                                 65535, 65535, 65535)
+
+    def __del__(self):
+        MainConnection().core.FreeCursor(self.xid)
