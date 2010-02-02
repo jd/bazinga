@@ -6,6 +6,7 @@ from base.singleton import SingletonPool
 from x import MainConnection, byte_list_to_uint32, byte_list_to_str
 from atom import Atom
 from color import Color
+from cursor import Cursor
 import event
 
 import xcb.xproto
@@ -148,6 +149,17 @@ class Window(Object, SingletonPool):
                                                          xcb.xproto.CW.BorderPixel,
                                                          [ color.pixel ])
             return color
+
+    class cursor(cachedproperty):
+        """Window cursor."""
+        def __get__(self):
+            raise AttributeError("Nobody knows how to fetch this.")
+
+        def __set__(self, value):
+            MainConnection().core.ChangeWindowAttributes(self.xid,
+                                                         xcb.xproto.CW.Cursor,
+                                                         [ Cursor(value).xid ])
+
 
     class map_state(rocachedproperty):
         """Window mapping state."""
