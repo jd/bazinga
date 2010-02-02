@@ -156,10 +156,11 @@ class Window(Object, SingletonPool):
             raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
+            value = Cursor(value)
             MainConnection().core.ChangeWindowAttributes(self.xid,
                                                          xcb.xproto.CW.Cursor,
-                                                         [ Cursor(value).xid ])
-
+                                                         [ value.xid ])
+            return value
 
     class map_state(rocachedproperty):
         """Window mapping state."""

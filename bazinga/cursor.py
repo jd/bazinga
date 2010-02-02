@@ -2,6 +2,7 @@
 
 from base.object import Object
 from base.singleton import SingletonPool
+from color import Color
 from x import MainConnection
 
 # This is defined in some X header file…
@@ -93,25 +94,35 @@ class XCursor(Object, SingletonPool):
 
     _font = None
 
-    def __init__(self, name):
-        if Cursor.font is None:
-            Cursor.font = MainConnection().generate_id()
-            MainConnection().core.OpenFont(Cursor.font, len(_font_name), _font_name)
+    def __init__(self, name, foreground=None, background=None):
+        if XCursor._font is None:
+            XCursor._font = MainConnection().generate_id()
+            MainConnection().core.OpenFont(XCursor._font, len(_font_name), _font_name)
 
         try:
             cursor_id = _name_to_id[name]
         except KeyError:
             raise ValueError("No such cursor.")
 
+        if foreground is None:
+            foreground = Color(MainConnection().roots[0].default_colormap, "black")
+        if background is None:
+            background = Color(MainConnection().roots[0].default_colormap, "white")
+
         self.xid = MainConnection().generate_id()
         MainConnection().core.CreateGlyphCursor(self.xid,
-                                                Cursor.font, Cursor.font,
+                                                XCursor._font, XCursor._font,
                                                 cursor_id, cursor_id + 1,
-                                                0, 0, 0,
-                                                65535, 65535, 65535)
+                                                foreground.red, foreground.green, foreground.blue,
+                                                background.red, background.green, background.blue)
+        self.name = name
+
+    def __str__(self):
+        return self.name
 
     def __del__(self):
-        MainConnection().core.FreeCursor(self.xid)
+        if hasattr(self, "xid"):
+            MainConnection().core.FreeCursor(self.xid)
 
 def Cursor(value):
     if isinstance(value, XCursor):
