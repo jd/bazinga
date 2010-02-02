@@ -132,10 +132,7 @@ def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
         # Already color type :-)
         if isinstance(color, XColor):
             return color
-        else:
-            if color[0] == '#':
-                return HexColor(colormap, color[1:], alpha)
-            else:
-                return NamedColor(colormap, color, alpha)
-    else:
-        return ValueColor(colormap, red, green, blue, alpha)
+        if color[0] == '#':
+            return HexColor(colormap, color[1:], alpha)
+        return NamedColor(colormap, color, alpha)
+    return ValueColor(colormap, red, green, blue, alpha)
