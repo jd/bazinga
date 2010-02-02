@@ -10,8 +10,15 @@ from loop import MainLoop
 
 def byte_list_to_str(blist):
     """Convert a byte list to a string."""
-
     return "".join(map(chr, blist))
+
+
+def byte_list_to_int(blist):
+    """Convert a byte list to a integer."""
+    value = 0
+    for i in range(len(blist)):
+        value |= blist[i] << i * 8
+    return value
 
 
 class Connection(Object, xcb.Connection):

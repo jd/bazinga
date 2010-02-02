@@ -3,7 +3,7 @@
 from base.property import cachedproperty, rocachedproperty
 from base.object import Object, Notify
 from base.singleton import SingletonPool
-from x import MainConnection, byte_list_to_str
+from x import MainConnection, byte_list_to_str, byte_list_to_int
 from atom import Atom
 from color import Color
 import event
@@ -159,7 +159,7 @@ class Window(Object, SingletonPool):
                                                      Atom("WM_TRANSIENT_FOR").value,
                                                      Atom("WINDOW").value,
                                                      0, 1).reply()
-            return Window(prop.value)
+            return Window(byte_list_to_int(prop.value))
 
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
