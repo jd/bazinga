@@ -10,6 +10,7 @@ import event
 
 import xcb.xproto
 from PIL import Image
+import struct
 
 events_window_attribute = {
     # Event: (event mask, attribute matching xid)
@@ -163,12 +164,22 @@ class Window(Object, SingletonPool):
                                                      # Max icon size is:
                                                      #  w  *  h  * (rgba)
                                                      0, 256*256*4).reply()
-            if len(prop.value):
+            if len(prop.value) % 4 == 0:
                 width, height = byte_list_to_uint32(prop.value[:8])
                 return Image.frombuffer("RGBA",
                                         (width, height),
                                         byte_list_to_str(prop.value[8:]),
                                         "raw", "ARGB", 0, 1)
+
+        def __set__(self, image):
+            imagedata = image.tostring("raw", "RGBA", 0, 1)
+            data = struct.pack("II{0}s".format(len(imagedata)),
+                               image.size[0], image.size[1], imagedata)
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("_NET_WM_ICON").value,
+                                                 Atom("CARDINAL").value,
+                                                 32, len(data) / 4, data)
 
     class transient_for(rocachedproperty):
         """Window this window is transient for."""
@@ -185,7 +196,7 @@ class Window(Object, SingletonPool):
                                                  self.xid,
                                                  Atom("WM_TRANSIENT_FOR").value,
                                                  Atom("WINDOW").value,
-                                                 32, 1, self.xid)
+                                                 32, 1, value.xid)
 
     class machine(rocachedproperty):
         """Machine this window is running on."""
