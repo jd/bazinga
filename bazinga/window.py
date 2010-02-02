@@ -224,6 +224,47 @@ class Window(Object, SingletonPool):
     def name(self, value):
         self._icccm_name = self._netwm_name = value
 
+    class _icccm_icon_name(cachedproperty):
+        """ICCCM window name."""
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("WM_ICON_NAME").value,
+                                                     xcb.xproto.GetPropertyType.Any,
+                                                     0, 4096).reply()
+            return byte_list_to_str(prop.value)
+
+        def __set__(self, value):
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("WM_ICON_NAME").value,
+                                                 Atom("STRING").value,
+                                                 8, len(value), value)
+
+    class _netwm_icon_name(cachedproperty):
+        """EWMH window icon name."""
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("_NET_WM_ICON_NAME").value,
+                                                     xcb.xproto.GetPropertyType.Any,
+                                                     0, 4096).reply()
+            return byte_list_to_str(prop.value)
+
+        def __set__(self, value):
+            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                 self.xid,
+                                                 Atom("_NET_WM_ICON_NAME").value,
+                                                 Atom("STRING").value,
+                                                 8, len(value), value)
+
+    @property
+    def icon_name(self):
+        """Window icon name."""
+        return self._netwm_icon_name or self._icccm_icon_name
+
+    @name.setter
+    def icon_name(self, value):
+        self._icccm_icon_name = self._netwm_icon_name = value
+
     def __init__(self, xid):
         self.xid = xid
         # Mandatory, we except this.
@@ -321,6 +362,8 @@ class Window(Object, SingletonPool):
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
         Atom("_NET_WM_NAME").value: "_netwm_name",
+        Atom("WM_ICON_NAME").value: "_icccm_icon_name",
+        Atom("_NET_WM_ICON_NAME").value: "_netwm_icon_name",
         Atom("WM_TRANSIENT_FOR").value: "transient_for",
         Atom("WM_CLIENT_MACHINE").value: "machine",
     }
@@ -334,6 +377,8 @@ class Window(Object, SingletonPool):
     _property_renotify_map = {
         Notify("_icccm_name"): Notify("name"),
         Notify("_netwm_name"): Notify("name"),
+        Notify("_icccm_icon_name"): Notify("icon_name"),
+        Notify("_netwm_icon_name"): Notify("icon_name"),
     }
 
     @staticmethod
