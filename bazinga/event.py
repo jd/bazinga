@@ -4,21 +4,27 @@ import weakref
 class Event(object):
     pass
 
-class KeyButtonEvent(Event, SingletonPool):
+class KeyButton(Event, SingletonPool):
     def __init__(self, state, detail):
         self.state = state
         self.detail = detail
 
+class Key(KeyButton):
+    pass
+
+class Button(KeyButton):
+    pass
+
 # Note:
 # Each class has its own pool.
-class KeyPress(KeyButtonEvent):
+class KeyPress(Key):
     _SingletonPool__instances = weakref.WeakValueDictionary()
 
-class KeyRelease(KeyButtonEvent):
+class KeyRelease(Key):
     _SingletonPool__instances = weakref.WeakValueDictionary()
 
-class ButtonPress(KeyButtonEvent):
+class ButtonPress(Button):
     _SingletonPool__instances = weakref.WeakValueDictionary()
 
-class ButtonRelease(KeyButtonEvent):
+class ButtonRelease(Button):
     _SingletonPool__instances = weakref.WeakValueDictionary()
