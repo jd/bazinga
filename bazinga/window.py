@@ -328,20 +328,29 @@ class Window(Object, SingletonPool):
         Window.visibility.set_cache(sender, signal.state)
 
     @staticmethod
+    def _build_key_button_event(xevent, cls):
+        event = cls(xevent.state, xevent.detail)
+        event.x = xevent.event_x
+        event.y = xevent.event_y
+        event.root_x = xevent.root_x
+        event.root_y = xevent.root_y
+        return event
+
+    @staticmethod
     def _on_key_press_emit_event(sender, signal):
-        sender.emit_signal(event.KeyPress(signal.state, signal.detail))
+        sender.emit_signal(_build_key_button_event(signal, event.KeyPress))
 
     @staticmethod
     def _on_key_release_emit_event(sender, signal):
-        sender.emit_signal(event.KeyRelease(signal.state, signal.detail))
+        sender.emit_signal(_build_key_button_event(signal, event.KeyRelease))
 
     @staticmethod
     def _on_button_press_emit_event(sender, signal):
-        sender.emit_signal(event.ButtonPress(signal.state, signal.detail))
+        sender.emit_signal(_build_key_button_event(signal, event.ButtonPress))
 
     @staticmethod
     def _on_button_release_emit_event(sender, signal):
-        sender.emit_signal(event.ButtonRelease(signal.state, signal.detail))
+        sender.emit_signal(_build_key_button_event(signal, event.ButtonRelease))
 
     # Methods
     def focus(self):
