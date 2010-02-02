@@ -329,10 +329,6 @@ class Window(Object, SingletonPool):
 
     @staticmethod
     def _on_key_press_emit_event(sender, signal):
-        print signal.state, signal.detail
-        print "EMIT", event.KeyPress(signal.state, signal.detail)
-        print "EMIT", event.KeyPress(signal.state, signal.detail)
-        print "EMIT", event.KeyPress(signal.state, signal.detail)
         sender.emit_signal(event.KeyPress(signal.state, signal.detail))
 
     @staticmethod
@@ -381,26 +377,6 @@ class Window(Object, SingletonPool):
         MainConnection().core.UngrabKey(keycode,
                                         self.xid,
                                         modifiers)
-
-    def connect_key_press(self,
-                          modifiers=xcb.xproto.ModMask.Any,
-                          keycode=0):
-        self.grab_key(modifiers, keycode)
-        def _on_key(func):
-            print "CONNECT"
-            print event.KeyPress(modifiers, keycode)
-            self.connect_signal(func, event.KeyPress(modifiers, keycode))
-            return func
-        return _on_key
-
-    def connect_key_release(self,
-                            modifiers=xcb.xproto.ModMask.Any,
-                            keycode=0):
-        self.grab_key(modifiers, keycode)
-        def _on_key(func):
-            self.connect_signal(func, event.KeyRelease(modifiers, keycode))
-            return func
-        return _on_key
 
     def grab_button(self, modifiers, button):
         """Grab a button on a window."""
