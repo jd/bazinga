@@ -114,7 +114,15 @@ class Window(Object, SingletonPool):
         def __set__(self, value):
             MainConnection().core.ConfigureWindow(self.xid,
                                                   xcb.xproto.ConfigWindow.BorderWidth,
-                                                         [ value ])
+                                                  [ value ])
+
+    class above_sibling(cachedproperty):
+        """Sibling which is under the window."""
+        def __set__(self, window):
+            MainConnection().core.ConfigureWindow(self.xid,
+                                                  xcb.xproto.ConfigWindow.Sibling
+                                                  | xcb.xproto.ConfigWindow.StackMode,
+                                                  [ window.xid, xcb.xproto.StackMode.Above ])
 
     class visibility(rocachedproperty):
         """Visibility of the window.
@@ -271,6 +279,7 @@ class Window(Object, SingletonPool):
         Window.width.set_cache(sender, signal.width)
         Window.height.set_cache(sender, signal.height)
         Window.border_width.set_cache(sender, signal.border_width)
+        Window.above_sibling.set_cache(sender, signal.above_sibling)
 
     @staticmethod
     def _on_reparent(sender, signal):
