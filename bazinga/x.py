@@ -189,5 +189,4 @@ class Connection(Object, xcb.Connection):
 
 class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""
-
     pass
