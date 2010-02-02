@@ -3,12 +3,13 @@
 from base.property import cachedproperty, rocachedproperty
 from base.object import Object, Notify
 from base.singleton import SingletonPool
-from x import MainConnection, byte_list_to_int
+from x import MainConnection, byte_list_to_uint32, byte_list_to_str
 from atom import Atom
 from color import Color
 import event
 
 import xcb.xproto
+from PIL import Image
 
 events_window_attribute = {
     # Event: (event mask, attribute matching xid)
@@ -153,14 +154,31 @@ class Window(Object, SingletonPool):
             reply = MainConnection().core.GetWindowAttributes(self.xid).reply()
             return reply.map_state
 
+    class icon(cachedproperty):
+        """Window icon."""
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("_NET_WM_ICON").value,
+                                                     Atom("CARDINAL").value,
+                                                     # Max icon size is:
+                                                     #  w  *  h  * (rgba)
+                                                     0, 256*256*4).reply()
+            if len(prop.value):
+                width, height = byte_list_to_uint32(prop.value[:8])
+                return Image.frombuffer("RGBA",
+                                        (width, height),
+                                        byte_list_to_str(prop.value[8:]),
+                                        "raw", "ARGB", 0, 1)
+
     class transient_for(rocachedproperty):
+        """Window this window is transient for."""
         def __get__(self):
             prop = MainConnection().core.GetProperty(False, self.xid,
                                                      Atom("WM_TRANSIENT_FOR").value,
                                                      Atom("WINDOW").value,
                                                      0, 1).reply()
             if prop.value:
-                return Window(byte_list_to_int(prop.value))
+                return Window(byte_list_to_uint32(prop.value)[0])
 
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
@@ -170,6 +188,7 @@ class Window(Object, SingletonPool):
                                                  32, 1, self.xid)
 
     class machine(rocachedproperty):
+        """Machine this window is running on."""
         def __get__(self):
             return MainConnection().get_text_property(self, "WM_CLIENT_MACHINE")
 

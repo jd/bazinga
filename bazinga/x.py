@@ -19,13 +19,13 @@ def byte_list_to_unicode(blist):
     return u"".join(map(unichr, blist))
 
 
-def byte_list_to_int(blist):
+def byte_list_to_uint32(blist):
     """Convert a byte list to a integer."""
-    if len(blist) > 0:
-        value = 0
-        for i in range(len(blist)):
-            value |= blist[i] << i * 8
-        return value
+    if len(blist) > 0 and len(blist) % 4 == 0:
+        ret = []
+        for i in range(0, len(blist), 4):
+            ret.append(blist[i] | blist[i + 1] << 8 | blist[i + 2] << 16 | blist[i + 3] << 24 )
+        return ret
 
 
 class Connection(Object, xcb.Connection):
