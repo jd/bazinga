@@ -120,6 +120,11 @@ class Window(Object, SingletonPool):
                                                   xcb.xproto.ConfigWindow.BorderWidth,
                                                   [ value ])
 
+    class depth(rocachedproperty):
+        """Window color depth."""
+        def __get__(self):
+            self._retrieve_geometry()
+
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
         def __set__(self, window):
@@ -360,6 +365,7 @@ class Window(Object, SingletonPool):
         Window.width.set_cache(self, wg.width)
         Window.height.set_cache(self, wg.height)
         Window.border_width.set_cache(self, wg.border_width)
+        Window.depth.set_cache(self, wg.depth)
 
     def _retrieve_window_attributes(self):
         """Update windows attributes."""
@@ -570,13 +576,13 @@ class CreatedWindow(Window):
 
 
         create_window = \
-        MainConnection().core.CreateWindowChecked(parent.root.root_depth,
+        MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParen,
                                                   self.xid,
                                                   parent.xid,
                                                   x, y, width, height,
                                                   border_width,
                                                   xcb.xproto.WindowClass.CopyFromParent,
-                                                  parent.root.visual,
+                                                  xcb.xproto.WindowClass.CopyFromParent,
                                                   xcb.xproto.CW.EventMask,
                                                   [ self.__events ])
 
