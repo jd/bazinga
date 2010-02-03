@@ -310,6 +310,10 @@ class Window(Object, SingletonPool):
 
         super(Window, self).__init__()
 
+    def __repr__(self):
+        return "<{0} {1}>".format(self.__class__.__name__,
+                           hex(self.xid))
+
     def get_children_request(self):
         """Get a tree of children window."""
         # Request children
@@ -501,7 +505,7 @@ class Window(Object, SingletonPool):
                                            modifiers)
 
     # Events handling
-    def _on_event(self, event):
+    def on_event(self, event):
         if events_window_attribute[event][0]:
             self._add_event(events_window_attribute[event][0])
         def _on_event(func):
@@ -509,9 +513,15 @@ class Window(Object, SingletonPool):
             return func
         return _on_event
 
-    def __repr__(self):
-        return "<{0} {1}>".format(self.__class__.__name__,
-                           hex(self.xid))
+    # Helpers
+    def create_pixmap(self):
+        """Create a pixmap for this window."""
+        return Pixmap(self.depth, self.xid, self.width, self.height):
+
+    def create_subwindow(self, *args, **kwargs):
+        """Create a subwindow for this window.
+        See CreatedWindow for arguments."""
+        return CreatedWindow(self, *wargs, **kwargs)
 
 
 # Handle ConfigureNotify to update cached attributes
