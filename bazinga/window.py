@@ -185,7 +185,15 @@ class Window(Object, SingletonPool):
                                         "raw", "ARGB", 0, 1)
 
         def __set__(self, image):
-            imagedata = image.tostring("raw", "RGBA", 0, 1)
+            _imagedata = image.tostring("raw", "RGBA", 0, 1)
+            # Convert to ARGB
+            imagedata = ""
+            for i in range(0, len(_imagedata), 4):
+                imagedata += _imagedata[i + 3] # A
+                imagedata += _imagedata[i]     # R
+                imagedata += _imagedata[i + 1] # G
+                imagedata += _imagedata[i + 2] # B
+
             data = struct.pack("II{0}s".format(len(imagedata)),
                                image.size[0], image.size[1], imagedata)
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
