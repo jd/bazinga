@@ -94,7 +94,8 @@ class XCursor(Object, SingletonPool):
 
     _font = None
 
-    def __init__(self, name, foreground=None, background=None):
+    def __init__(self, name, foreground="black", background="white"):
+        # Initialize font is never done before
         if XCursor._font is None:
             XCursor._font = MainConnection().generate_id()
             MainConnection().core.OpenFont(XCursor._font, len(_font_name), _font_name)
@@ -104,18 +105,25 @@ class XCursor(Object, SingletonPool):
         except KeyError:
             raise ValueError("No such cursor.")
 
-        if foreground is None:
-            foreground = Color(MainConnection().roots[0].default_colormap, "black")
-        if background is None:
-            background = Color(MainConnection().roots[0].default_colormap, "white")
+        foreground = Color(MainConnection().roots[0].default_colormap, foreground)
+        background = Color(MainConnection().roots[0].default_colormap, background)
 
-        self.xid = MainConnection().generate_id()
-        MainConnection().core.CreateGlyphCursor(self.xid,
-                                                XCursor._font, XCursor._font,
-                                                cursor_id, cursor_id + 1,
-                                                foreground.red, foreground.green, foreground.blue,
-                                                background.red, background.green, background.blue)
+        xid = MainConnection().generate_id()
+        cg = MainConnection().core.CreateGlyphCursorChecked(xid,
+                                                            XCursor._font, XCursor._font,
+                                                            cursor_id, cursor_id + 1,
+                                                            foreground.red,
+                                                            foreground.green,
+                                                            foreground.blue,
+                                                            background.red,
+                                                            background.green,
+                                                            background.blue)
         self.name = name
+        self.foreground = foreground
+        self.background = background
+        cg.check()
+        # Do this last, so we do not try to FreeCursor if check fail
+        self.xid = xid
 
     def __str__(self):
         return self.name
@@ -126,7 +134,7 @@ class XCursor(Object, SingletonPool):
 
     # XXX recolor_cursor
 
-def Cursor(value):
+def Cursor(value, foreground, background):
     if isinstance(value, XCursor):
         return value
-    return XCursor(value)
+    return XCursor(value, foreground, background)
