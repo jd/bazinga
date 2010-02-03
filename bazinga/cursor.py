@@ -124,6 +124,8 @@ class XCursor(Object, SingletonPool):
         if hasattr(self, "xid"):
             MainConnection().core.FreeCursor(self.xid)
 
+    # XXX recolor_cursor
+
 def Cursor(value):
     if isinstance(value, XCursor):
         return value
