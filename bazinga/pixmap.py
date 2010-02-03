@@ -4,9 +4,15 @@ from x import MainConnection
 class Pixmap(Object):
     """Pixmap."""
 
-    def __init__(self, depth, drawable, width, height):
-        self.xid = MainConnection().generate_id()
-        # XXX roots[0]...
-        MainConnection().core.CreatePixmap(MainConnection.roots[0].root_depth,
-                                           self.xid,
-                                           drawable
+    def __init__(self, depth, drawable, width=1, height=1):
+        xid = MainConnection().generate_id()
+        cp = MainConnection().core.CreatePixmapChecked(depth,
+                                                       xid,
+                                                       drawable,
+                                                       width, height)
+        cp.check()
+        self.xid = xid
+
+    def __del__(self):
+        if hasattr(self, "xid"):
+            MainConnection().core.FreePixmap(self.xid)
