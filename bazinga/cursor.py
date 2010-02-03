@@ -133,7 +133,7 @@ class XCursor(Object, SingletonPool):
                                                        color.blue)
 
             return color
-                                                        
+
     def __init__(self, colormap, name, foreground, background):
         # Initialize font is never done before
         if XCursor._font is None:
