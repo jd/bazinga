@@ -310,23 +310,25 @@ class Window(Object, SingletonPool):
 
         super(Window, self).__init__()
 
-    # I'm still not sure it belongs here, but well at least it's a good test
-    def watch_children(self):
-        """Maintain a list of children window."""
-        # Avoid missing events
-        with MainConnection():
-            # Request children
-            qt = MainConnection().core.QueryTree(self.xid)
-            # Build children tree correctly
-            # XXX fixme, this is now on_event()
-            self.on_reparent(self._on_reparent)
-            self.on_create_subwindow(self._on_create_subwindow)
-            self.on_destroy_subwindow(self._on_destroy_subwindow)
-            reply = qt.reply()
+    def get_children_request(self):
+        """Get a tree of children window."""
+        # Request children
+        return MainConnection().core.QueryTree(self.xid)
 
-        self.children = set()
+    def get_children(self, cookie):
+        children = set()
+        cookies = {}
+        reply = cookie.reply()
         for w in reply.children:
-            self.children.add(Window(w))
+            child = Window(w)
+            cookies[child] = child.get_children_request()
+            children.add(child)
+
+        for child in children:
+            # XXX NO!
+            child.children = child.get_children(cookies[child])
+
+        return children
 
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
@@ -385,16 +387,6 @@ class Window(Object, SingletonPool):
         Window.border_width.set_cache(sender, signal.border_width)
         Window.above_sibling.set_cache(sender, signal.above_sibling)
 
-    @staticmethod
-    def _on_reparent(sender, signal):
-        # Make sure we are not the one reparented
-        if signal.window != sender.xid:
-            if signal.parent == sender.xid:
-                # We are adopting
-                sender.children.add(Window(signal.window))
-            else:
-                sender.children.remove(Window(signal.window))
-
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
         Atom("_NET_WM_NAME").value: "_netwm_name",
@@ -423,18 +415,6 @@ class Window(Object, SingletonPool):
         """Reemit some notify events differently."""
         if sender._property_renotify_map.has_key(signal):
             sender.emit_signal(sender._property_renotify_map[signal])
-
-    @staticmethod
-    def _on_create_subwindow(sender, signal):
-        """Add children when subwindows are created."""
-        sender.children.add(Window(signal.window))
-
-    @staticmethod
-    def _on_destroy_subwindow(sender, signal):
-        """Remove subwindow."""
-        # Check it's not 'sender/self' that is being destroyed
-        if signal.window != sender.xid:
-            sender.children.remove(Window(signal.window))
 
     @staticmethod
     def _on_visibility_set_value(sender, signal):
