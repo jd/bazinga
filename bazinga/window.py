@@ -125,6 +125,11 @@ class Window(Object, SingletonPool):
         def __get__(self):
             self._retrieve_geometry()
 
+    class root(rocachedproperty):
+        """Root window this window is attached on."""
+        def __get__(self):
+            self._retrieve_geometry()
+
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
         def __set__(self, window):
@@ -169,11 +174,6 @@ class Window(Object, SingletonPool):
 
     class map_state(rocachedproperty):
         """Window mapping state."""
-        def __get__(self):
-            self._retrieve_window_attributes()
-
-    class root(rocachedproperty):
-        """Root window this window is attached on."""
         def __get__(self):
             self._retrieve_window_attributes()
 
@@ -366,14 +366,14 @@ class Window(Object, SingletonPool):
         Window.height.set_cache(self, wg.height)
         Window.border_width.set_cache(self, wg.border_width)
         Window.depth.set_cache(self, wg.depth)
+        Window.root.set_cache(self, Window(wg.root))
 
     def _retrieve_window_attributes(self):
         """Update windows attributes."""
         wa = MainConnection().core.GetWindowAttributes(self.xid).reply()
-        Window.map_state.set_cache(self, wg.map_state)
-        Window.root.set_cache(self, Window(wg.root))
-        Window.colormap.set_cache(self, wg.colormap)
-        Window.visual.set_cache(self, wg.visual)
+        Window.map_state.set_cache(self, wa.map_state)
+        Window.colormap.set_cache(self, wa.colormap)
+        Window.visual.set_cache(self, wa.visual)
 
     @staticmethod
     def _on_configure_update_geometry(sender, signal):
@@ -576,7 +576,7 @@ class CreatedWindow(Window):
 
 
         create_window = \
-        MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParen,
+        MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
                                                   self.xid,
                                                   parent.xid,
                                                   x, y, width, height,
