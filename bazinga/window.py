@@ -378,6 +378,7 @@ class Window(Object, SingletonPool):
         Atom("_NET_WM_ICON_NAME").value: "_netwm_icon_name",
         Atom("WM_TRANSIENT_FOR").value: "transient_for",
         Atom("WM_CLIENT_MACHINE").value: "machine",
+        Atom("_NET_WM_ICON").value: "icon",
     }
 
     @staticmethod
