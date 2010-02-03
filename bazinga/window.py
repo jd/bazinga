@@ -187,6 +187,15 @@ class Window(Object, SingletonPool):
         def __get__(self):
             self._retrieve_window_attributes()
 
+    class override_redirect(cachedproperty):
+        def __get__(self):
+            self._retrieve_window_attributes()
+
+        def __set__(self, value):
+            MainConnection().core.ChangeWindowAttributes(self.xid,
+                                                         xcb.xproto.CW.OverrideRedirect,
+                                                         [ int(value) ])
+
     class icon(cachedproperty):
         """Window icon."""
         def __get__(self):
@@ -360,6 +369,7 @@ class Window(Object, SingletonPool):
         Window.map_state.set_cache(self, wa.map_state)
         Window.colormap.set_cache(self, wa.colormap)
         Window.visual.set_cache(self, wa.visual)
+        Window.override_redirect.set_cache(self, wa.override_redirect)
 
     @staticmethod
     def _on_configure_update_geometry(sender, signal):
