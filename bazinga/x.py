@@ -60,10 +60,6 @@ class Connection(Object, xcb.Connection):
                 Window.y.set_cache(root_window, 0)
                 Window.width.set_cache(root_window, root.width_in_pixels)
                 Window.height.set_cache(root_window, root.height_in_pixels)
-                # Extra attributes
-                root_window.default_colormap = root.default_colormap
-                root_window.root_depth = root.root_depth
-                root_window.root_visual = root.root_visual
                 roots.append(root_window)
 
             return roots
