@@ -144,7 +144,7 @@ class Window(Object, SingletonPool):
             raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
-            color = Color(self.root.default_colormap, value)
+            color = Color(self.colormap, value)
             MainConnection().core.ChangeWindowAttributes(self.xid,
                                                          xcb.xproto.CW.BorderPixel,
                                                          [ color.pixel ])
@@ -156,7 +156,7 @@ class Window(Object, SingletonPool):
             raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
-            value = Cursor(value)
+            value = Cursor(self.colormap, value)
             MainConnection().core.ChangeWindowAttributes(self.xid,
                                                          xcb.xproto.CW.Cursor,
                                                          [ value.xid ])
