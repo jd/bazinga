@@ -30,10 +30,10 @@ class CachedProperty(object):
                 value = getattr(inst, self.key, self)
                 if value is self:
                     # Getter did not set any value
-                    raise AttributeError
+                    raise AttributeError("Unable to fetch value for attribute '{0}' of '{1}'".format(self.name, inst))
         else:
             # No attribute value!
-            raise AttributeError
+            raise AttributeError("Unable to fetch value for attribute '{0}' of '{1}'".format(self.name, inst))
 
         self.set_cache(inst, value)
 
