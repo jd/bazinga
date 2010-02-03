@@ -144,7 +144,7 @@ class Window(Object, SingletonPool):
             raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
-            color = Color(self.get_root().default_colormap, value)
+            color = Color(self.root.default_colormap, value)
             MainConnection().core.ChangeWindowAttributes(self.xid,
                                                          xcb.xproto.CW.BorderPixel,
                                                          [ color.pixel ])
@@ -165,8 +165,17 @@ class Window(Object, SingletonPool):
     class map_state(rocachedproperty):
         """Window mapping state."""
         def __get__(self):
-            reply = MainConnection().core.GetWindowAttributes(self.xid).reply()
-            return reply.map_state
+            self._retrieve_window_attributes()
+
+    class root(rocachedproperty):
+        """Root window this window is attached on."""
+        def __get__(self):
+            self._retrieve_window_attributes()
+
+    class colormap(rocachedproperty):
+        """Colormap of the window."""
+        def __get__(self):
+            self._retrieve_window_attributes()
 
     class icon(cachedproperty):
         """Window icon."""
@@ -291,10 +300,6 @@ class Window(Object, SingletonPool):
 
         super(Window, self).__init__()
 
-    def get_root(self):
-        # XXX lol...
-        return MainConnection().roots[0]
-
     # I'm still not sure it belongs here, but well at least it's a good test
     def watch_children(self):
         """Maintain a list of children window."""
@@ -350,6 +355,13 @@ class Window(Object, SingletonPool):
         Window.width.set_cache(self, wg.width)
         Window.height.set_cache(self, wg.height)
         Window.border_width.set_cache(self, wg.border_width)
+
+    def _retrieve_window_attributes(self):
+        """Update windows attributes."""
+        wa = MainConnection().core.GetWindowAttributes(self.xid).reply()
+        Window.map_state.set_cache(self, wg.map_state)
+        Window.root.set_cache(self, Window(wg.root))
+        Window.colormap.set_cache(self, wg.colormap)
 
     @staticmethod
     def _on_configure_update_geometry(sender, signal):
@@ -551,15 +563,14 @@ class CreatedWindow(Window):
                         | xcb.xproto.EventMask.VisibilityChange
 
 
-        # XXX fix, no get_root
         create_window = \
-        MainConnection().core.CreateWindowChecked(parent.get_root().root_depth,
+        MainConnection().core.CreateWindowChecked(parent.root.root_depth,
                                                   self.xid,
                                                   parent.xid,
                                                   x, y, width, height,
                                                   border_width,
                                                   xcb.xproto.WindowClass.CopyFromParent,
-                                                  parent.get_root().root_visual,
+                                                  parent.root().root_visual,
                                                   xcb.xproto.CW.EventMask,
                                                   [ self.__events ])
 
