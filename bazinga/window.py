@@ -133,10 +133,12 @@ class Window(Object, SingletonPool):
     class parent(cachedproperty):
         """Parent window."""
         def __get__(self):
-            return Window(MainConnection().core.QueryTree(self.xid).reply().parent)
+            parent = MainConnection().core.QueryTree(self.xid).reply().parent
+            if parent > 0:
+                return Window(parent)
 
         def __set__(self, value):
-            MainConnection().core.ReparentWindow(self.xid, value.xid, self.x self.y)
+            MainConnection().core.ReparentWindow(self.xid, value.xid, self.x, self.y)
 
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
@@ -514,7 +516,7 @@ class Window(Object, SingletonPool):
     # Helpers
     def create_pixmap(self):
         """Create a pixmap for this window."""
-        return Pixmap(self.depth, self.xid, self.width, self.height):
+        return Pixmap(self.depth, self.xid, self.width, self.height)
 
     def create_subwindow(self, *args, **kwargs):
         """Create a subwindow for this window.
