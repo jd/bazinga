@@ -130,6 +130,14 @@ class Window(Object, SingletonPool):
         def __get__(self):
             self._retrieve_geometry()
 
+    class parent(cachedproperty):
+        """Parent window."""
+        def __get__(self):
+            return Window(MainConnection().core.QueryTree(self.xid).reply().parent)
+
+        def __set__(self, value):
+            MainConnection().core.ReparentWindow(self.xid, value.xid, self.x self.y)
+
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
         def __set__(self, window):
