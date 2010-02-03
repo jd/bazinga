@@ -177,6 +177,11 @@ class Window(Object, SingletonPool):
         def __get__(self):
             self._retrieve_window_attributes()
 
+    class visual(rocachedproperty):
+        """Visual of the window."""
+        def __get__(self):
+            self._retrieve_window_attributes()
+
     class icon(cachedproperty):
         """Window icon."""
         def __get__(self):
@@ -362,6 +367,7 @@ class Window(Object, SingletonPool):
         Window.map_state.set_cache(self, wg.map_state)
         Window.root.set_cache(self, Window(wg.root))
         Window.colormap.set_cache(self, wg.colormap)
+        Window.visual.set_cache(self, wg.visual)
 
     @staticmethod
     def _on_configure_update_geometry(sender, signal):
@@ -570,7 +576,7 @@ class CreatedWindow(Window):
                                                   x, y, width, height,
                                                   border_width,
                                                   xcb.xproto.WindowClass.CopyFromParent,
-                                                  parent.root().root_visual,
+                                                  parent.root.visual,
                                                   xcb.xproto.CW.EventMask,
                                                   [ self.__events ])
 
