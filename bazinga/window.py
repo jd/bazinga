@@ -314,26 +314,6 @@ class Window(Object, SingletonPool):
         return "<{0} {1}>".format(self.__class__.__name__,
                            hex(self.xid))
 
-    def get_children_request(self):
-        """Get a tree of children window."""
-        # Request children
-        return MainConnection().core.QueryTree(self.xid)
-
-    def get_children(self, cookie):
-        children = set()
-        cookies = {}
-        reply = cookie.reply()
-        for w in reply.children:
-            child = Window(w)
-            cookies[child] = child.get_children_request()
-            children.add(child)
-
-        for child in children:
-            # XXX NO!
-            child.children = child.get_children(cookies[child])
-
-        return children
-
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 
@@ -584,39 +564,3 @@ class CreatedWindow(Window):
 
         create_window.check()
         super(CreatedWindow, self).__init__(self.xid)
-
-    def on_button_press(self, func):
-        """Connect a function to a button press event on that window."""
-        self._add_event(xcb.xproto.EventMask.ButtonPress)
-        self.connect_signal(func, xcb.xproto.ButtonPressEvent)
-        return func
-
-    def on_button_release(self, func):
-        """Connect a function to a button release event on that window."""
-        self._add_event(xcb.xproto.EventMask.ButtonRelease)
-        self.connect_signal(func, xcb.xproto.ButtonReleaseEvent)
-        return func
-
-    def on_key_press(self, func):
-        """Connect a function to a key press event on that window."""
-        self._add_event(xcb.xproto.EventMask.KeyPress)
-        self.connect_signal(func, xcb.xproto.KeyPressEvent)
-        return func
-
-    def on_key_release(self, func):
-        """Connect a function to a key release event on that window."""
-        self._add_event(xcb.xproto.EventMask.KeyRelease)
-        self.connect_signal(func, xcb.xproto.KeyReleaseEvent)
-        return func
-
-    def on_pointer_motion(self, func):
-        """Connect a function to a pointer motion."""
-        self._add_event(xcb.xproto.EventMask.PointerMotion)
-        self.connect_signal(func, xcb.xproto.MotionNotifyEvent)
-        return func
-
-    def on_expose(self, func):
-        """Connect a function to an expose event."""
-        self._add_event(xcb.xproto.EventMask.Exposure)
-        self.connect_signal(func, xcb.xproto.ExposeEvent)
-        return func
