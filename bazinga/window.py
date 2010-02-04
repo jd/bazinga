@@ -473,10 +473,6 @@ class Window(Object, SingletonPool):
         """Unmap a window from the screen."""
         MainConnection().core.UnmapWindow(self.xid)
 
-    def destroy(self):
-        """Destroy a window."""
-        MainConnection().core.DestroyWindow(self.xid)
-
     def grab_key(self, modifiers, keycode):
         """Grab a key on a window."""
         MainConnection().core.GrabKey(True,
@@ -605,3 +601,8 @@ class CreatedWindow(Window):
 
         create_window.check()
         super(CreatedWindow, self).__init__(self.xid)
+
+    def __del__(self):
+        """Destroy a window."""
+        if hasattr(self, "xid"):
+            MainConnection().core.DestroyWindow(self.xid)
