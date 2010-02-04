@@ -40,6 +40,11 @@ events_window_attribute = {
 }
 
 
+_events_to_always_listen = xcb.xproto.EventMask.StructureNotify
+                           | xcb.xproto.EventMask.PropertyChange
+                           | xcb.xproto.EventMask.VisibilityChange)
+
+
 def xcb_dict_to_value(values, xcb_dict):
     """Many X values are made from a mask indicating which values are present
     in the request and the actual values. We use that function to build this two
@@ -329,11 +334,10 @@ class Window(Object, SingletonPool):
         self._icccm_icon_name = self._netwm_icon_name = value
 
     def __init__(self, xid):
+        global _events_to_always_listen
         self.xid = xid
-        # Mandatory, we except this.
-        self._set_events(xcb.xproto.EventMask.StructureNotify
-                         | xcb.xproto.EventMask.PropertyChange
-                         | xcb.xproto.EventMask.VisibilityChange)
+        # Mandatory, we want this.
+        self._set_events(_events_to_always_listen)
         # Receive events and errors from the X connection
         MainConnection().connect_signal(self._dispatch_events,
                                         signal=xcb.Event)
@@ -610,11 +614,9 @@ class CreatedWindow(Window):
 
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
-        # XXX or grab while creating and calling super()
-        self.__events = xcb.xproto.EventMask.StructureNotify \
-                        | xcb.xproto.EventMask.PropertyChange \
-                        | xcb.xproto.EventMask.VisibilityChange
-
+        # XXX or grab server while creating and calling super()
+        global _events_to_always_listen
+        self.__events = _events_to_always_listen
 
         create_window = \
         MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
