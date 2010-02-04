@@ -399,17 +399,6 @@ class Window(Object, SingletonPool):
         Window.override_redirect.set_cache(self, wa.override_redirect)
 
     @staticmethod
-    def _on_configure_update_geometry(sender, signal):
-        """Update window geometry from an event."""
-        Window.x.set_cache(sender, signal.x)
-        Window.y.set_cache(sender, signal.y)
-        Window.width.set_cache(sender, signal.width)
-        Window.height.set_cache(sender, signal.height)
-        Window.border_width.set_cache(sender, signal.border_width)
-        Window.above_sibling.set_cache(sender, signal.above_sibling)
-        Window.override_redirect.set_cache(sender, signal.override_redirect)
-
-    @staticmethod
     def _on_reparent_update_parent(sender, signal):
         # We are getting reparented
         if signal.window == sender.xid:
@@ -577,8 +566,16 @@ class Window(Object, SingletonPool):
 
 
 # Handle ConfigureNotify to update cached attributes
-Window.connect_class_signal(Window._on_configure_update_geometry,
-                            xcb.xproto.ConfigureNotifyEvent)
+@Window.on_class_signal(xcb.xproto.ConfigureNotifyEvent)
+def _on_configure_update_geometry(sender, signal):
+    """Update window geometry from an event."""
+    Window.x.set_cache(sender, signal.x)
+    Window.y.set_cache(sender, signal.y)
+    Window.width.set_cache(sender, signal.width)
+    Window.height.set_cache(sender, signal.height)
+    Window.border_width.set_cache(sender, signal.border_width)
+    Window.above_sibling.set_cache(sender, signal.above_sibling)
+    Window.override_redirect.set_cache(sender, signal.override_redirect)
 # Handle PropertyNotify to update properties
 Window.connect_class_signal(Window._on_property_change_del_cache,
                             xcb.xproto.PropertyNotifyEvent)

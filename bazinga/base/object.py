@@ -40,7 +40,19 @@ class Object(object):
     connect_class_signal = classmethod(connect_signal)
     disconnect_class_signal = classmethod(disconnect_signal)
     emit_class_signal = classmethod(emit_signal)
-    on_class_signal = classmethod(on_signal)
+
+    @classmethod
+    def on_class_signal(cls, signal):
+        """Return a function that can be called with a receiver as argument.
+        This function will connect the receiver to the signal.
+        You typically use that as a decorator:
+            @MyClass.on_class_signal(some_signal)
+            def my_function(sender, signal):
+                ..."""
+        def _on_signal(func):
+            cls.connect_class_signal(func, signal)
+            return func
+        return _on_signal
 
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
@@ -73,4 +85,12 @@ class Object(object):
     connect_class_notify = classmethod(connect_notify)
     disconnect_class_notify = classmethod(disconnect_notify)
     emit_class_notify = classmethod(emit_notify)
-    on_class_notify = classmethod(on_notify)
+
+    def on_class_notify(cls, key):
+        """Return a function that can be called with a receiver as argument.
+        This function will connect the receiver to the notify event matching that key.
+        You typically use that as a decorator:
+            @MyClass.on_notify("some_attribute")
+            def my_function(sender, signal):
+                ..."""
+        return cls.on_class_signal(Notify(key))
