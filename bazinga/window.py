@@ -510,6 +510,17 @@ class Window(Object, SingletonPool):
                                            self.xid,
                                            modifiers)
 
+    def get_children(self):
+        qt = MainConnection().core.QueryTree(self.xid)
+        children = set()
+        reply = qt.reply()
+        # Update parent and root, it's free!
+        Window.parent.set_cache(self, Window(reply.parent))
+        Window.root.set_cache(self, Window(reply.root))
+        for w in reply.children:
+            children.add(Window(w))
+        return children
+
     # Events handling
     def on_event(self, event):
         if events_window_attribute[event][0]:
