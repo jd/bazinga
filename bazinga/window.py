@@ -457,19 +457,19 @@ class Window(Object, SingletonPool):
 
     @staticmethod
     def _on_key_press_emit_event(sender, signal):
-        sender.emit_signal(_build_key_button_event(signal, event.KeyPress))
+        sender.emit_signal(sender._build_key_button_event(signal, event.KeyPress))
 
     @staticmethod
     def _on_key_release_emit_event(sender, signal):
-        sender.emit_signal(_build_key_button_event(signal, event.KeyRelease))
+        sender.emit_signal(sender._build_key_button_event(signal, event.KeyRelease))
 
     @staticmethod
     def _on_button_press_emit_event(sender, signal):
-        sender.emit_signal(_build_key_button_event(signal, event.ButtonPress))
+        sender.emit_signal(sender._build_key_button_event(signal, event.ButtonPress))
 
     @staticmethod
     def _on_button_release_emit_event(sender, signal):
-        sender.emit_signal(_build_key_button_event(signal, event.ButtonRelease))
+        sender.emit_signal(sender._build_key_button_event(signal, event.ButtonRelease))
 
     # Methods
     def focus(self):
