@@ -206,6 +206,19 @@ class Window(Object, SingletonPool):
                                                          xcb.xproto.CW.OverrideRedirect,
                                                          [ int(value) ])
 
+    class protocols(cachedproperty):
+        def __get__(self):
+            prop = MainConnection().core.GetProperty(False, self.xid,
+                                                     Atom("WM_PROTOCOLS").value,
+                                                     Atom("ATOM").value,
+                                                     0, 1024).reply()
+            atoms = byte_list_to_uint32(prop.value)
+            if atoms:
+                protos = set()
+                for a in atoms:
+                    protos.add(Atom(a))
+                return protos
+
     class icon(cachedproperty):
         """Window icon."""
         def __get__(self):
