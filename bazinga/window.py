@@ -45,28 +45,6 @@ _events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
                            | xcb.xproto.EventMask.VisibilityChange
 
 
-def xcb_dict_to_value(values, xcb_dict):
-    """Many X values are made from a mask indicating which values are present
-    in the request and the actual values. We use that function to build this two
-    variables from a dict { OverrideRedirect: 1 }
-    to a mask |= OverrideRedirect and value = [ 1 ]"""
-
-    value_mask = 0
-    value_list = []
-
-    xcb_dict_rev = dict(zip(xcb_dict.__dict__.values(),
-                            xcb_dict.__dict__.keys()))
-    xcb_dict_keys = xcb_dict_rev.keys()
-    xcb_dict_keys.sort()
-
-    for mask in xcb_dict_keys:
-        if mask and values.has_key(xcb_dict_rev[mask]):
-            value_mask |= mask
-            value_list.append(values[xcb_dict_rev[mask]])
-
-    return value_mask, value_list
-
-
 class Window(Object, SingletonPool):
     """A basic X window."""
 
@@ -398,72 +376,6 @@ class Window(Object, SingletonPool):
         Window.visual.set_cache(self, wa.visual)
         Window.override_redirect.set_cache(self, wa.override_redirect)
 
-    @staticmethod
-    def _on_reparent_update_parent(sender, signal):
-        # We are getting reparented
-        if signal.window == sender.xid:
-            Window.parent.set_cache(sender, Window(signal.parent))
-
-    _atom_to_property = {
-        Atom("WM_NAME").value: "_icccm_name",
-        Atom("_NET_WM_NAME").value: "_netwm_name",
-        Atom("WM_ICON_NAME").value: "_icccm_icon_name",
-        Atom("_NET_WM_ICON_NAME").value: "_netwm_icon_name",
-        Atom("WM_TRANSIENT_FOR").value: "transient_for",
-        Atom("WM_CLIENT_MACHINE").value: "machine",
-        Atom("_NET_WM_ICON").value: "icon",
-        Atom("WM_PROTOCOLS").value: "protocols",
-    }
-
-    @staticmethod
-    def _on_property_change_del_cache(sender, signal):
-        if sender._atom_to_property.has_key(signal.atom):
-            # Erase cache
-            delattr(sender, sender._atom_to_property[signal.atom])
-
-    _property_renotify_map = {
-        Notify("_icccm_name"): Notify("name"),
-        Notify("_netwm_name"): Notify("name"),
-        Notify("_icccm_icon_name"): Notify("icon_name"),
-        Notify("_netwm_icon_name"): Notify("icon_name"),
-    }
-
-    @staticmethod
-    def _property_renotify(sender, signal):
-        """Reemit some notify events differently."""
-        if sender._property_renotify_map.has_key(signal):
-            sender.emit_signal(sender._property_renotify_map[signal])
-
-    @staticmethod
-    def _on_visibility_set_value(sender, signal):
-        """Update visibility value."""
-        Window.visibility.set_cache(sender, signal.state)
-
-    @staticmethod
-    def _build_key_button_event(xevent, cls):
-        event = cls(xevent.state, xevent.detail)
-        event.x = xevent.event_x
-        event.y = xevent.event_y
-        event.root_x = xevent.root_x
-        event.root_y = xevent.root_y
-        return event
-
-    @staticmethod
-    def _on_key_press_emit_event(sender, signal):
-        sender.emit_signal(sender._build_key_button_event(signal, event.KeyPress))
-
-    @staticmethod
-    def _on_key_release_emit_event(sender, signal):
-        sender.emit_signal(sender._build_key_button_event(signal, event.KeyRelease))
-
-    @staticmethod
-    def _on_button_press_emit_event(sender, signal):
-        sender.emit_signal(sender._build_key_button_event(signal, event.ButtonPress))
-
-    @staticmethod
-    def _on_button_release_emit_event(sender, signal):
-        sender.emit_signal(sender._build_key_button_event(signal, event.ButtonRelease))
-
     # Methods
     def focus(self):
         """Give focus to a window.
@@ -565,6 +477,23 @@ class Window(Object, SingletonPool):
         return CreatedWindow(self, *wargs, **kwargs)
 
 
+# Static function that are used to update various information
+# on windows objects automagically
+
+_property_renotify_map = {
+    Notify("_icccm_name"): Notify("name"),
+    Notify("_netwm_name"): Notify("name"),
+    Notify("_icccm_icon_name"): Notify("icon_name"),
+    Notify("_netwm_icon_name"): Notify("icon_name"),
+}
+
+@Window.on_class_signal(Notify)
+def _property_renotify(sender, signal):
+    """Reemit some notify events differently."""
+    if _property_renotify_map.has_key(signal):
+        sender.emit_signal(_property_renotify_map[signal])
+
+
 # Handle ConfigureNotify to update cached attributes
 @Window.on_class_signal(xcb.xproto.ConfigureNotifyEvent)
 def _on_configure_update_geometry(sender, signal):
@@ -576,22 +505,62 @@ def _on_configure_update_geometry(sender, signal):
     Window.border_width.set_cache(sender, signal.border_width)
     Window.above_sibling.set_cache(sender, signal.above_sibling)
     Window.override_redirect.set_cache(sender, signal.override_redirect)
-# Handle PropertyNotify to update properties
-Window.connect_class_signal(Window._on_property_change_del_cache,
-                            xcb.xproto.PropertyNotifyEvent)
-# Build visibility value
-Window.connect_class_signal(Window._on_visibility_set_value,
-                            xcb.xproto.VisibilityNotifyEvent)
-# Handle ReparentNotify to update parent
-Window.connect_class_signal(Window._on_reparent_update_parent,
-                            xcb.xproto.ReparentNotifyEvent)
-# Handle key/button press/release
-Window.connect_class_signal(Window._on_key_press_emit_event, xcb.xproto.KeyPressEvent)
-Window.connect_class_signal(Window._on_key_release_emit_event, xcb.xproto.KeyReleaseEvent)
-Window.connect_class_signal(Window._on_button_press_emit_event, xcb.xproto.ButtonPressEvent)
-Window.connect_class_signal(Window._on_button_release_emit_event, xcb.xproto.ButtonReleaseEvent)
-# Reemit some Notify signals
-Window.connect_class_signal(Window._property_renotify, Notify)
+
+
+_atom_to_property = {
+    Atom("WM_NAME").value: "_icccm_name",
+    Atom("_NET_WM_NAME").value: "_netwm_name",
+    Atom("WM_ICON_NAME").value: "_icccm_icon_name",
+    Atom("_NET_WM_ICON_NAME").value: "_netwm_icon_name",
+    Atom("WM_TRANSIENT_FOR").value: "transient_for",
+    Atom("WM_CLIENT_MACHINE").value: "machine",
+    Atom("_NET_WM_ICON").value: "icon",
+    Atom("WM_PROTOCOLS").value: "protocols",
+}
+
+@Window.on_class_signal(xcb.xproto.PropertyNotifyEvent)
+def _on_property_change_del_cache(sender, signal):
+    if sender._atom_to_property.has_key(signal.atom):
+        # Erase cache
+        delattr(sender, sender._atom_to_property[signal.atom])
+
+
+@Window.on_class_signal(xcb.xproto.VisibilityNotifyEvent)
+def _on_visibility_set_value(sender, signal):
+    """Update visibility value."""
+    Window.visibility.set_cache(sender, signal.state)
+
+
+@Window.on_class_signal(xcb.xproto.ReparentNotifyEvent)
+def _on_reparent_update_parent(sender, signal):
+    # We are getting reparented
+    if signal.window == sender.xid:
+        Window.parent.set_cache(sender, Window(signal.parent))
+
+
+def _build_key_button_event(xevent, cls):
+    event = cls(xevent.state, xevent.detail)
+    event.x = xevent.event_x
+    event.y = xevent.event_y
+    event.root_x = xevent.root_x
+    event.root_y = xevent.root_y
+    return event
+
+@Window.on_class_signal(xcb.xproto.KeyPressEvent)
+def _on_key_press_emit_event(sender, signal):
+    sender.emit_signal(sender._build_key_button_event(signal, event.KeyPress))
+
+@Window.on_class_signal(xcb.xproto.KeyReleaseEvent)
+def _on_key_release_emit_event(sender, signal):
+    sender.emit_signal(sender._build_key_button_event(signal, event.KeyRelease))
+
+@Window.on_class_signal(xcb.xproto.ButtonPressEvent)
+def _on_button_press_emit_event(sender, signal):
+    sender.emit_signal(sender._build_key_button_event(signal, event.ButtonPress))
+
+@Window.on_class_signal(xcb.xproto.ButtonReleaseEvent)
+def _on_button_release_emit_event(sender, signal):
+    sender.emit_signal(sender._build_key_button_event(signal, event.ButtonRelease))
 
 
 class CreatedWindow(Window):
