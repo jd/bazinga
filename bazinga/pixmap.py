@@ -1,7 +1,13 @@
-from base.object import Object
 from x import MainConnection
+from xobject import XObject, XID
 
-class Pixmap(Object):
+
+class XPixmapID(XID):
+    def __delete__(self):
+        MainConnection().core.FreePixmap(self)
+
+
+class Pixmap(XObject):
     """Pixmap."""
 
     def __init__(self, depth, drawable, width=1, height=1):
@@ -11,8 +17,4 @@ class Pixmap(Object):
                                                        drawable,
                                                        width, height)
         cp.check()
-        self.xid = xid
-
-    def __del__(self):
-        if hasattr(self, "xid"):
-            MainConnection().core.FreePixmap(self.xid)
+        self.xid = XPixmapID(xid)
