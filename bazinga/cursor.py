@@ -111,7 +111,7 @@ class XCursor(Object, SingletonPool):
                                                        color.blue,
                                                        self.background.red,
                                                        self.background.green,
-                                                       self.background.blue)
+                                                       self.background.blue).check()
             return color
 
     class background(cachedproperty):
@@ -131,7 +131,7 @@ class XCursor(Object, SingletonPool):
                                                        self.foreground.blue,
                                                        color.red,
                                                        color.green,
-                                                       color.blue)
+                                                       color.blue).check()
 
             return color
 
