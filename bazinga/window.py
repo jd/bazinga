@@ -391,6 +391,12 @@ class Window(Object, SingletonPool):
         Window.border_width.set_cache(sender, signal.border_width)
         Window.above_sibling.set_cache(sender, signal.above_sibling)
 
+    @staticmethod
+    def _on_reparent_update_parent(sender, signal):
+        # We are getting reparented
+        if signal.window == sender.xid:
+            Window.parent.set_cache(sender, Window(signal.parent))
+
     _atom_to_property = {
         Atom("WM_NAME").value: "_icccm_name",
         Atom("_NET_WM_NAME").value: "_netwm_name",
@@ -533,6 +539,9 @@ Window.connect_class_signal(Window._on_property_change_del_cache,
 # Build visibility value
 Window.connect_class_signal(Window._on_visibility_set_value,
                             xcb.xproto.VisibilityNotifyEvent)
+# Handle ReparentNotify to update parent
+Window.connect_class_signal(Window._on_reparent_set_parent,
+                            xcb.xproto.ReparentNotifyEvent)
 # Handle key/button press/release
 Window.connect_class_signal(Window._on_key_press_emit_event, xcb.xproto.KeyPressEvent)
 Window.connect_class_signal(Window._on_key_release_emit_event, xcb.xproto.KeyReleaseEvent)
