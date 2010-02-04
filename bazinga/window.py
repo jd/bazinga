@@ -551,7 +551,7 @@ Window.connect_class_signal(Window._on_property_change_del_cache,
 Window.connect_class_signal(Window._on_visibility_set_value,
                             xcb.xproto.VisibilityNotifyEvent)
 # Handle ReparentNotify to update parent
-Window.connect_class_signal(Window._on_reparent_set_parent,
+Window.connect_class_signal(Window._on_reparent_update_parent,
                             xcb.xproto.ReparentNotifyEvent)
 # Handle key/button press/release
 Window.connect_class_signal(Window._on_key_press_emit_event, xcb.xproto.KeyPressEvent)
