@@ -13,21 +13,6 @@ class Notify(SingletonPool):
 class Object(object):
     """Base class of many bazinga objects."""
 
-    @classmethod
-    def connect_class_signal(cls, receiver, signal=bsignal.signal.All):
-        """Connect a signal to all object of this class."""
-        return bsignal.connect(receiver, signal=signal, sender=cls)
-
-    @classmethod
-    def disconnect_class_signal(cls, receiver, signal=bsignal.signal.All):
-        """Disconnect a class signal."""
-        return bsignal.disconnect(receiver, signal=signal, sender=cls)
-
-    @classmethod
-    def emit_class_signal(cls, signal=bsignal.signal.All, *args, **kw):
-        """Emit a signal on all object of this class."""
-        return bsignal.emit(signal, cls, *args, **kw)
-
     def connect_signal(self, receiver, signal=bsignal.signal.All):
         """Connect a signal."""
         return bsignal.connect(receiver, signal=signal, sender=self)
@@ -52,6 +37,11 @@ class Object(object):
             return func
         return _on_signal
 
+    connect_class_signal = classmethod(connect_signal)
+    disconnect_class_signal = classmethod(disconnect_signal)
+    emit_class_signal = classmethod(emit_signal)
+    on_class_signal = classmethod(on_signal)
+
     def __setattr__(self, key, value):
         super(Object, self).__setattr__(key, value)
         self.emit_notify(key)
@@ -64,7 +54,7 @@ class Object(object):
         """Connect a function to a Notify signal matching key."""
         return self.connect_signal(receiver, Notify(key))
 
-    def connect_notify(self, receiver, key):
+    def disconnect_notify(self, receiver, key):
         """Disconnect a function to a Notify signal matching key."""
         return self.disconnect_signal(receiver, Notify(key))
 
@@ -79,3 +69,8 @@ class Object(object):
             def my_function(sender, signal):
                 ..."""
         return self.on_signal(Notify(key))
+
+    connect_class_notify = classmethod(connect_notify)
+    disconnect_class_notify = classmethod(disconnect_notify)
+    emit_class_notify = classmethod(emit_notify)
+    on_class_notify = classmethod(on_notify)

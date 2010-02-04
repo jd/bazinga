@@ -40,9 +40,9 @@ events_window_attribute = {
 }
 
 
-_events_to_always_listen = xcb.xproto.EventMask.StructureNotify
-                           | xcb.xproto.EventMask.PropertyChange
-                           | xcb.xproto.EventMask.VisibilityChange)
+_events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
+                           | xcb.xproto.EventMask.PropertyChange \
+                           | xcb.xproto.EventMask.VisibilityChange
 
 
 def xcb_dict_to_value(values, xcb_dict):
