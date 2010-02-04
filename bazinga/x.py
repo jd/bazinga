@@ -218,6 +218,24 @@ class Connection(Object, xcb.Connection):
         elif prop.type == Atom("STRING").value:
             return byte_list_to_str(prop.value)
 
+    def grab_pointer(self, window, cursor="left_ptr", confine_to=None):
+        """Grab pointer on a window."""
+        confine_to = confine_to or window
+        self.core.GrabPointer(self, False, window.xid,
+                              xcb.xproto.EventMask.ButtonPress
+                              | xcb.xproto.EventMask.ButtonRelease
+                              | xcb.xproto.EventMask.PointerMotion,
+                              xcb.xproto.GrabMode.Async,
+                              xcb.xproto.GrabMode.Async,
+                              confine_to.xid,
+                              Cursor(window.colormap, cursor),
+                              xcb.xproto.Time.CurrentTime)
+
+    def ungrab_pointer(self):
+        self.core.UngrabPointer(xcb.xproto.Time.CurrentTime)
+
+    def ungrab_pointer(self, 
+
 
 class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""

@@ -517,9 +517,17 @@ class Window(Object, SingletonPool):
 
     def ungrab_button(self, modifiers, button):
         """Ungrab a button on a window."""
-        MainConnectino().core.UngrabButton(button,
+        MainConnection().core.UngrabButton(button,
                                            self.xid,
                                            modifiers)
+
+    def grab_pointer(self, cursor="left_ptr", confine_to=None):
+        """Grab pointer on this window."""
+        return MainConnection().grab_pointer(self, cursor, confine_to)
+
+    @staticmethod
+    def ungrab_pointer():
+        return MainConnection().ungrab_pointer()
 
     def get_children(self):
         qt = MainConnection().core.QueryTree(self.xid)
