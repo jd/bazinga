@@ -162,7 +162,7 @@ class Window(Object, SingletonPool):
             value = Cursor(self.colormap, value)
             MainConnection().core.ChangeWindowAttributes(self.xid,
                                                          xcb.xproto.CW.Cursor,
-                                                         [ value.xid ])
+                                                         [ value ])
             return value
 
     class map_state(rocachedproperty):

@@ -229,7 +229,7 @@ class Connection(Object, xcb.Connection):
                               xcb.xproto.GrabMode.Async,
                               xcb.xproto.GrabMode.Async,
                               confine_to.xid,
-                              Cursor(window.colormap, cursor).xid,
+                              Cursor(window.colormap, cursor),
                               xcb.xproto.Time.CurrentTime)
 
     def ungrab_pointer(self):

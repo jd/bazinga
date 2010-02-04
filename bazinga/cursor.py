@@ -1,8 +1,8 @@
 # vim: set fileencoding=utf-8
 
-from base.object import Object
 from base.property import cachedproperty
 from base.singleton import SingletonPool
+from xobject import XObject
 from color import Color
 
 # This is defined in some X header file…
@@ -89,7 +89,7 @@ _name_to_id = {
     "xterm": 152,
 }
 
-class XCursor(Object, SingletonPool):
+class XCursor(XObject, SingletonPool):
     """Pointer cursor."""
 
     _font = None
@@ -163,8 +163,7 @@ class XCursor(Object, SingletonPool):
         self.name = name
         self.colormap = colormap
         cg.check()
-        # Do this last, so we do not try to FreeCursor if check fail
-        self.xid = xid
+        super(XCursor, self).__init__(xid)
 
     def __str__(self):
         return self.name
