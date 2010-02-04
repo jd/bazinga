@@ -2,7 +2,7 @@
 
 from base.property import cachedproperty, rocachedproperty
 from base.object import Notify
-from xobject import XObject, XID
+from xobject import XObject
 from base.singleton import SingletonPool
 from x import MainConnection, byte_list_to_uint32, byte_list_to_str
 from atom import Atom
@@ -46,7 +46,7 @@ _events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
                            | xcb.xproto.EventMask.VisibilityChange
 
 
-class Window(XObject, SingletonPool):
+class Window(SingletonPool, XObject):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
@@ -60,7 +60,7 @@ class Window(XObject, SingletonPool):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self.xid,
+            MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.X,
                                                   [ value ])
 
@@ -70,7 +70,7 @@ class Window(XObject, SingletonPool):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self.xid,
+            MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.Y,
                                                   [ value ])
 
@@ -80,7 +80,7 @@ class Window(XObject, SingletonPool):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self.xid,
+            MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.Width,
                                                   [ value ])
 
@@ -90,7 +90,7 @@ class Window(XObject, SingletonPool):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self.xid,
+            MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.Height,
                                                   [ self.height ])
 
@@ -100,7 +100,7 @@ class Window(XObject, SingletonPool):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self.xid,
+            MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.BorderWidth,
                                                   [ value ])
 
@@ -117,17 +117,17 @@ class Window(XObject, SingletonPool):
     class parent(cachedproperty):
         """Parent window."""
         def __get__(self):
-            parent = MainConnection().core.QueryTree(self.xid).reply().parent
+            parent = MainConnection().core.QueryTree(self).reply().parent
             if parent > 0:
                 return Window(parent)
 
         def __set__(self, value):
-            MainConnection().core.ReparentWindow(self.xid, value.xid, self.x, self.y)
+            MainConnection().core.ReparentWindow(self, value.xid, self.x, self.y)
 
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
         def __set__(self, window):
-            MainConnection().core.ConfigureWindow(self.xid,
+            MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.Sibling
                                                   | xcb.xproto.ConfigWindow.StackMode,
                                                   [ window.xid, xcb.xproto.StackMode.Above ])
@@ -149,7 +149,7 @@ class Window(XObject, SingletonPool):
 
         def __set__(self, value):
             color = Color(self.colormap, value)
-            MainConnection().core.ChangeWindowAttributes(self.xid,
+            MainConnection().core.ChangeWindowAttributes(self,
                                                          xcb.xproto.CW.BorderPixel,
                                                          [ color.pixel ])
             return color
@@ -161,7 +161,7 @@ class Window(XObject, SingletonPool):
 
         def __set__(self, value):
             value = Cursor(self.colormap, value)
-            MainConnection().core.ChangeWindowAttributes(self.xid,
+            MainConnection().core.ChangeWindowAttributes(self,
                                                          xcb.xproto.CW.Cursor,
                                                          [ value ])
             return value
@@ -186,29 +186,29 @@ class Window(XObject, SingletonPool):
             self._retrieve_window_attributes()
 
         def __set__(self, value):
-            MainConnection().core.ChangeWindowAttributes(self.xid,
+            MainConnection().core.ChangeWindowAttributes(self,
                                                          xcb.xproto.CW.OverrideRedirect,
                                                          [ int(value) ])
 
     class protocols(cachedproperty):
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_PROTOCOLS").value,
-                                                     Atom("ATOM").value,
+            prop = MainConnection().core.GetProperty(False, self,
+                                                     Atom("WM_PROTOCOLS"),
+                                                     Atom("ATOM"),
                                                      0, 1024).reply()
             atoms = byte_list_to_uint32(prop.value)
             if atoms:
                 protos = set()
                 for a in atoms:
-                    protos.add(Atom(a))
+                    protos.add(Atom(xid=a))
                 return protos
 
     class icon(cachedproperty):
         """Window icon."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("_NET_WM_ICON").value,
-                                                     Atom("CARDINAL").value,
+            prop = MainConnection().core.GetProperty(False, self,
+                                                     Atom("_NET_WM_ICON"),
+                                                     Atom("CARDINAL"),
                                                      # Max icon size is:
                                                      #  w  *  h  * (rgba)
                                                      0, 256*256*4).reply()
@@ -232,26 +232,26 @@ class Window(XObject, SingletonPool):
             data = struct.pack("II{0}s".format(len(imagedata)),
                                image.size[0], image.size[1], imagedata)
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("_NET_WM_ICON").value,
-                                                 Atom("CARDINAL").value,
+                                                 self,
+                                                 Atom("_NET_WM_ICON"),
+                                                 Atom("CARDINAL"),
                                                  32, len(data) / 4, data)
 
     class transient_for(rocachedproperty):
         """Window this window is transient for."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self.xid,
-                                                     Atom("WM_TRANSIENT_FOR").value,
-                                                     Atom("WINDOW").value,
+            prop = MainConnection().core.GetProperty(False, self,
+                                                     Atom("WM_TRANSIENT_FOR"),
+                                                     Atom("WINDOW"),
                                                      0, 1).reply()
             if prop.value:
                 return Window(byte_list_to_uint32(prop.value)[0])
 
         def __set__(self, value):
             MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self.xid,
-                                                 Atom("WM_TRANSIENT_FOR").value,
-                                                 Atom("WINDOW").value,
+                                                 self,
+                                                 Atom("WM_TRANSIENT_FOR"),
+                                                 Atom("WINDOW"),
                                                  32, 1, value.xid)
 
     class machine(rocachedproperty):
@@ -312,9 +312,12 @@ class Window(XObject, SingletonPool):
     def icon_name(self, value):
         self._icccm_icon_name = self._netwm_icon_name = value
 
+    @staticmethod
+    def __pool_key__(xid):
+        return xid
+
     def __init__(self, xid):
         global _events_to_always_listen
-        self.xid = XID(xid)
         # Mandatory, we want this.
         self._set_events(_events_to_always_listen)
         # Receive events and errors from the X connection
@@ -323,17 +326,17 @@ class Window(XObject, SingletonPool):
         MainConnection().connect_signal(self._dispatch_errors,
                                         signal=xcb.Error)
 
-        super(Window, self).__init__()
+        super(Window, self).__init__(xid)
 
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__,
-                           hex(self.xid))
+                           hex(self))
 
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 
         if event.__class__ in events_window_attribute.keys():
-            return getattr(event, events_window_attribute[event.__class__][1]) == self.xid
+            return getattr(event, events_window_attribute[event.__class__][1]) == self
         return False
 
     def _dispatch_events(self, signal):
@@ -343,13 +346,13 @@ class Window(XObject, SingletonPool):
 
     def _dispatch_errors(self, signal):
         """Dispatch errors that belongs to us."""
-        if signal.bad_value == self.xid:
+        if signal.bad_value == self:
             self.emit_signal(signal)
 
     def _set_events(self, events):
         """Set events that shall be received by the window."""
         if events != self.__events:
-            MainConnection().core.ChangeWindowAttributes(self.xid,
+            MainConnection().core.ChangeWindowAttributes(self,
                                                          xcb.xproto.CW.EventMask,
                                                          [ events ])
             self.__events = events
@@ -360,7 +363,7 @@ class Window(XObject, SingletonPool):
 
     def _retrieve_geometry(self):
         """Update window geometry."""
-        wg = MainConnection().core.GetGeometry(self.xid).reply()
+        wg = MainConnection().core.GetGeometry(self).reply()
         Window.x.set_cache(self, wg.x)
         Window.y.set_cache(self, wg.y)
         Window.width.set_cache(self, wg.width)
@@ -371,7 +374,7 @@ class Window(XObject, SingletonPool):
 
     def _retrieve_window_attributes(self):
         """Update windows attributes."""
-        wa = MainConnection().core.GetWindowAttributes(self.xid).reply()
+        wa = MainConnection().core.GetWindowAttributes(self).reply()
         Window.map_state.set_cache(self, wa.map_state)
         Window.colormap.set_cache(self, wa.colormap)
         Window.visual.set_cache(self, wa.visual)
@@ -382,21 +385,21 @@ class Window(XObject, SingletonPool):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
         MainConnection().core.SetInputFocus(xcb.xproto.InputFocus.Parent,
-                                            self.xid,
+                                            self,
                                             xcb.xproto.Time.CurrentTime)
 
     def map(self):
         """Map a window on the screen."""
-        MainConnection().core.MapWindow(self.xid)
+        MainConnection().core.MapWindow(self)
 
     def unmap(self):
         """Unmap a window from the screen."""
-        MainConnection().core.UnmapWindow(self.xid)
+        MainConnection().core.UnmapWindow(self)
 
     def grab_key(self, modifiers, keycode):
         """Grab a key on a window."""
         MainConnection().core.GrabKey(True,
-                                      self.xid,
+                                      self,
                                       modifiers,
                                       keycode,
                                       xcb.xproto.GrabMode.Async,
@@ -405,13 +408,13 @@ class Window(XObject, SingletonPool):
     def ungrab_key(self, modifiers, keycode):
         """Ungrab a key on a window."""
         MainConnection().core.UngrabKey(keycode,
-                                        self.xid,
+                                        self,
                                         modifiers)
 
     def grab_button(self, modifiers, button):
         """Grab a button on a window."""
         MainConnection().core.GrabButton(False,
-                                         self.xid,
+                                         self,
                                          xcb.xproto.EventMask.ButtonPress
                                          | xcb.xproto.EventMask.ButtonRelease,
                                          # XXX Sync?
@@ -424,7 +427,7 @@ class Window(XObject, SingletonPool):
     def ungrab_button(self, modifiers, button):
         """Ungrab a button on a window."""
         MainConnection().core.UngrabButton(button,
-                                           self.xid,
+                                           self,
                                            modifiers)
 
     def grab_pointer(self, cursor="left_ptr", confine_to=None):
@@ -436,7 +439,7 @@ class Window(XObject, SingletonPool):
         return MainConnection().ungrab_pointer()
 
     def get_children(self):
-        qt = MainConnection().core.QueryTree(self.xid)
+        qt = MainConnection().core.QueryTree(self)
         children = set()
         reply = qt.reply()
         # Update parent and root, it's free!
@@ -451,10 +454,10 @@ class Window(XObject, SingletonPool):
         # XXX Seriously, we need to do some stuff for xpyb about this.
         buf = struct.pack("BB2xIIII12x",
                           33, # XCB_CLIENT_MESSAGE
-                          32, self.xid, Atom("WM_PROTOCOLS").value,
-                          Atom("WM_TAKE_FOCUS").value,
+                          32, self, Atom("WM_PROTOCOLS"),
+                          Atom("WM_TAKE_FOCUS"),
                           xcb.xproto.Time.CurrentTime)
-        MainConnection().core.SendEvent(False, self.xid,
+        MainConnection().core.SendEvent(False, self,
                                         xcb.xproto.EventMask.NoEvent,
                                         buf)
 
@@ -470,7 +473,7 @@ class Window(XObject, SingletonPool):
     # Helpers
     def create_pixmap(self):
         """Create a pixmap for this window."""
-        return Pixmap(self.depth, self.xid, self.width, self.height)
+        return Pixmap(self.depth, self, self.width, self.height)
 
     def create_subwindow(self, *args, **kwargs):
         """Create a subwindow for this window.
@@ -509,14 +512,14 @@ def _on_configure_update_geometry(sender, signal):
 
 
 _atom_to_property = {
-    Atom("WM_NAME").value: "_icccm_name",
-    Atom("_NET_WM_NAME").value: "_netwm_name",
-    Atom("WM_ICON_NAME").value: "_icccm_icon_name",
-    Atom("_NET_WM_ICON_NAME").value: "_netwm_icon_name",
-    Atom("WM_TRANSIENT_FOR").value: "transient_for",
-    Atom("WM_CLIENT_MACHINE").value: "machine",
-    Atom("_NET_WM_ICON").value: "icon",
-    Atom("WM_PROTOCOLS").value: "protocols",
+    Atom("WM_NAME"): "_icccm_name",
+    Atom("_NET_WM_NAME"): "_netwm_name",
+    Atom("WM_ICON_NAME"): "_icccm_icon_name",
+    Atom("_NET_WM_ICON_NAME"): "_netwm_icon_name",
+    Atom("WM_TRANSIENT_FOR"): "transient_for",
+    Atom("WM_CLIENT_MACHINE"): "machine",
+    Atom("_NET_WM_ICON"): "icon",
+    Atom("WM_PROTOCOLS"): "protocols",
 }
 
 @Window.on_class_signal(xcb.xproto.PropertyNotifyEvent)
@@ -587,7 +590,7 @@ class CreatedWindow(Window):
 
         create_window = \
         MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
-                                                  self.xid,
+                                                  self,
                                                   parent.xid,
                                                   x, y, width, height,
                                                   border_width,
@@ -603,4 +606,4 @@ class CreatedWindow(Window):
         CreatedWindow.height.set_cache(self, height)
 
         create_window.check()
-        super(CreatedWindow, self).__init__(self.xid)
+        super(CreatedWindow, self).__init__(xid)

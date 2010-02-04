@@ -2,7 +2,7 @@
 
 from base.property import cachedproperty
 from base.singleton import SingletonPool
-from xobject import XObject, XID
+from xobject import XObject
 from color import Color
 
 # This is defined in some X header file…
@@ -90,12 +90,6 @@ _name_to_id = {
 }
 
 
-class XCursorID(XID):
-    def __del__(self):
-        from x import MainConnection
-        MainConnection().core.FreeCursor(self)
-
-
 class XCursor(XObject, SingletonPool):
     """Pointer cursor."""
 
@@ -170,12 +164,14 @@ class XCursor(XObject, SingletonPool):
         self.name = name
         self.colormap = colormap
         cg.check()
-        self.xid = XCursorID(xid)
-        super(XCursor, self).__init__()
+        super(XCursor, self).__init__(xid)
 
     def __str__(self):
         return self.name
 
+    def __del__(self):
+        from x import MainConnection
+        MainConnection().core.FreeCursor(self)
 
 def Cursor(colormap, value, foreground="black", background="white"):
     if isinstance(value, XCursor):
