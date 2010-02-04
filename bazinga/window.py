@@ -636,7 +636,8 @@ class CreatedWindow(Window):
         create_window.check()
         super(CreatedWindow, self).__init__(self.xid)
 
-    def __del__(self):
-        """Destroy a window."""
-        if hasattr(self, "xid"):
-            MainConnection().core.DestroyWindow(self.xid)
+    # XXX Looks bad
+    #def __del__(self):
+    #    """Destroy a window."""
+    #    if hasattr(self, "xid"):
+    #        MainConnection().core.DestroyWindow(self.xid)
