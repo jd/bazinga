@@ -390,6 +390,7 @@ class Window(Object, SingletonPool):
         Window.height.set_cache(sender, signal.height)
         Window.border_width.set_cache(sender, signal.border_width)
         Window.above_sibling.set_cache(sender, signal.above_sibling)
+        Window.override_redirect.set_cache(sender, signal.override_redirect)
 
     @staticmethod
     def _on_reparent_update_parent(sender, signal):
