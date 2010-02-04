@@ -1,7 +1,8 @@
 """Bazinga window objects."""
 
 from base.property import cachedproperty, rocachedproperty
-from base.object import Object, Notify
+from base.object import Notify
+from xobject import XObject, XID
 from base.singleton import SingletonPool
 from x import MainConnection, byte_list_to_uint32, byte_list_to_str
 from atom import Atom
@@ -45,7 +46,7 @@ _events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
                            | xcb.xproto.EventMask.VisibilityChange
 
 
-class Window(Object, SingletonPool):
+class Window(XObject, SingletonPool):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
@@ -313,7 +314,7 @@ class Window(Object, SingletonPool):
 
     def __init__(self, xid):
         global _events_to_always_listen
-        self.xid = xid
+        self.xid = XID(xid)
         # Mandatory, we want this.
         self._set_events(_events_to_always_listen)
         # Receive events and errors from the X connection
@@ -603,9 +604,3 @@ class CreatedWindow(Window):
 
         create_window.check()
         super(CreatedWindow, self).__init__(self.xid)
-
-    # XXX Looks bad
-    #def __del__(self):
-    #    """Destroy a window."""
-    #    if hasattr(self, "xid"):
-    #        MainConnection().core.DestroyWindow(self.xid)
