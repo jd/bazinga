@@ -8,6 +8,7 @@ from base.property import cachedproperty
 from base.object import Object
 from loop import MainLoop
 from atom import Atom
+from cursor import Cursor
 
 def byte_list_to_str(blist):
     """Convert a byte list to a string."""
@@ -221,20 +222,18 @@ class Connection(Object, xcb.Connection):
     def grab_pointer(self, window, cursor="left_ptr", confine_to=None):
         """Grab pointer on a window."""
         confine_to = confine_to or window
-        self.core.GrabPointer(self, False, window.xid,
+        self.core.GrabPointer(False, window.xid,
                               xcb.xproto.EventMask.ButtonPress
                               | xcb.xproto.EventMask.ButtonRelease
                               | xcb.xproto.EventMask.PointerMotion,
                               xcb.xproto.GrabMode.Async,
                               xcb.xproto.GrabMode.Async,
                               confine_to.xid,
-                              Cursor(window.colormap, cursor),
+                              Cursor(window.colormap, cursor).xid,
                               xcb.xproto.Time.CurrentTime)
 
     def ungrab_pointer(self):
         self.core.UngrabPointer(xcb.xproto.Time.CurrentTime)
-
-    def ungrab_pointer(self, 
 
 
 class MainConnection(Singleton, Connection):

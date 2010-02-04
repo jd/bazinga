@@ -4,7 +4,6 @@ from base.object import Object
 from base.property import cachedproperty
 from base.singleton import SingletonPool
 from color import Color
-from x import MainConnection
 
 # This is defined in some X header file…
 _font_name = "cursor"
@@ -104,6 +103,7 @@ class XCursor(Object, SingletonPool):
             raise AttributeError
 
         def __set__(self, value):
+            from x import MainConnection
             color = Color(self.colormap, value)
             MainConnection().core.RecolorCursorChecked(self.xid,
                                                        color.red,
@@ -123,6 +123,7 @@ class XCursor(Object, SingletonPool):
             raise AttributeError
 
         def __set__(self, value):
+            from x import MainConnection
             color = Color(self.colormap, value)
             MainConnection().core.RecolorCursorChecked(self.xid,
                                                        self.foreground.red,
@@ -135,6 +136,7 @@ class XCursor(Object, SingletonPool):
             return color
 
     def __init__(self, colormap, name, foreground, background):
+        from x import MainConnection
         # Initialize font is never done before
         if XCursor._font is None:
             XCursor._font = MainConnection().generate_id()
@@ -167,11 +169,14 @@ class XCursor(Object, SingletonPool):
     def __str__(self):
         return self.name
 
-    def __del__(self):
-        if hasattr(self, "xid"):
-            MainConnection().core.FreeCursor(self.xid)
+    # This is not possible:
+    # Cursor().xid will free xid...
+    # We need an xid object for that :-)
+    #def __del__(self):
+    #    if hasattr(self, "xid"):
+    #        from x import MainConnection
+    #        MainConnection().core.FreeCursor(self.xid)
 
-    # XXX recolor_cursor
 
 def Cursor(colormap, value, foreground="black", background="white"):
     if isinstance(value, XCursor):

@@ -1,6 +1,5 @@
 import xcb.xproto
 
-from x import MainConnection
 from base.object import Object
 from base.singleton import SingletonPool
 from base.property import rocachedproperty
@@ -68,6 +67,7 @@ class NamedColor(XColor):
         if alpha < 0 or alpha > 65535:
             raise ValueError("Bad alpha value.")
 
+        from x import MainConnection
         self._cookie = MainConnection().core.AllocNamedColor(colormap, len(name), name)
         NamedColor.name.set_cache(self, name)
         NamedColor.alpha.set_cache(self, alpha)
@@ -92,6 +92,7 @@ class ValueColor(XColor):
             if value < 0 or value > 65535:
                 raise ValueError("Color attribute value is too high.")
 
+        from x import MainConnection
         self._cookie = MainConnection().core.AllocColor(colormap, red, green, blue)
         ValueColor.alpha.set_cache(self, alpha)
 
