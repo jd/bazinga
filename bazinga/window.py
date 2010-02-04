@@ -571,8 +571,8 @@ class CreatedWindow(Window):
     def __init__(self, parent, x=0, y=0, width=1, height=1,
                  border_width=0, values={}):
 
-        if parent is None or parent is self:
-            raise ValueError("you have to set a parent to create your window")
+        if parent is None:
+            raise ValueError("You have to set a parent to create your window.")
 
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
