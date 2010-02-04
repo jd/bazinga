@@ -532,6 +532,18 @@ class Window(Object, SingletonPool):
             children.add(Window(w))
         return children
 
+    def takefocus(self):
+        """Send a take focus request to a window."""
+        # XXX Seriously, we need to do some stuff for xpyb about this.
+        buf = struct.pack("BB2xIIII12x",
+                          33, # XCB_CLIENT_MESSAGE
+                          32, self.xid, Atom("WM_PROTOCOLS").value,
+                          Atom("WM_TAKE_FOCUS").value,
+                          xcb.xproto.Time.CurrentTime)
+        MainConnection().core.SendEvent(False, self.xid,
+                                        xcb.xproto.EventMask.NoEvent,
+                                        buf)
+
     # Events handling
     def on_event(self, event):
         if events_window_attribute[event][0]:
