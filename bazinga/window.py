@@ -558,7 +558,7 @@ _atom_to_property = {
 def _on_property_change_del_cache(sender, signal):
     if _atom_to_property.has_key(signal.atom):
         # Erase cache
-        delattr(sender, _atom_to_property[signal.atom])
+        getattr(Window, _atom_to_property[signal.atom]).del_cache(sender)
 
 
 @Window.on_class_signal(xcb.xproto.VisibilityNotifyEvent)

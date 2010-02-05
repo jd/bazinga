@@ -49,17 +49,20 @@ class CachedProperty(object):
     def __delete__(self, inst):
         if self.deleter:
             self.deleter(inst)
-        # Clear cache
-        try:
-            delattr(inst, self.key)
-        except AttributeError:
-            pass
+        self.del_cache(inst)
 
     def set_cache(self, inst, value):
         setattr(inst, self.key, value)
         # Emit signal if object is a Bazinga Object
         if isinstance(inst, Object):
             inst.emit_notify(self.name)
+
+    def del_cache(self, inst):
+        # Clear cache
+        try:
+            delattr(inst, self.key)
+        except AttributeError:
+            pass
 
 
 class CachedPropertyType(CachedProperty):
