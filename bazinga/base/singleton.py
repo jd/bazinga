@@ -35,12 +35,11 @@ class SingletonPoolMeta(type):
 
     def __call__(cls, *args, **kwargs):
         try:
-            with cls.__instance_lock:
-                return cls.__getpool__(*args, **kwargs)
+            key = cls.__getpool__(*args, **kwargs)
+            return key
         except:
             obj = type.__call__(cls, *args, **kwargs)
-            with cls.__instance_lock:
-                cls.__setpool__(obj, *args, **kwargs)
+            cls.__setpool__(obj, *args, **kwargs)
             return obj
 
 class SingletonPool(object):
@@ -51,7 +50,6 @@ class SingletonPool(object):
 
     __metaclass__ = SingletonPoolMeta
 
-    _SingletonPoolMeta__instance_lock = Lock()
     # Can be overriden
     __instances = weakref.WeakValueDictionary()
 
@@ -65,5 +63,4 @@ class SingletonPool(object):
 
     @classmethod
     def __setpool__(cls, obj, *args, **kwargs):
-        poolkey =  cls.__getpoolkey__(*args, **kwargs)
-        cls.__instances[poolkey] = obj
+        cls.__instances[cls.__getpoolkey__(*args, **kwargs)] = obj

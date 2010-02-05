@@ -14,7 +14,7 @@ from cursor import Cursor
 
 def byte_list_to_str(blist):
     """Convert a byte list to a string."""
-    return struct.unpack_from("{0}s".format(len(blist)), blist.buf())
+    return struct.unpack_from("{0}s".format(len(blist)), blist.buf())[0]
 
 
 def byte_list_to_uint32(blist):
