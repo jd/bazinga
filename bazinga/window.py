@@ -481,10 +481,36 @@ class Window(SingletonPool, XObject):
         """Create a pixmap for this window."""
         return Pixmap(self.depth, self, self.width, self.height)
 
-    def create_subwindow(self, *args, **kwargs):
-        """Create a subwindow for this window.
-        See CreatedWindow for arguments."""
-        return CreatedWindow(self, *wargs, **kwargs)
+    def create_subwindow(self, x=0, y=0, width=1, height=1, border_width=0):
+        """Create a subwindow for this window."""
+        # Always listen to this events at creation.
+        # Otherwise our cache might not be up to date.
+        # XXX or grab server while creating and calling super()
+        global _events_to_always_listen
+        self.__events = _events_to_always_listen
+
+        xid = MainConnection().generate_id()
+        create_window = \
+        MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
+                                                  xid,
+                                                  self,
+                                                  x, y, width, height,
+                                                  border_width,
+                                                  xcb.xproto.WindowClass.CopyFromParent,
+                                                  xcb.xproto.WindowClass.CopyFromParent,
+                                                  xcb.xproto.CW.EventMask,
+                                                  [ self.__events ])
+
+        window = Window(xid)
+        Window.border_width.set_cache(window, border_width)
+        Window.x.set_cache(window, x)
+        Window.y.set_cache(window, y)
+        Window.width.set_cache(window, width)
+        Window.height.set_cache(window, height)
+
+        create_window.check()
+
+        return window
 
 
 # Static function that are used to update various information
@@ -530,9 +556,9 @@ _atom_to_property = {
 
 @Window.on_class_signal(xcb.xproto.PropertyNotifyEvent)
 def _on_property_change_del_cache(sender, signal):
-    if sender._atom_to_property.has_key(signal.atom):
+    if _atom_to_property.has_key(signal.atom):
         # Erase cache
-        delattr(sender, sender._atom_to_property[signal.atom])
+        delattr(sender, _atom_to_property[signal.atom])
 
 
 @Window.on_class_signal(xcb.xproto.VisibilityNotifyEvent)
@@ -571,45 +597,3 @@ def _on_button_press_emit_event(sender, signal):
 @Window.on_class_signal(xcb.xproto.ButtonReleaseEvent)
 def _on_button_release_emit_event(sender, signal):
     sender.emit_signal(sender._build_key_button_event(signal, event.ButtonRelease))
-
-
-class CreatedWindow(Window):
-    """Created window."""
-
-    def __new__(cls, xid, *args, **kwargs):
-        xid = MainConnection().generate_id()
-        obj, do_init = super(CreatedWindow, cls).__new__(cls, xid)
-        obj.xid = xid
-        return obj, do_init
-
-    def __init__(self, parent, x=0, y=0, width=1, height=1,
-                 border_width=0, values={}):
-
-        if parent is None:
-            raise ValueError("You have to set a parent to create your window.")
-
-        # Always listen to this events at creation.
-        # Otherwise our cache might not be up to date.
-        # XXX or grab server while creating and calling super()
-        global _events_to_always_listen
-        self.__events = _events_to_always_listen
-
-        create_window = \
-        MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
-                                                  self,
-                                                  parent.xid,
-                                                  x, y, width, height,
-                                                  border_width,
-                                                  xcb.xproto.WindowClass.CopyFromParent,
-                                                  xcb.xproto.WindowClass.CopyFromParent,
-                                                  xcb.xproto.CW.EventMask,
-                                                  [ self.__events ])
-
-        CreatedWindow.border_width.set_cache(self, border_width)
-        CreatedWindow.x.set_cache(self, x)
-        CreatedWindow.y.set_cache(self, y)
-        CreatedWindow.width.set_cache(self, width)
-        CreatedWindow.height.set_cache(self, height)
-
-        create_window.check()
-        super(CreatedWindow, self).__init__(xid)
