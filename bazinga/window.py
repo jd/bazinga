@@ -13,6 +13,7 @@ import event
 import xcb.xproto
 from PIL import Image
 import struct
+import weakref
 
 events_window_attribute = {
     # Event: (event mask, attribute matching xid)
@@ -50,6 +51,8 @@ class Window(SingletonPool, XObject):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
+
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     Visibility = xcb.xproto.Visibility
     Visibility.Unknown = -1

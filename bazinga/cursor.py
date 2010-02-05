@@ -4,6 +4,7 @@ from base.property import cachedproperty
 from base.singleton import SingletonPool
 from xobject import XObject
 from color import Color
+import weakref
 
 # This is defined in some X header file…
 _font_name = "cursor"
@@ -94,6 +95,8 @@ class XCursor(SingletonPool, XObject):
     """Pointer cursor."""
 
     _font = None
+
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     class foreground(cachedproperty):
         def __get__(self):

@@ -1,4 +1,5 @@
 import xcb.xproto
+import weakref
 
 from base.object import Object
 from base.singleton import SingletonPool
@@ -6,6 +7,8 @@ from base.property import rocachedproperty
 
 class XColor(Object, SingletonPool):
     """Generic color class."""
+
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     class pixel(rocachedproperty):
         """Pixel value of the color."""
