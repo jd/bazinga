@@ -128,6 +128,8 @@ class Connection(Object, xcb.Connection):
                     screen.height = screen_info.height
                     # There is only one root if we have Xinerama
                     screen.root = self.roots[0]
+                    # This is useless, but just to be logic
+                    screen.outputs = [ Output() ]
                     screens.append(screen)
             else:
                 for root, xroot in zip(self.roots, self.get_setup().roots):
