@@ -1,10 +1,13 @@
 from . import signal as bsignal
 from singleton import SingletonPool
+import weakref
 
 class Notify(SingletonPool):
     """Notify signal.
     This is sent when an object see one of its attribute changed.
     On object[key] = value, Notify object is emitted on the object."""
+
+    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     def __init__(self, attribute):
         self.attribute = attribute

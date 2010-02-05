@@ -7,6 +7,7 @@ from bazinga.base.singleton import Singleton, SingletonPool
 class TestSingleton(unittest.TestCase):
 
     class Point(SingletonPool):
+        _SingletonPool__instances = {}
         def __init__(self, x, y):
             pass
 
