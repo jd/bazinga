@@ -17,18 +17,9 @@ def byte_list_to_str(blist):
     return struct.unpack_from("{0}s".format(len(blist)), blist.buf())
 
 
-def byte_list_to_unicode(blist):
-    """Convert a byte list to a unicode string."""
-    return u"".join(map(unichr, blist))
-
-
 def byte_list_to_uint32(blist):
     """Convert a byte list to a integer."""
-    if len(blist) > 0 and len(blist) % 4 == 0:
-        ret = []
-        for i in range(0, len(blist), 4):
-            ret.append(blist[i] | blist[i + 1] << 8 | blist[i + 2] << 16 | blist[i + 3] << 24 )
-        return ret
+    return struct.unpack_from("{0}I".format(len(blist) / 4), blist.buf())
 
 
 class Connection(Object, xcb.Connection):
@@ -218,7 +209,7 @@ class Connection(Object, xcb.Connection):
                                                  xcb.xproto.GetPropertyType.Any,
                                                  0, 4096).reply()
         if prop.type == Atom("UTF8_STRING").value:
-            return byte_list_to_unicode(prop.value)
+            return unicode(byte_list_to_str(prop.value), "UTF-8")
         elif prop.type == Atom("STRING").value:
             return byte_list_to_str(prop.value)
 
