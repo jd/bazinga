@@ -200,7 +200,7 @@ class Window(SingletonPool, XObject):
             if atoms:
                 protos = set()
                 for a in atoms:
-                    protos.add(Atom(xid=a))
+                    protos.add(Atom(a))
                 return protos
 
     class icon(cachedproperty):
@@ -313,8 +313,11 @@ class Window(SingletonPool, XObject):
         self._icccm_icon_name = self._netwm_icon_name = value
 
     @staticmethod
-    def __pool_key__(xid):
+    def __getpoolkey__(xid):
         return xid
+
+    def __new__(cls, xid):
+        return super(Window, cls).__new__(cls, xid)
 
     def __init__(self, xid):
         global _events_to_always_listen
@@ -326,7 +329,7 @@ class Window(SingletonPool, XObject):
         MainConnection().connect_signal(self._dispatch_errors,
                                         signal=xcb.Error)
 
-        super(Window, self).__init__(xid)
+        super(Window, self).__init__()
 
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__,

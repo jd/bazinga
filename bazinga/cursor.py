@@ -90,7 +90,7 @@ _name_to_id = {
 }
 
 
-class XCursor(XObject, SingletonPool):
+class XCursor(SingletonPool, XObject):
     """Pointer cursor."""
 
     _font = None
@@ -106,7 +106,7 @@ class XCursor(XObject, SingletonPool):
         def __set__(self, value):
             from x import MainConnection
             color = Color(self.colormap, value)
-            MainConnection().core.RecolorCursorChecked(self.xid,
+            MainConnection().core.RecolorCursorChecked(self,
                                                        color.red,
                                                        color.green,
                                                        color.blue,
@@ -126,7 +126,7 @@ class XCursor(XObject, SingletonPool):
         def __set__(self, value):
             from x import MainConnection
             color = Color(self.colormap, value)
-            MainConnection().core.RecolorCursorChecked(self.xid,
+            MainConnection().core.RecolorCursorChecked(self,
                                                        self.foreground.red,
                                                        self.foreground.green,
                                                        self.foreground.blue,
@@ -135,6 +135,10 @@ class XCursor(XObject, SingletonPool):
                                                        color.blue).check()
 
             return color
+
+    def __new__(cls, *args, **kwargs):
+        from x import MainConnection
+        return super(XCursor, cls).__new__(cls, MainConnection().generate_id())
 
     def __init__(self, colormap, name, foreground, background):
         from x import MainConnection
@@ -151,8 +155,7 @@ class XCursor(XObject, SingletonPool):
         XCursor.foreground.set_cache(self, Color(colormap, foreground))
         XCursor.background.set_cache(self, Color(colormap, background))
 
-        xid = MainConnection().generate_id()
-        cg = MainConnection().core.CreateGlyphCursorChecked(xid,
+        cg = MainConnection().core.CreateGlyphCursorChecked(self,
                                                             XCursor._font, XCursor._font,
                                                             cursor_id, cursor_id + 1,
                                                             self.foreground.red,
@@ -164,7 +167,6 @@ class XCursor(XObject, SingletonPool):
         self.name = name
         self.colormap = colormap
         cg.check()
-        super(XCursor, self).__init__(xid)
 
     def __str__(self):
         return self.name

@@ -55,8 +55,8 @@ class SingletonPool(object):
     # Can be overriden
     __instances = weakref.WeakValueDictionary()
 
-    @classmethod
-    def __getpoolkey__(cls, *args, **kwargs):
+    @staticmethod
+    def __getpoolkey__(*args, **kwargs):
         return cPickle.dumps((args, kwargs))
 
     @classmethod
@@ -65,4 +65,5 @@ class SingletonPool(object):
 
     @classmethod
     def __setpool__(cls, obj, *args, **kwargs):
-        cls.__instances[cls.__getpoolkey__(*args, **kwargs)] = obj
+        poolkey =  cls.__getpoolkey__(*args, **kwargs)
+        cls.__instances[poolkey] = obj

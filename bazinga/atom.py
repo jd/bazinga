@@ -1,29 +1,29 @@
 from base.property import rocachedproperty
-from base.singleton import SingletonPool
 from xobject import XObject
+from base.singleton import SingletonPool
 
 
 class Atom(SingletonPool, XObject):
-    """X atom."""
-
-    # Keep references for ever.
-    # That should be a LRU in the future, or it may grow too large.
-    _SingletonPool__instances = {}
 
     class name(rocachedproperty):
-        pass
+        def __get__(self):
+            from x import MainConnection, byte_list_to_str
+            return byte_list_to_str(MainConnection().core.GetAtomName(self).reply().name)
 
-    @staticmethod
-    def __pool_key__(name=None, xid=None):
-        return name or xid
+    def __str__(self):
+        return self.name
 
-    def __init__(self, name=None, xid=None):
-        # Ok, this code is not async, but really, I doubt it's worh the effort.
-        from x import MainConnection
-        xid = xid or MainConnection().core.InternAtom(False, len(name), name).reply().atom
+    def __repr__(self):
+        return "<{0} {1}>".format(self.__class__.__name__, self.name)
 
-        name = name or MainConnection().core.GetAtomName(xid).reply().name
-        Atom.name.set_cache(self, name)
-
-        XObject.__init__(self, xid)
-        SingletonPool.__init__(self)
+    def __new__(cls, name_or_value="Any"):
+        if isinstance(name_or_value, str):
+            from x import MainConnection
+            ia = MainConnection().core.InternAtom(False,
+                                                  len(name_or_value),
+                                                  name_or_value)
+            self = super(Atom, cls).__new__(cls, ia.reply().atom)
+            Atom.name.set_cache(self, name_or_value)
+        else:
+            self = super(Atom, cls).__new__(cls, name_or_value)
+        return self
