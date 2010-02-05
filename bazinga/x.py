@@ -1,6 +1,7 @@
 import pyev
 import xcb.xproto
 import traceback
+import struct
 
 from screen import Screen, Output
 from base.singleton import Singleton
@@ -10,9 +11,10 @@ from loop import MainLoop
 from atom import Atom
 from cursor import Cursor
 
+
 def byte_list_to_str(blist):
     """Convert a byte list to a string."""
-    return "".join(map(chr, blist))
+    return struct.unpack_from("{0}s".format(len(blist)), blist.buf())
 
 
 def byte_list_to_unicode(blist):
@@ -90,8 +92,9 @@ class Connection(Object, xcb.Connection):
 
             # Does it have RandR ?
             if randr_queryversion_c and randr_queryversion_c.reply():
-                screen_resources_c = zip(self.roots, Connection.prepare_requests(self.randr.GetScreenResources,
-                                                                                 list(root.xid for root in self.roots), 0))
+                screen_resources_c = zip(self.roots,
+                        Connection.prepare_requests(self.randr.GetScreenResources,
+                                                    self.roots, 0))
                 for root, screen_resources_cookie in screen_resources_c:
                     screen_resources = screen_resources_cookie.reply()
 
@@ -204,13 +207,13 @@ class Connection(Object, xcb.Connection):
         else:
             string_atom = Atom("STRING")
         self.core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                 window.xid,
+                                 window,
                                  Atom(atom_name).value,
                                  string_atom,
                                  8, len(value), value)
 
     def get_text_property(self, window, atom_name):
-        prop = MainConnection().core.GetProperty(False, window.xid,
+        prop = MainConnection().core.GetProperty(False, window,
                                                  Atom(atom_name).value,
                                                  xcb.xproto.GetPropertyType.Any,
                                                  0, 4096).reply()
@@ -222,13 +225,13 @@ class Connection(Object, xcb.Connection):
     def grab_pointer(self, window, cursor="left_ptr", confine_to=None):
         """Grab pointer on a window."""
         confine_to = confine_to or window
-        self.core.GrabPointer(False, window.xid,
+        self.core.GrabPointer(False, window,
                               xcb.xproto.EventMask.ButtonPress
                               | xcb.xproto.EventMask.ButtonRelease
                               | xcb.xproto.EventMask.PointerMotion,
                               xcb.xproto.GrabMode.Async,
                               xcb.xproto.GrabMode.Async,
-                              confine_to.xid,
+                              confine_to,
                               Cursor(window.colormap, cursor),
                               xcb.xproto.Time.CurrentTime)
 
