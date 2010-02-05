@@ -5,7 +5,7 @@ import struct
 
 from screen import Screen, Output
 from base.singleton import Singleton
-from base.property import cachedproperty
+from base.property import rocachedproperty
 from base.object import Object
 from loop import MainLoop
 from atom import Atom
@@ -43,7 +43,7 @@ class Connection(Object, xcb.Connection):
         # Store loop
         self.loop = loop
 
-    class roots(cachedproperty):
+    class roots(rocachedproperty):
         """Root windows."""
         def __get__(self):
             roots = []
@@ -58,7 +58,7 @@ class Connection(Object, xcb.Connection):
 
             return roots
 
-    class screens(cachedproperty):
+    class screens(rocachedproperty):
         """Screens connection."""
         def __get__(self):
             screens = []
