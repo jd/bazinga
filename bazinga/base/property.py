@@ -26,7 +26,7 @@ class CachedProperty(object):
             # Update cache
             value = self.getter(inst)
             # Returned nothing... see if cached has been updated
-            if not value:
+            if value is None:
                 value = getattr(inst, self.key, self)
                 if value is self:
                     # Getter did not set any value
