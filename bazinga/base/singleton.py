@@ -30,27 +30,39 @@ class Singleton(object):
         return cls.__instance, False
 
 
+class SingletonPoolMeta(type):
+    """Singleton pool metaclass."""
+
+    def __call__(cls, *args, **kwargs):
+        try:
+            with cls.__instance_lock:
+                return cls.__getpool__(*args, **kwargs)
+        except:
+            obj = type.__call__(cls, *args, **kwargs)
+            with cls.__instance_lock:
+                cls.__setpool__(obj, *args, **kwargs)
+            return obj
+
 class SingletonPool(object):
 
     """Pool of singleton object.
     When using multiple inheritance, it's very advised to start to inherit
     with this class, because it's use of a metaclass overriding __call__."""
 
-    __metaclass__ = SingletonMeta
+    __metaclass__ = SingletonPoolMeta
 
-    __lock = Lock()
+    _SingletonPoolMeta__instance_lock = Lock()
     # Can be overriden
     __instances = weakref.WeakValueDictionary()
 
-    def __new__(cls, *args, **kwargs):
-        with cls.__lock:
-            if hasattr(cls, "__pool_key__"):
-                key = cls.__pool_key__(*args, **kwargs)
-            else:
-                key = cPickle.dumps((args, kwargs))
-            try:
-                return cls.__instances[key], False
-            except KeyError:
-                obj = super(SingletonPool, cls).__new__(cls, *args, **kwargs)
-                cls.__instances[key] = obj
-                return obj, True
+    @classmethod
+    def __getpoolkey__(cls, *args, **kwargs):
+        return cPickle.dumps((args, kwargs))
+
+    @classmethod
+    def __getpool__(cls, *args, **kwargs):
+        return cls.__instances[cls.__getpoolkey__(*args, **kwargs)]
+
+    @classmethod
+    def __setpool__(cls, obj, *args, **kwargs):
+        cls.__instances[cls.__getpoolkey__(*args, **kwargs)] = obj
