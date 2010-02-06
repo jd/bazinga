@@ -2,6 +2,9 @@ from base.property import rocachedproperty
 from base.singleton import SingletonPool
 
 
+# XXX
+# * Use predefined ATOM
+# * Stop using SingletonPool ?
 class Atom(SingletonPool, int):
 
     # Store Atoms for ever
