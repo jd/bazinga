@@ -353,10 +353,6 @@ class Window(XObject):
         self.connection.connect_signal(self._dispatch_errors,
                                        signal=xcb.Error)
 
-    def __repr__(self):
-        return "<{0} {1}>".format(self.__class__.__name__,
-                           hex(self))
-
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 

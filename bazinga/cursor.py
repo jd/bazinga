@@ -181,6 +181,7 @@ class XCursor(XObject):
     def __str__(self):
         return self.name
 
+
 class Cursor(XCursor):
     def __del__(self):
         self.connection.core.FreeCursor(self)
