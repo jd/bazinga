@@ -195,7 +195,7 @@ class Connection(Object, xcb.Connection):
 
     def set_text_property(self, window, atom_name, value):
         if isinstance(value, unicode):
-            string_atom = Atom("UTF8_STRING")
+            string_atom = Atom(self, "UTF8_STRING")
             value = value.encode("UTF-8")
         else:
             string_atom = Atom(self, "STRING")
