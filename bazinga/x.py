@@ -2,12 +2,14 @@ import pyev
 import xcb.xproto
 import traceback
 import struct
+import weakref
 
 from screen import Screen, Output
-from base.singleton import Singleton
+from base.singleton import Singleton, SingletonPool
 from base.property import rocachedproperty
 from base.object import Object
 from loop import MainLoop
+from atom import Atom
 
 
 def byte_list_to_str(blist):
@@ -47,7 +49,7 @@ class Connection(Object, xcb.Connection):
             roots = []
             from window import Window
             for root in self.get_setup().roots:
-                root_window = Window(xid=root.root)
+                root_window = Window(self, root.root)
                 Window.x.set_cache(root_window, 0)
                 Window.y.set_cache(root_window, 0)
                 Window.width.set_cache(root_window, root.width_in_pixels)
@@ -192,27 +194,25 @@ class Connection(Object, xcb.Connection):
         self.flush()
 
     def set_text_property(self, window, atom_name, value):
-        from atom import Atom
         if isinstance(value, unicode):
             string_atom = Atom("UTF8_STRING")
             value = value.encode("UTF-8")
         else:
-            string_atom = Atom("STRING")
+            string_atom = Atom(self, "STRING")
         self.core.ChangeProperty(xcb.xproto.Property.NewValue,
                                  window,
-                                 Atom(atom_name).value,
+                                 Atom(self, atom_name).value,
                                  string_atom,
                                  8, len(value), value)
 
     def get_text_property(self, window, atom_name):
-        from atom import Atom
-        prop = MainConnection().core.GetProperty(False, window,
-                                                 Atom(atom_name).value,
-                                                 xcb.xproto.GetPropertyType.Any,
-                                                 0, 4096).reply()
-        if prop.type == Atom("UTF8_STRING").value:
+        prop = self.core.GetProperty(False, window,
+                                     Atom(self, atom_name).value,
+                                     xcb.xproto.GetPropertyType.Any,
+                                     0, 4096).reply()
+        if prop.type == Atom(self, "UTF8_STRING").value:
             return unicode(byte_list_to_str(prop.value), "UTF-8")
-        elif prop.type == Atom("STRING").value:
+        elif prop.type == Atom(self, "STRING").value:
             return byte_list_to_str(prop.value)
 
     def grab_pointer(self, window, cursor="left_ptr", confine_to=None):
@@ -237,6 +237,28 @@ class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""
     pass
 
-class XObject(Object, int):
+class XObject(SingletonPool, Object, int):
+
+    # All X objects are here, indexed by xid
+    _SingletonPool__instances = weakref.WeakValueDictionary()
+
+    @staticmethod
+    def __getpoolkey__(connection, xid):
+        return (id(connection), xid)
+
+    def __new__(cls, connection, xid):
+        return super(XObject, cls).__new__(cls, xid)
+
+    def __init__(self, connection, xid):
+        self.connection = connection
+
+    @classmethod
+    def create(cls, connection):
+        return cls(connection, connection.generate_id())
+
     # Use default format from object rather than from int
     __str__ = object.__str__
+
+    def __repr__(self):
+        return "<{0} 0x{1:x} at 0x{2:x}>".format(self.__class__.__name__,
+                                                 int(self), id(self))

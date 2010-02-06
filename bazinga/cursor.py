@@ -1,13 +1,9 @@
 # vim: set fileencoding=utf-8
 
 from base.property import cachedproperty
-from base.singleton import SingletonPool
 from x import XObject
 from color import Color
-import weakref
 
-# This is defined in some X header file…
-_font_name = "cursor"
 
 _name_to_id = {
     "num_glyphs": 154,
@@ -91,12 +87,18 @@ _name_to_id = {
 }
 
 
-class XCursor(SingletonPool, XObject):
-    """Pointer cursor."""
+# XXX make font an X object
+#_fonts = weakref.WeakValueDictionary()
+_font = None
 
+
+class XCursor(XObject):
+    """A X cursor."""
+
+    # This is defined in some X header file…
+    _font_name = "cursor"
     _font = None
 
-    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     class foreground(cachedproperty):
         def __get__(self):
@@ -107,15 +109,14 @@ class XCursor(SingletonPool, XObject):
             raise AttributeError
 
         def __set__(self, value):
-            from x import MainConnection
-            color = Color(self.colormap, value)
-            MainConnection().core.RecolorCursorChecked(self,
-                                                       color.red,
-                                                       color.green,
-                                                       color.blue,
-                                                       self.background.red,
-                                                       self.background.green,
-                                                       self.background.blue).check()
+            color = Color(self.connection, self.colormap, value)
+            self.connection.core.RecolorCursorChecked(self,
+                                                      color.red,
+                                                      color.green,
+                                                      color.blue,
+                                                      self.background.red,
+                                                      self.background.green,
+                                                      self.background.blue).check()
             return color
 
     class background(cachedproperty):
@@ -127,58 +128,59 @@ class XCursor(SingletonPool, XObject):
             raise AttributeError
 
         def __set__(self, value):
-            from x import MainConnection
-            color = Color(self.colormap, value)
-            MainConnection().core.RecolorCursorChecked(self,
-                                                       self.foreground.red,
-                                                       self.foreground.green,
-                                                       self.foreground.blue,
-                                                       color.red,
-                                                       color.green,
-                                                       color.blue).check()
+            color = Color(self.connection, self.colormap, value)
+            self.connection.core.RecolorCursorChecked(self,
+                                                      self.foreground.red,
+                                                      self.foreground.green,
+                                                      self.foreground.blue,
+                                                      color.red,
+                                                      color.green,
+                                                      color.blue).check()
 
             return color
 
-    def __new__(cls, *args, **kwargs):
-        from x import MainConnection
-        return super(XCursor, cls).__new__(cls, MainConnection().generate_id())
+    @classmethod
+    def create(cls, connection, colormap, value, foreground="black", background="white"):
+        if isinstance(value, XCursor):
+            return value
 
-    def __init__(self, colormap, name, foreground, background):
-        from x import MainConnection
         # Initialize font is never done before
-        if XCursor._font is None:
-            XCursor._font = MainConnection().generate_id()
-            MainConnection().core.OpenFont(XCursor._font, len(_font_name), _font_name)
+        if cls._font is None:
+            cls._font = connection.generate_id()
+            connection.core.OpenFont(cls._font, len(cls._font_name), cls._font_name)
 
         try:
-            cursor_id = _name_to_id[name]
+            cursor_id = _name_to_id[value]
         except KeyError:
             raise ValueError("No such cursor.")
 
-        XCursor.foreground.set_cache(self, Color(colormap, foreground))
-        XCursor.background.set_cache(self, Color(colormap, background))
+        cursor = super(XCursor, cls).create(connection)
 
-        cg = MainConnection().core.CreateGlyphCursorChecked(self,
-                                                            XCursor._font, XCursor._font,
-                                                            cursor_id, cursor_id + 1,
-                                                            self.foreground.red,
-                                                            self.foreground.green,
-                                                            self.foreground.blue,
-                                                            self.background.red,
-                                                            self.background.green,
-                                                            self.background.blue)
-        self.name = name
-        self.colormap = colormap
+        foreground = Color(connection, colormap, foreground)
+        background = Color(connection, colormap, background)
+
+        cg = cursor.connection.core.CreateGlyphCursorChecked(cursor,
+                                                             cls._font, cls._font,
+                                                             cursor_id, cursor_id + 1,
+                                                             foreground.red,
+                                                             foreground.green,
+                                                             foreground.blue,
+                                                             background.red,
+                                                             background.green,
+                                                             background.blue)
+
+        Cursor.foreground.set_cache(cursor, foreground)
+        Cursor.background.set_cache(cursor, background)
+        cursor.name = value
+        cursor.colormap = colormap
+
         cg.check()
+
+        return cursor
 
     def __str__(self):
         return self.name
 
+class Cursor(XCursor):
     def __del__(self):
-        from x import MainConnection
-        MainConnection().core.FreeCursor(self)
-
-def Cursor(colormap, value, foreground="black", background="white"):
-    if isinstance(value, XCursor):
-        return value
-    return XCursor(colormap, value, foreground, background)
+        self.connection.core.FreeCursor(self)

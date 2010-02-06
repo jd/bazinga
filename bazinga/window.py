@@ -2,8 +2,7 @@
 
 from base.property import cachedproperty, rocachedproperty
 from base.object import Notify
-from base.singleton import SingletonPool
-from x import XObject, MainConnection, byte_list_to_uint32, byte_list_to_str
+from x import XObject, byte_list_to_uint32, byte_list_to_str
 from atom import Atom
 from color import Color
 from cursor import Cursor
@@ -46,12 +45,10 @@ _events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
                            | xcb.xproto.EventMask.VisibilityChange
 
 
-class Window(SingletonPool, XObject):
+class Window(XObject):
     """A basic X window."""
 
     __events = xcb.xproto.EventMask.NoEvent
-
-    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     Visibility = xcb.xproto.Visibility
     Visibility.Unknown = -1
@@ -62,9 +59,9 @@ class Window(SingletonPool, XObject):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self,
-                                                  xcb.xproto.ConfigWindow.X,
-                                                  [ value ])
+            self.connection.core.ConfigureWindow(self,
+                                                 xcb.xproto.ConfigWindow.X,
+                                                 [ value ])
 
         def __delete__(self):
             raise AttributeError
@@ -75,9 +72,9 @@ class Window(SingletonPool, XObject):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self,
-                                                  xcb.xproto.ConfigWindow.Y,
-                                                  [ value ])
+            self.connection.core.ConfigureWindow(self,
+                                                 xcb.xproto.ConfigWindow.Y,
+                                                 [ value ])
 
         def __delete__(self):
             raise AttributeError
@@ -88,9 +85,9 @@ class Window(SingletonPool, XObject):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self,
-                                                  xcb.xproto.ConfigWindow.Width,
-                                                  [ value ])
+            self.connection.core.ConfigureWindow(self,
+                                                 xcb.xproto.ConfigWindow.Width,
+                                                 [ value ])
 
         def __delete__(self):
             raise AttributeError
@@ -101,9 +98,9 @@ class Window(SingletonPool, XObject):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self,
-                                                  xcb.xproto.ConfigWindow.Height,
-                                                  [ self.height ])
+            self.connection.core.ConfigureWindow(self,
+                                                 xcb.xproto.ConfigWindow.Height,
+                                                 [ self.height ])
 
         def __delete__(self):
             raise AttributeError
@@ -114,9 +111,9 @@ class Window(SingletonPool, XObject):
             self._retrieve_geometry()
 
         def __set__(self, value):
-            MainConnection().core.ConfigureWindow(self,
-                                                  xcb.xproto.ConfigWindow.BorderWidth,
-                                                  [ value ])
+            self.connection.core.ConfigureWindow(self,
+                                                 xcb.xproto.ConfigWindow.BorderWidth,
+                                                 [ value ])
 
         def __delete__(self):
             raise AttributeError
@@ -134,12 +131,12 @@ class Window(SingletonPool, XObject):
     class parent(cachedproperty):
         """Parent window."""
         def __get__(self):
-            parent = MainConnection().core.QueryTree(self).reply().parent
+            parent = self.connection.core.QueryTree(self).reply().parent
             if parent > 0:
                 return Window(parent)
 
         def __set__(self, value):
-            MainConnection().core.ReparentWindow(self, value.xid, self.x, self.y)
+            self.connection.core.ReparentWindow(self, value.xid, self.x, self.y)
 
         def __delete__(self):
             raise AttributeError
@@ -147,10 +144,10 @@ class Window(SingletonPool, XObject):
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
         def __set__(self, window):
-            MainConnection().core.ConfigureWindow(self,
-                                                  xcb.xproto.ConfigWindow.Sibling
-                                                  | xcb.xproto.ConfigWindow.StackMode,
-                                                  [ window.xid, xcb.xproto.StackMode.Above ])
+            self.connection.core.ConfigureWindow(self,
+                                                 xcb.xproto.ConfigWindow.Sibling
+                                                 | xcb.xproto.ConfigWindow.StackMode,
+                                                 [ window.xid, xcb.xproto.StackMode.Above ])
 
         def __delete__(self):
             raise AttributeError
@@ -171,10 +168,10 @@ class Window(SingletonPool, XObject):
             raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
-            color = Color(self.colormap, value)
-            MainConnection().core.ChangeWindowAttributes(self,
-                                                         xcb.xproto.CW.BorderPixel,
-                                                         [ color.pixel ])
+            color = Color(self.connection, self.colormap, value)
+            self.connection.core.ChangeWindowAttributes(self,
+                                                        xcb.xproto.CW.BorderPixel,
+                                                        [ color.pixel ])
             return color
 
         def __delete__(self):
@@ -186,10 +183,10 @@ class Window(SingletonPool, XObject):
             raise AttributeError("Nobody knows how to fetch this.")
 
         def __set__(self, value):
-            value = Cursor(self.colormap, value)
-            MainConnection().core.ChangeWindowAttributes(self,
-                                                         xcb.xproto.CW.Cursor,
-                                                         [ value ])
+            value = Cursor.create(self.connection, self.colormap, value)
+            self.connection.core.ChangeWindowAttributes(self,
+                                                        xcb.xproto.CW.Cursor,
+                                                        [ value ])
             return value
 
         def __delete__(self):
@@ -215,35 +212,35 @@ class Window(SingletonPool, XObject):
             self._retrieve_window_attributes()
 
         def __set__(self, value):
-            MainConnection().core.ChangeWindowAttributes(self,
-                                                         xcb.xproto.CW.OverrideRedirect,
-                                                         [ int(value) ])
+            self.connection.core.ChangeWindowAttributes(self,
+                                                        xcb.xproto.CW.OverrideRedirect,
+                                                        [ value ])
 
         def __delete__(self):
             raise AttributeError
 
     class protocols(cachedproperty):
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self,
-                                                     Atom("WM_PROTOCOLS"),
-                                                     Atom("ATOM"),
-                                                     0, 1024).reply()
+            prop = self.connection.core.GetProperty(False, self,
+                                                    Atom(self.connection, "WM_PROTOCOLS"),
+                                                    Atom(self.connection, "ATOM"),
+                                                    0, 1024).reply()
             atoms = byte_list_to_uint32(prop.value)
             if atoms:
                 protos = set()
                 for a in atoms:
-                    protos.add(Atom(a))
+                    protos.add(Atom(self.connection, a))
                 return protos
 
     class icon(cachedproperty):
         """Window icon."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self,
-                                                     Atom("_NET_WM_ICON"),
-                                                     Atom("CARDINAL"),
-                                                     # Max icon size is:
-                                                     #  w  *  h  * (rgba)
-                                                     0, 256*256*4).reply()
+            prop = self.connection.core.GetProperty(False, self,
+                                                    Atom(self.connection, "_NET_WM_ICON"),
+                                                    Atom(self.connection, "CARDINAL"),
+                                                    # Max icon size is:
+                                                    #  w  *  h  * (rgba)
+                                                    0, 256*256*4).reply()
             if len(prop.value) % 4 == 0:
                 width, height = byte_list_to_uint32(prop.value[:8])
                 return Image.frombuffer("RGBA",
@@ -263,52 +260,52 @@ class Window(SingletonPool, XObject):
 
             data = struct.pack("II{0}s".format(len(imagedata)),
                                image.size[0], image.size[1], imagedata)
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self,
-                                                 Atom("_NET_WM_ICON"),
-                                                 Atom("CARDINAL"),
-                                                 32, len(data) / 4, data)
+            self.connection.core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                self,
+                                                Atom(self.connection, "_NET_WM_ICON"),
+                                                Atom(self.connection, "CARDINAL"),
+                                                32, len(data) / 4, data)
 
     class transient_for(rocachedproperty):
         """Window this window is transient for."""
         def __get__(self):
-            prop = MainConnection().core.GetProperty(False, self,
-                                                     Atom("WM_TRANSIENT_FOR"),
-                                                     Atom("WINDOW"),
-                                                     0, 1).reply()
+            prop = self.connection.core.GetProperty(False, self,
+                                                    Atom(self.connection, "WM_TRANSIENT_FOR"),
+                                                    Atom(self.connection, "WINDOW"),
+                                                    0, 1).reply()
             if prop.value:
                 return Window(byte_list_to_uint32(prop.value)[0])
 
         def __set__(self, value):
-            MainConnection().core.ChangeProperty(xcb.xproto.Property.NewValue,
-                                                 self,
-                                                 Atom("WM_TRANSIENT_FOR"),
-                                                 Atom("WINDOW"),
-                                                 32, 1, value.xid)
+            self.connection.core.ChangeProperty(xcb.xproto.Property.NewValue,
+                                                self,
+                                                Atom(self.connection, "WM_TRANSIENT_FOR"),
+                                                Atom(self.connection, "WINDOW"),
+                                                32, 1, value.xid)
 
     class machine(rocachedproperty):
         """Machine this window is running on."""
         def __get__(self):
-            return MainConnection().get_text_property(self, "WM_CLIENT_MACHINE")
+            return self.connection.get_text_property(self, "WM_CLIENT_MACHINE")
 
         def __set__(self, value):
-            MainConnection().set_text_property(self, "WM_CLIENT_MACHINE", value)
+            self.connection.set_text_property(self, "WM_CLIENT_MACHINE", value)
 
     class _icccm_name(cachedproperty):
         """ICCCM window name."""
         def __get__(self):
-            return MainConnection().get_text_property(self, "WM_NAME")
+            return self.connection.get_text_property(self, "WM_NAME")
 
         def __set__(self, value):
-            MainConnection().set_text_property(self, "WM_NAME", value)
+            self.connection.set_text_property(self, "WM_NAME", value)
 
     class _netwm_name(cachedproperty):
         """EWMH window name."""
         def __get__(self):
-            return MainConnection().get_text_property(self, "_NET_WM_NAME")
+            return self.connection.get_text_property(self, "_NET_WM_NAME")
 
         def __set__(self, value):
-            MainConnection().set_text_property(self, "_NET_WM_NAME", value)
+            self.connection.set_text_property(self, "_NET_WM_NAME", value)
 
     @property
     def name(self):
@@ -322,18 +319,18 @@ class Window(SingletonPool, XObject):
     class _icccm_icon_name(cachedproperty):
         """ICCCM window name."""
         def __get__(self):
-            return MainConnection().get_text_property(self, "WM_ICON_NAME")
+            return self.connection.get_text_property(self, "WM_ICON_NAME")
 
         def __set__(self, value):
-            MainConnection().set_text_property(self, "WM_ICON_NAME", value)
+            self.connection.set_text_property(self, "WM_ICON_NAME", value)
 
     class _netwm_icon_name(cachedproperty):
         """EWMH window icon name."""
         def __get__(self):
-            return MainConnection().get_text_property(self, "_NET_WM_ICON_NAME")
+            return self.connection.get_text_property(self, "_NET_WM_ICON_NAME")
 
         def __set__(self, value):
-            MainConnection().set_text_property(self, "_NET_WM_ICON_NAME", value)
+            self.connection.set_text_property(self, "_NET_WM_ICON_NAME", value)
 
     @property
     def icon_name(self):
@@ -344,24 +341,17 @@ class Window(SingletonPool, XObject):
     def icon_name(self, value):
         self._icccm_icon_name = self._netwm_icon_name = value
 
-    @staticmethod
-    def __getpoolkey__(xid):
-        return xid
-
-    def __new__(cls, xid):
-        return super(Window, cls).__new__(cls, xid)
-
-    def __init__(self, xid):
+    def __init__(self, connection, xid):
+        super(Window, self).__init__(connection, xid)
         global _events_to_always_listen
         # Mandatory, we want this.
+        # XXX this is bad. When doing create(), we call this before CreateWindow
         self._set_events(_events_to_always_listen)
         # Receive events and errors from the X connection
-        MainConnection().connect_signal(self._dispatch_events,
-                                        signal=xcb.Event)
-        MainConnection().connect_signal(self._dispatch_errors,
-                                        signal=xcb.Error)
-
-        super(Window, self).__init__()
+        self.connection.connect_signal(self._dispatch_events,
+                                       signal=xcb.Event)
+        self.connection.connect_signal(self._dispatch_errors,
+                                       signal=xcb.Error)
 
     def __repr__(self):
         return "<{0} {1}>".format(self.__class__.__name__,
@@ -387,9 +377,9 @@ class Window(SingletonPool, XObject):
     def _set_events(self, events):
         """Set events that shall be received by the window."""
         if events != self.__events:
-            MainConnection().core.ChangeWindowAttributes(self,
-                                                         xcb.xproto.CW.EventMask,
-                                                         [ events ])
+            self.connection.core.ChangeWindowAttributes(self,
+                                                        xcb.xproto.CW.EventMask,
+                                                        [ events ])
             self.__events = events
 
     def _add_event(self, event):
@@ -398,7 +388,7 @@ class Window(SingletonPool, XObject):
 
     def _retrieve_geometry(self):
         """Update window geometry."""
-        wg = MainConnection().core.GetGeometry(self).reply()
+        wg = self.connection.core.GetGeometry(self).reply()
         Window.x.set_cache(self, wg.x)
         Window.y.set_cache(self, wg.y)
         Window.width.set_cache(self, wg.width)
@@ -409,7 +399,7 @@ class Window(SingletonPool, XObject):
 
     def _retrieve_window_attributes(self):
         """Update windows attributes."""
-        wa = MainConnection().core.GetWindowAttributes(self).reply()
+        wa = self.connection.core.GetWindowAttributes(self).reply()
         Window.map_state.set_cache(self, wa.map_state)
         Window.colormap.set_cache(self, wa.colormap)
         Window.visual.set_cache(self, wa.visual)
@@ -419,62 +409,62 @@ class Window(SingletonPool, XObject):
     def focus(self):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
-        MainConnection().core.SetInputFocus(xcb.xproto.InputFocus.Parent,
-                                            self,
-                                            xcb.xproto.Time.CurrentTime)
+        self.connection.core.SetInputFocus(xcb.xproto.InputFocus.Parent,
+                                           self,
+                                           xcb.xproto.Time.CurrentTime)
 
     def map(self):
         """Map a window on the screen."""
-        MainConnection().core.MapWindow(self)
+        self.connection.core.MapWindow(self)
 
     def unmap(self):
         """Unmap a window from the screen."""
-        MainConnection().core.UnmapWindow(self)
+        self.connection.core.UnmapWindow(self)
 
     def grab_key(self, modifiers, keycode):
         """Grab a key on a window."""
-        MainConnection().core.GrabKey(True,
-                                      self,
-                                      modifiers,
-                                      keycode,
-                                      xcb.xproto.GrabMode.Async,
-                                      xcb.xproto.GrabMode.Async)
+        self.connection.core.GrabKey(True,
+                                     self,
+                                     modifiers,
+                                     keycode,
+                                     xcb.xproto.GrabMode.Async,
+                                     xcb.xproto.GrabMode.Async)
 
     def ungrab_key(self, modifiers, keycode):
         """Ungrab a key on a window."""
-        MainConnection().core.UngrabKey(keycode,
-                                        self,
-                                        modifiers)
+        self.connection.core.UngrabKey(keycode,
+                                       self,
+                                       modifiers)
 
     def grab_button(self, modifiers, button):
         """Grab a button on a window."""
-        MainConnection().core.GrabButton(False,
-                                         self,
-                                         xcb.xproto.EventMask.ButtonPress
-                                         | xcb.xproto.EventMask.ButtonRelease,
-                                         # XXX Sync?
-                                         xcb.xproto.GrabMode.Async,
-                                         xcb.xproto.GrabMode.Async,
-                                         xcb.xproto.NONE,
-                                         xcb.xproto.NONE,
-                                         button, modifiers)
+        self.connection.core.GrabButton(False,
+                                        self,
+                                        xcb.xproto.EventMask.ButtonPress
+                                        | xcb.xproto.EventMask.ButtonRelease,
+                                        # XXX Sync?
+                                        xcb.xproto.GrabMode.Async,
+                                        xcb.xproto.GrabMode.Async,
+                                        xcb.xproto.NONE,
+                                        xcb.xproto.NONE,
+                                        button, modifiers)
 
     def ungrab_button(self, modifiers, button):
         """Ungrab a button on a window."""
-        MainConnection().core.UngrabButton(button,
-                                           self,
-                                           modifiers)
+        self.connection.core.UngrabButton(button,
+                                          self,
+                                          modifiers)
 
     def grab_pointer(self, cursor="left_ptr", confine_to=None):
         """Grab pointer on this window."""
-        return MainConnection().grab_pointer(self, cursor, confine_to)
+        return self.connection.grab_pointer(self, cursor, confine_to)
 
     @staticmethod
     def ungrab_pointer():
-        return MainConnection().ungrab_pointer()
+        return self.connection.ungrab_pointer()
 
     def get_children(self):
-        qt = MainConnection().core.QueryTree(self)
+        qt = self.connection.core.QueryTree(self)
         children = set()
         reply = qt.reply()
         # Update parent and root, it's free!
@@ -489,12 +479,12 @@ class Window(SingletonPool, XObject):
         # XXX Seriously, we need to do some stuff for xpyb about this.
         buf = struct.pack("BB2xIIII12x",
                           33, # XCB_CLIENT_MESSAGE
-                          32, self, Atom("WM_PROTOCOLS"),
-                          Atom("WM_TAKE_FOCUS"),
+                          32, self, Atom(self.connection, "WM_PROTOCOLS"),
+                          Atom(self.connection, "WM_TAKE_FOCUS"),
                           xcb.xproto.Time.CurrentTime)
-        MainConnection().core.SendEvent(False, self,
-                                        xcb.xproto.EventMask.NoEvent,
-                                        buf)
+        self.connection.core.SendEvent(False, self,
+                                       xcb.xproto.EventMask.NoEvent,
+                                       buf)
 
     # Events handling
     def on_event(self, event):
@@ -505,48 +495,48 @@ class Window(SingletonPool, XObject):
             return func
         return _on_event
 
-    # Helpers
-    def create_pixmap(self, width=None, height=None):
-        """Create a pixmap for this window."""
-        xid = MainConnection().generate_id()
-        MainConnection().core.CreatePixmapChecked(self.depth,
-                                                  xid,
-                                                  self,
-                                                  width or self.width,
-                                                  height or self.height).check()
-        return Pixmap(xid)
-
-    def create_subwindow(self, x=0, y=0, width=1, height=1, border_width=0):
+    @classmethod
+    def create(cls, connection, parent, x=0, y=0, width=1, height=1, border_width=0):
+        window = super(Window, cls).create(connection)
         """Create a subwindow for this window."""
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
         # XXX or grab server while creating and calling super()
         global _events_to_always_listen
-        self.__events = _events_to_always_listen
-
-        xid = MainConnection().generate_id()
+        window.__events = _events_to_always_listen
         create_window = \
-        MainConnection().core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
-                                                  xid,
-                                                  self,
-                                                  x, y, width, height,
-                                                  border_width,
-                                                  xcb.xproto.WindowClass.CopyFromParent,
-                                                  xcb.xproto.WindowClass.CopyFromParent,
-                                                  xcb.xproto.CW.EventMask,
-                                                  [ self.__events ])
+        window.connection.core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
+                                                   window,
+                                                   parent,
+                                                   x, y, width, height,
+                                                   border_width,
+                                                   xcb.xproto.WindowClass.CopyFromParent,
+                                                   xcb.xproto.WindowClass.CopyFromParent,
+                                                   xcb.xproto.CW.EventMask,
+                                                   [ window.__events ])
 
-        window = Window(xid)
-        Window.border_width.set_cache(window, border_width)
-        Window.x.set_cache(window, x)
-        Window.y.set_cache(window, y)
-        Window.width.set_cache(window, width)
-        Window.height.set_cache(window, height)
+        cls.border_width.set_cache(window, border_width)
+        cls.x.set_cache(window, x)
+        cls.y.set_cache(window, y)
+        cls.width.set_cache(window, width)
+        cls.height.set_cache(window, height)
 
         create_window.check()
 
         return window
 
+    # Helpers
+    def create_pixmap(self, width=None, height=None):
+        """Create a pixmap for this window."""
+        return Pixmap.create(self.connection, self.depth, self,
+                             width or self.width,
+                             height or self.height)
+
+
+    def create_subwindow(self, x=0, y=0, width=1, height=1, border_width=0):
+        """Create a subwindow for this window."""
+        return self.__class__.create(self.connection, self,
+                                     x, y, width, height, border_width)
 
 # Static function that are used to update various information
 # on windows objects automagically
@@ -578,19 +568,18 @@ def _on_configure_update_geometry(sender, signal):
     Window.override_redirect.set_cache(sender, signal.override_redirect)
 
 
-_atom_to_property = {
-    Atom("WM_NAME"): "_icccm_name",
-    Atom("_NET_WM_NAME"): "_netwm_name",
-    Atom("WM_ICON_NAME"): "_icccm_icon_name",
-    Atom("_NET_WM_ICON_NAME"): "_netwm_icon_name",
-    Atom("WM_TRANSIENT_FOR"): "transient_for",
-    Atom("WM_CLIENT_MACHINE"): "machine",
-    Atom("_NET_WM_ICON"): "icon",
-    Atom("WM_PROTOCOLS"): "protocols",
-}
-
 @Window.on_class_signal(xcb.xproto.PropertyNotifyEvent)
 def _on_property_change_del_cache(sender, signal):
+    _atom_to_property = {
+        Atom(sender.connection, "WM_NAME"): "_icccm_name",
+        Atom(sender.connection, "_NET_WM_NAME"): "_netwm_name",
+        Atom(sender.connection, "WM_ICON_NAME"): "_icccm_icon_name",
+        Atom(sender.connection, "_NET_WM_ICON_NAME"): "_netwm_icon_name",
+        Atom(sender.connection, "WM_TRANSIENT_FOR"): "transient_for",
+        Atom(sender.connection, "WM_CLIENT_MACHINE"): "machine",
+        Atom(sender.connection, "_NET_WM_ICON"): "icon",
+        Atom(sender.connection, "WM_PROTOCOLS"): "protocols",
+    }
     if _atom_to_property.has_key(signal.atom):
         # Erase cache
         getattr(Window, _atom_to_property[signal.atom]).del_cache(sender)

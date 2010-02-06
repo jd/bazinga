@@ -2,59 +2,44 @@ import xcb.xproto
 import weakref
 
 from base.object import Object
-from base.singleton import SingletonPool
 from base.property import rocachedproperty
 
-class XColor(Object, SingletonPool):
+class XColor(Object):
     """Generic color class."""
-
-    _SingletonPool__instances = weakref.WeakValueDictionary()
 
     class pixel(rocachedproperty):
         """Pixel value of the color."""
-        def __get__(self):
-            self._read_reply()
+        pass
 
     class red(rocachedproperty):
         """Red value of the color."""
-        def __get__(self):
-            self._read_reply()
+        pass
 
     class green(rocachedproperty):
         """Green value of the color."""
-        def __get__(self):
-            self._read_reply()
+        pass
 
     class blue(rocachedproperty):
         """Blue value of the color."""
-        def __get__(self):
-            self._read_reply()
+        pass
 
     class alpha(rocachedproperty):
         """Alpha value of the color."""
-        def __get__(self):
-            self._read_reply()
+        pass
 
-    class hex(rocachedproperty):
-        """Hexadecimal representation of the color."""
-        def __get__(self):
-            return "#{0:<02x}{1:<02x}{2:<02x}{3:<02x}".format(self.red / 257,
-                                                              self.green / 257,
-                                                              self.blue / 257,
-                                                              self.alpha / 257)
+    def __hex__(self):
+        return "#{0:<02x}{1:<02x}{2:<02x}{3:<02x}".format(self.red / 257,
+                                                          self.green / 257,
+                                                          self.blue / 257,
+                                                          self.alpha / 257)
 
-    def _read_reply(self):
-        if hasattr(self, "_cookie"):
-            reply = self._cookie.reply()
-            del self._cookie
-            XColor.pixel.set_cache(self, reply.pixel)
-            return reply
-
+    def __init__(self, connection):
+        self.connection = connection
 
     @property
     def name(self):
         """Name of the color."""
-        return self.hex
+        return hex(self)
 
     def __str__(self):
         return self.name
@@ -66,48 +51,41 @@ class NamedColor(XColor):
     class name(rocachedproperty):
         __doc__  = XColor.name.__doc__
 
-    def __init__(self, colormap, name, alpha=65535):
+    def __init__(self, connection, colormap, name, alpha=65535):
         if alpha < 0 or alpha > 65535:
             raise ValueError("Bad alpha value.")
 
-        from x import MainConnection
-        self._cookie = MainConnection().core.AllocNamedColor(colormap, len(name), name)
+        cookie = connection.core.AllocNamedColor(colormap, len(name), name)
         NamedColor.name.set_cache(self, name)
         NamedColor.alpha.set_cache(self, alpha)
 
-        super(NamedColor, self).__init__()
+        reply = cookie.reply()
+        NamedColor.red.set_cache(self, reply.exact_red)
+        NamedColor.green.set_cache(self, reply.exact_green)
+        NamedColor.blue.set_cache(self, reply.exact_blue)
+        NamedColor.pixel.set_cache(self, reply.pixel)
 
-    def _read_reply(self):
-        reply = XColor._read_reply(self)
-        if reply:
-            NamedColor.red.set_cache(self, reply.exact_red)
-            NamedColor.green.set_cache(self, reply.exact_green)
-            NamedColor.blue.set_cache(self, reply.exact_blue)
-            return reply
+        super(NamedColor, self).__init__(connection)
 
 
 class ValueColor(XColor):
     """A color by value."""
 
-    def __init__(self, colormap, red=0, green=0, blue=0, alpha=65535):
+    def __init__(self, connection, colormap, red=0, green=0, blue=0, alpha=65535):
 
         for value in [ red, blue, green, alpha ]:
             if value < 0 or value > 65535:
                 raise ValueError("Color attribute value is too high.")
 
-        from x import MainConnection
-        self._cookie = MainConnection().core.AllocColor(colormap, red, green, blue)
+        cookie = connection.core.AllocColor(colormap, red, green, blue)
         ValueColor.alpha.set_cache(self, alpha)
 
-        super(ValueColor, self).__init__()
+        reply = cookie.reply()
+        ValueColor.red.set_cache(self, reply.red)
+        ValueColor.green.set_cache(self, reply.green)
+        ValueColor.blue.set_cache(self, reply.blue)
 
-    def _read_reply(self):
-        reply = XColor._read_reply(self)
-        if reply:
-            ValueColor.red.set_cache(self, reply.red)
-            ValueColor.green.set_cache(self, reply.green)
-            ValueColor.blue.set_cache(self, reply.blue)
-            return reply
+        super(ValueColor, self).__init__(connection)
 
 
 class HexColor(ValueColor):
@@ -126,10 +104,11 @@ class HexColor(ValueColor):
         if len_name == 9:
             alpha = int(name[7:9], 16) * 257
 
-        super(HexColor, self).__init__(colormap, red, green, blue, alpha)
+        super(HexColor, self).__init__(connection, colormap, red, green, blue, alpha)
 
-
-def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
+# XXX
+# Memoize the factory, or the classes above
+def Color(connection, colormap, color=None, red=0, green=0, blue=0, alpha=65535):
     """Create a color. You should specify name, or RGB value."""
 
     if color:
@@ -137,6 +116,6 @@ def Color(colormap, color=None, red=0, green=0, blue=0, alpha=65535):
         if isinstance(color, XColor):
             return color
         if color[0] == '#':
-            return HexColor(colormap, color[1:], alpha)
-        return NamedColor(colormap, color, alpha)
-    return ValueColor(colormap, red, green, blue, alpha)
+            return HexColor(connection, colormap, color[1:], alpha)
+        return NamedColor(connection, colormap, color, alpha)
+    return ValueColor(connection, colormap, red, green, blue, alpha)

@@ -18,13 +18,13 @@ class Button(KeyButton):
 # Note:
 # Each class has its own pool.
 class KeyPress(Key, SingletonPool):
-    pass
+    __SingletonPool_instances = weakref.WeakValueDictionary()
 
 class KeyRelease(Key, SingletonPool):
-    pass
+    __SingletonPool_instances = weakref.WeakValueDictionary()
 
 class ButtonPress(Button, SingletonPool):
-    pass
+    __SingletonPool_instances = weakref.WeakValueDictionary()
 
 class ButtonRelease(Button, SingletonPool):
-    pass
+    __SingletonPool_instances = weakref.WeakValueDictionary()
