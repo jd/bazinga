@@ -506,7 +506,7 @@ class Window(SingletonPool, XObject):
         return _on_event
 
     # Helpers
-    def create_pixmap(self, width=None, height=None, autofree=True):
+    def create_pixmap(self, width=None, height=None):
         """Create a pixmap for this window."""
         xid = MainConnection().generate_id()
         MainConnection().core.CreatePixmapChecked(self.depth,
@@ -514,7 +514,7 @@ class Window(SingletonPool, XObject):
                                                   self,
                                                   width or self.width,
                                                   height or self.height).check()
-        return Pixmap(xid, autofree)
+        return Pixmap(xid)
 
     def create_subwindow(self, x=0, y=0, width=1, height=1, border_width=0):
         """Create a subwindow for this window."""

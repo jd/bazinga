@@ -1,14 +1,12 @@
 from x import MainConnection, XObject
 
-class Pixmap(XObject):
-    """Pixmap."""
+class XPixmap(XObject):
+    """X Pixmap."""
 
-    def __init__(self, xid, autofree=True):
-        self.autofree = autofree
-
-    def free(self):
-        MainConnection().core.FreePixmap(self)
+class Pixmap(XPixmap):
+    """Bazinga pixmap.
+    This one is autocollected from X when you do not use it anymore."""
 
     def __del__(self):
-        if self.autofree:
-            self.free()
+        MainConnection().core.FreePixmap(self)
+        super(Pixmap, self).__del__()
