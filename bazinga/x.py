@@ -8,8 +8,6 @@ from base.singleton import Singleton
 from base.property import rocachedproperty
 from base.object import Object
 from loop import MainLoop
-from atom import Atom
-from cursor import Cursor
 
 
 def byte_list_to_str(blist):
@@ -194,6 +192,7 @@ class Connection(Object, xcb.Connection):
         self.flush()
 
     def set_text_property(self, window, atom_name, value):
+        from atom import Atom
         if isinstance(value, unicode):
             string_atom = Atom("UTF8_STRING")
             value = value.encode("UTF-8")
@@ -206,6 +205,7 @@ class Connection(Object, xcb.Connection):
                                  8, len(value), value)
 
     def get_text_property(self, window, atom_name):
+        from atom import Atom
         prop = MainConnection().core.GetProperty(False, window,
                                                  Atom(atom_name).value,
                                                  xcb.xproto.GetPropertyType.Any,
@@ -217,6 +217,7 @@ class Connection(Object, xcb.Connection):
 
     def grab_pointer(self, window, cursor="left_ptr", confine_to=None):
         """Grab pointer on a window."""
+        from cursor import Cursor
         confine_to = confine_to or window
         self.core.GrabPointer(False, window,
                               xcb.xproto.EventMask.ButtonPress
@@ -235,3 +236,7 @@ class Connection(Object, xcb.Connection):
 class MainConnection(Singleton, Connection):
     """Main X connection of bazinga."""
     pass
+
+class XObject(Object, int):
+    # Use default format from object rather than from int
+    __str__ = object.__str__

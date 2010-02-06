@@ -1,5 +1,4 @@
-from x import MainConnection
-from xobject import XObject
+from x import MainConnection, XObject
 
 class Pixmap(XObject):
     """Pixmap."""

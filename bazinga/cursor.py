@@ -2,7 +2,7 @@
 
 from base.property import cachedproperty
 from base.singleton import SingletonPool
-from xobject import XObject
+from x import XObject
 from color import Color
 import weakref
 

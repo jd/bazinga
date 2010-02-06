@@ -1,5 +1,5 @@
 from base.property import rocachedproperty
-from xobject import XObject
+from x import XObject
 from base.singleton import SingletonPool
 
 

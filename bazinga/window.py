@@ -2,9 +2,8 @@
 
 from base.property import cachedproperty, rocachedproperty
 from base.object import Notify
-from xobject import XObject
 from base.singleton import SingletonPool
-from x import MainConnection, byte_list_to_uint32, byte_list_to_str
+from x import XObject, MainConnection, byte_list_to_uint32, byte_list_to_str
 from atom import Atom
 from color import Color
 from cursor import Cursor
