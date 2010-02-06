@@ -67,6 +67,9 @@ class Window(SingletonPool, XObject):
                                                   xcb.xproto.ConfigWindow.X,
                                                   [ value ])
 
+        def __delete__(self):
+            raise AttributeError
+
     class y(cachedproperty):
         """Y coordinate."""
         def __get__(self):
@@ -76,6 +79,9 @@ class Window(SingletonPool, XObject):
             MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.Y,
                                                   [ value ])
+
+        def __delete__(self):
+            raise AttributeError
 
     class width(cachedproperty):
         """Width."""
@@ -87,6 +93,9 @@ class Window(SingletonPool, XObject):
                                                   xcb.xproto.ConfigWindow.Width,
                                                   [ value ])
 
+        def __delete__(self):
+            raise AttributeError
+
     class height(cachedproperty):
         """Height."""
         def __get__(self):
@@ -97,6 +106,9 @@ class Window(SingletonPool, XObject):
                                                   xcb.xproto.ConfigWindow.Height,
                                                   [ self.height ])
 
+        def __delete__(self):
+            raise AttributeError
+
     class border_width(cachedproperty):
         """Border width."""
         def __get__(self):
@@ -106,6 +118,9 @@ class Window(SingletonPool, XObject):
             MainConnection().core.ConfigureWindow(self,
                                                   xcb.xproto.ConfigWindow.BorderWidth,
                                                   [ value ])
+
+        def __delete__(self):
+            raise AttributeError
 
     class depth(rocachedproperty):
         """Window color depth."""
@@ -127,6 +142,9 @@ class Window(SingletonPool, XObject):
         def __set__(self, value):
             MainConnection().core.ReparentWindow(self, value.xid, self.x, self.y)
 
+        def __delete__(self):
+            raise AttributeError
+
     class above_sibling(cachedproperty):
         """Sibling which is under the window."""
         def __set__(self, window):
@@ -134,6 +152,9 @@ class Window(SingletonPool, XObject):
                                                   xcb.xproto.ConfigWindow.Sibling
                                                   | xcb.xproto.ConfigWindow.StackMode,
                                                   [ window.xid, xcb.xproto.StackMode.Above ])
+
+        def __delete__(self):
+            raise AttributeError
 
     class visibility(rocachedproperty):
         """Visibility of the window.
@@ -157,6 +178,9 @@ class Window(SingletonPool, XObject):
                                                          [ color.pixel ])
             return color
 
+        def __delete__(self):
+            raise AttributeError
+
     class cursor(cachedproperty):
         """Window cursor."""
         def __get__(self):
@@ -168,6 +192,9 @@ class Window(SingletonPool, XObject):
                                                          xcb.xproto.CW.Cursor,
                                                          [ value ])
             return value
+
+        def __delete__(self):
+            raise AttributeError
 
     class map_state(rocachedproperty):
         """Window mapping state."""
@@ -192,6 +219,9 @@ class Window(SingletonPool, XObject):
             MainConnection().core.ChangeWindowAttributes(self,
                                                          xcb.xproto.CW.OverrideRedirect,
                                                          [ int(value) ])
+
+        def __delete__(self):
+            raise AttributeError
 
     class protocols(cachedproperty):
         def __get__(self):
@@ -477,9 +507,15 @@ class Window(SingletonPool, XObject):
         return _on_event
 
     # Helpers
-    def create_pixmap(self):
+    def create_pixmap(self, width=None, height=None, autofree=True):
         """Create a pixmap for this window."""
-        return Pixmap(self.depth, self, self.width, self.height)
+        xid = MainConnection().generate_id()
+        MainConnection().core.CreatePixmapChecked(self.depth,
+                                                  xid,
+                                                  self,
+                                                  width or self.width,
+                                                  height or self.height).check()
+        return Pixmap(xid, autofree)
 
     def create_subwindow(self, x=0, y=0, width=1, height=1, border_width=0):
         """Create a subwindow for this window."""
