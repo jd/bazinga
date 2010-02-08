@@ -4,7 +4,7 @@ import traceback
 import struct
 import weakref
 
-from screen import Screen, Output
+from screen import Screen, ScreenXinerama, ScreenRandr, Output, OutputRandr
 from base.singleton import Singleton, SingletonPool
 from base.property import rocachedproperty
 from base.object import Object
@@ -61,8 +61,6 @@ class Connection(Object, xcb.Connection):
     class screens(rocachedproperty):
         """Screens connection."""
         def __get__(self):
-            screens = []
-
             try:
                 import xcb.randr
                 self.randr = self(xcb.randr.key)
@@ -81,68 +79,32 @@ class Connection(Object, xcb.Connection):
                 # Check that Xinerama is active
                 xinerama_isactive_c = self.xinerama.IsActive()
 
+            screens = []
+
             # Does it have RandR ?
             if randr_queryversion_c and randr_queryversion_c.reply():
                 screen_resources_c = zip(self.roots,
-                        Connection.prepare_requests(self.randr.GetScreenResources,
-                                                    self.roots, 0))
+                                         self.prepare_requests(self.randr.GetScreenResources,
+                                                               self.roots, 0))
                 for root, screen_resources_cookie in screen_resources_c:
                     screen_resources = screen_resources_cookie.reply()
-
-                    crtc_info_c = Connection.prepare_requests(self.randr.GetCrtcInfo,
-                                                              screen_resources.crtcs, 0,
-                                                              xcb.xproto.Time.CurrentTime)
-
-                    for crtc_info_cookie in crtc_info_c:
-                        crtc_info = crtc_info_cookie.reply()
-                        # Does the CRTC have outputs?
-                        if len(crtc_info.outputs):
-                            screen = Screen()
-                            screen.x = crtc_info.x
-                            screen.y = crtc_info.y
-                            screen.width = crtc_info.width
-                            screen.height = crtc_info.height
-                            screen.root = root
-                            screen.outputs = []
-                            screens.append(screen)
-
-                            # Prepare output info requests
-                            output_info_c = Connection.prepare_requests(self.randr.GetOutputInfo,
-                                    crtc_info.outputs, 0, xcb.xproto.Time.CurrentTime)
-
-                            for output_info_cookie in output_info_c:
-                                output_info = output_info_cookie.reply()
-                                output = Output()
-                                output.name = byte_list_to_str(output_info.name)
-                                output.mm_width = output_info.mm_width
-                                output.mm_height = output_info.mm_height
-                                screen.outputs.append(output)
-
+                    screens.extend([ ScreenRandr(self, xid, root) for xid in
+                                   screen_resources.crtcs ])
             elif xinerama_isactive_c and xinerama_isactive_c.reply().state:
                 screens_info = self.xinerama.QueryScreens().reply()
+                xid = 0
                 for screen_info in screens_info.screen_info:
-                    screen = Screen()
-                    screen.x = screen_info.x_org
-                    screen.y = screen_info.y_org
-                    screen.width = screen_info.width
-                    screen.height = screen_info.height
                     # There is only one root if we have Xinerama
-                    screen.root = self.roots[0]
-                    # This is useless, but just to be logic
-                    screen.outputs = [ Output() ]
+                    screen = ScreenXinerama(self, xid, self.roots[0])
+                    ScreenXinerama.x.set_cache(screen, screen_info.x_org)
+                    ScreenXinerama.y.set_cache(screen, screen_info.y_org)
+                    ScreenXinerama.width.set_cache(screen, screen_info.width)
+                    ScreenXinerama.height.set_cache(screen, screen_info.height)
                     screens.append(screen)
+                    xid += 1
             else:
-                for root, xroot in zip(self.roots, self.get_setup().roots):
-                    screen = Screen()
-                    screen.x = screen.y = 0
-                    screen.width = root.width_in_pixels
-                    screen.height = root.height_in_pixels
-                    screen.root = root
-                    output = Output()
-                    output.mm_width = xroot.width_in_millimeters
-                    output.mm_height = xroot.height_in_millimeters
-                    screen.outputs = [ output ]
-                    screens.append(screen)
+                for i in xrange(len(self.roots)):
+                    screens.append(Screen(self, i, self.roots[i]))
 
             return screens
 

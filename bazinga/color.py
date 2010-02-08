@@ -3,6 +3,7 @@ import weakref
 
 from base.object import Object
 from base.property import rocachedproperty
+from base.singleton import SingletonPool
 
 class XColor(Object):
     """Generic color class."""
