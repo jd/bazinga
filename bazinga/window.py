@@ -201,10 +201,10 @@ class Window(XObject):
         def __delete__(self):
             raise AttributeError
 
-    class map_state(rocachedproperty):
+    @property
+    def map_state(self):
         """Window mapping state."""
-        def __get__(self):
-            self._retrieve_window_attributes()
+        return self._retrieve_window_attributes().map_state
 
     class colormap(rocachedproperty):
         """Colormap of the window."""
@@ -410,10 +410,10 @@ class Window(XObject):
     def _retrieve_window_attributes(self):
         """Update windows attributes."""
         wa = self.connection.core.GetWindowAttributes(self).reply()
-        Window.map_state.set_cache(self, wa.map_state)
         Window.colormap.set_cache(self, wa.colormap)
         Window.visual.set_cache(self, wa.visual)
         Window.override_redirect.set_cache(self, wa.override_redirect)
+        return wa
 
     # Methods
     def destroy(self):
