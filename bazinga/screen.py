@@ -76,14 +76,11 @@ class ScreenRandr(Screen):
         def __get__(self):
             return self._retrieve_info()
 
-    def __new__(cls, connection, xid, root):
-        return super(Screen, cls).__new__(cls, connection, xid, root)
-
     def _retrieve_info(self):
         reply = self.connection.randr.GetCrtcInfo(self,
-                                                  xcb.xproto.CurrentTime).reply()
+                                                  xcb.xproto.Time.CurrentTime).reply()
         Screen.outputs.set_cache(self,
-                                 [ Output(self.connection, xid) for xid in
+                                 [ OutputRandr(self.connection, xid) for xid in
                                    reply.outputs ])
         Screen.x.set_cache(self, reply.x)
         Screen.y.set_cache(self, reply.y)
@@ -114,19 +111,19 @@ class OutputRandr(Output, int):
         def __get__(self):
             return self._retrieve_info()
 
-    def __new__(cls, connect, xid):
-        return super(Output, cls).__new__(cls, xid)
+    def __new__(cls, connection, xid):
+        return super(OutputRandr, cls).__new__(cls, xid)
 
     def __init__(self, connection, xid):
         self.connection = connection
 
     def _retrieve_info(self):
         info = self.connection.randr.GetOutputInfo(self,
-                                                   xcb.xproto.Time.CurrentTime)
+                                                   xcb.xproto.Time.CurrentTime).reply()
         from x import byte_list_to_str
-        Output.name.set_cache(self, byte_list_to_str(info.name))
-        Output.width_mm.set_cache(self, info.mm_width)
-        Output.height_mm.set_cache(self, info.mm_height)
+        self.__class__.name.set_cache(self, byte_list_to_str(info.name))
+        self.__class__.width_mm.set_cache(self, info.mm_width)
+        self.__class__.height_mm.set_cache(self, info.mm_height)
 
     def __repr__(self):
         return "<{0} {1} at 0x{2:x}>".format(self.__class__.__name__,
