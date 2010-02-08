@@ -33,6 +33,10 @@ class Screen(Object, int):
         self.connection = connection
         self.root = root
 
+    def __repr__(self):
+        return "<{0} {1} at 0x{2:x}>".format(self.__class__.__name__,
+                                             int(self), id(self))
+
     def _retrieve_info(self):
         for root in self.connection.get_setup().roots:
             if root == self.root:
@@ -43,8 +47,6 @@ class Screen(Object, int):
                 Output.height_mm.set_cache(output, root.height_in_millimeters)
                 Screen.outputs.set_cache(self, [ output ])
                 break
-
-
 
 
 class ScreenXinerama(Screen):
@@ -125,3 +127,7 @@ class OutputRandr(Output, int):
         Output.name.set_cache(self, byte_list_to_str(info.name))
         Output.width_mm.set_cache(self, info.mm_width)
         Output.height_mm.set_cache(self, info.mm_height)
+
+    def __repr__(self):
+        return "<{0} {1} at 0x{2:x}>".format(self.__class__.__name__,
+                                             int(self), id(self))
