@@ -1,5 +1,6 @@
 """Bazinga window objects."""
 
+import base
 from base.property import cachedproperty, rocachedproperty
 from base.object import Notify
 from x import XObject, byte_list_to_uint32, byte_list_to_str
@@ -12,6 +13,9 @@ import xcb.xproto
 from PIL import Image
 import struct
 import weakref
+
+class BadWindow(base.Exception):
+    pass
 
 events_window_attribute = {
     # Event: (event mask, attribute matching xid)
@@ -52,6 +56,11 @@ class Window(XObject):
 
     Visibility = xcb.xproto.Visibility
     Visibility.Unknown = -1
+
+    class _valid(rocachedproperty):
+        """Is window valid? This is set to false upon destroy."""
+        def __get__(self):
+            return True
 
     class x(cachedproperty):
         """X coordinate."""
@@ -353,6 +362,11 @@ class Window(XObject):
         self.connection.connect_signal(self._dispatch_errors,
                                        signal=xcb.Error)
 
+    def __getattr__(self, value):
+        if not self._valid:
+            raise BadWindow("This window has been destroyed.")
+        return super(Window, self).__getattr__(value)
+
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 
@@ -402,6 +416,10 @@ class Window(XObject):
         Window.override_redirect.set_cache(self, wa.override_redirect)
 
     # Methods
+    def destroy(self):
+        self.connection.core.DestroyWindow(self)
+        Window._valid.set_cache(self, False)
+
     def focus(self):
         """Give focus to a window.
         If focus is lost, it will go back to window's parent."""
@@ -596,6 +614,11 @@ def _on_reparent_update_parent(sender, signal):
     if signal.window == sender:
         Window.parent.set_cache(sender, Window(signal.parent))
 
+@Window.on_class_signal(xcb.xproto.DestroyNotifyEvent)
+def _on_destroy_invalidate(sender, signal):
+    # We are getting deleted
+    if signal.window == sender:
+        Window._valid.set_cache(sender, False)
 
 def _build_key_button_event(xevent, cls):
     event = cls(xevent.state, xevent.detail)
