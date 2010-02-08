@@ -457,8 +457,8 @@ class Window(XObject):
                                         # XXX Sync?
                                         xcb.xproto.GrabMode.Async,
                                         xcb.xproto.GrabMode.Async,
-                                        xcb.xproto.NONE,
-                                        xcb.xproto.NONE,
+                                        xcb.NONE,
+                                        xcb.NONE,
                                         button, modifiers)
 
     def ungrab_button(self, modifiers, button):
@@ -551,6 +551,13 @@ class Window(XObject):
         """Create a subwindow for this window."""
         return self.__class__.create(self.connection, self,
                                      x, y, width, height, border_width)
+
+    def on_key_press(self, state, detail):
+        self.grab_key(state, detail)
+        def _on_key_press(func):
+            self.connect_signal(func, event.KeyPress(state, detail))
+            return func
+        return _on_key_press
 
 # Static function that are used to update various information
 # on windows objects automagically
