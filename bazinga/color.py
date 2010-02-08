@@ -48,6 +48,12 @@ class XColor(Object):
 class NamedColor(XColor):
     """A named color."""
 
+    _SingletonPool__instances = {}
+
+    @staticmethod
+    def __getpoolkey__(connection, colormap, name, alpha=65535):
+        return (id(connection), colormap, name, alpha)
+
     class name(rocachedproperty):
         __doc__  = XColor.name.__doc__
 
@@ -68,8 +74,14 @@ class NamedColor(XColor):
         super(NamedColor, self).__init__(connection)
 
 
-class ValueColor(XColor):
+class ValueColor(XColor, SingletonPool):
     """A color by value."""
+
+    _SingletonPool__instances = {}
+
+    @staticmethod
+    def __getpoolkey__(connection, colormap, red=0, green=0, blue=0, alpha=65535):
+        return (id(connection), colormap, name, red, green, blue, alpha)
 
     def __init__(self, connection, colormap, red=0, green=0, blue=0, alpha=65535):
 
@@ -106,8 +118,7 @@ class HexColor(ValueColor):
 
         super(HexColor, self).__init__(connection, colormap, red, green, blue, alpha)
 
-# XXX
-# Memoize the factory, or the classes above
+
 def Color(connection, colormap, color=None, red=0, green=0, blue=0, alpha=65535):
     """Create a color. You should specify name, or RGB value."""
 
