@@ -136,7 +136,7 @@ class Window(XObject):
                 return Window(parent)
 
         def __set__(self, value):
-            self.connection.core.ReparentWindow(self, value.xid, self.x, self.y)
+            self.connection.core.ReparentWindow(self, value, self.x, self.y)
 
         def __delete__(self):
             raise AttributeError
@@ -147,7 +147,7 @@ class Window(XObject):
             self.connection.core.ConfigureWindow(self,
                                                  xcb.xproto.ConfigWindow.Sibling
                                                  | xcb.xproto.ConfigWindow.StackMode,
-                                                 [ window.xid, xcb.xproto.StackMode.Above ])
+                                                 [ window, xcb.xproto.StackMode.Above ])
 
         def __delete__(self):
             raise AttributeError
@@ -281,7 +281,7 @@ class Window(XObject):
                                                 self,
                                                 Atom(self.connection, "WM_TRANSIENT_FOR"),
                                                 Atom(self.connection, "WINDOW"),
-                                                32, 1, value.xid)
+                                                32, 1, value)
 
     class machine(rocachedproperty):
         """Machine this window is running on."""
@@ -593,7 +593,7 @@ def _on_visibility_set_value(sender, signal):
 @Window.on_class_signal(xcb.xproto.ReparentNotifyEvent)
 def _on_reparent_update_parent(sender, signal):
     # We are getting reparented
-    if signal.window == sender.xid:
+    if signal.window == sender:
         Window.parent.set_cache(sender, Window(signal.parent))
 
 
