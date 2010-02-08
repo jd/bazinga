@@ -501,17 +501,17 @@ class Window(XObject):
         # Otherwise our cache might not be up to date.
         global _events_to_always_listen
         create_window = \
-        window.connection.core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
-                                                   xid,
-                                                   parent,
-                                                   x, y, width, height,
-                                                   border_width,
-                                                   xcb.xproto.WindowClass.CopyFromParent,
-                                                   xcb.xproto.WindowClass.CopyFromParent,
-                                                   xcb.xproto.CW.EventMask,
-                                                   [ _events_to_always_listen ])
+        connection.core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
+                                            xid,
+                                            parent,
+                                            x, y, width, height,
+                                            border_width,
+                                            xcb.xproto.WindowClass.CopyFromParent,
+                                            xcb.xproto.WindowClass.CopyFromParent,
+                                            xcb.xproto.CW.EventMask,
+                                            [ _events_to_always_listen ])
 
-        window = super(Window, cls)(connection, xid)
+        window = cls(connection, xid)
         window.__events = _events_to_always_listen
 
         cls.border_width.set_cache(window, border_width)
