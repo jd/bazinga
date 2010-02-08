@@ -373,9 +373,9 @@ class Window(XObject):
     def _set_events(self, events):
         """Set events that shall be received by the window."""
         if events != self.__events:
-            self.connection.core.ChangeWindowAttributes(self,
-                                                        xcb.xproto.CW.EventMask,
-                                                        [ events ])
+            self.connection.core.ChangeWindowAttributesChecked(self,
+                                                               xcb.xproto.CW.EventMask,
+                                                               [ events ]).check()
             self.__events = events
 
     def _add_event(self, event):
@@ -493,23 +493,26 @@ class Window(XObject):
 
     @classmethod
     def create(cls, connection, parent, x=0, y=0, width=1, height=1, border_width=0):
-        window = super(Window, cls).create(connection)
+        # XXX we can't call super because it would call
+        # ChangeWindowAttribute on non-created window XID
+        xid = connection.generate_id()
         """Create a subwindow for this window."""
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
-        # XXX or grab server while creating and calling super()
         global _events_to_always_listen
-        window.__events = _events_to_always_listen
         create_window = \
         window.connection.core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
-                                                   window,
+                                                   xid,
                                                    parent,
                                                    x, y, width, height,
                                                    border_width,
                                                    xcb.xproto.WindowClass.CopyFromParent,
                                                    xcb.xproto.WindowClass.CopyFromParent,
                                                    xcb.xproto.CW.EventMask,
-                                                   [ window.__events ])
+                                                   [ _events_to_always_listen ])
+
+        window = super(Window, cls)(connection, xid)
+        window.__events = _events_to_always_listen
 
         cls.border_width.set_cache(window, border_width)
         cls.x.set_cache(window, x)
