@@ -6,11 +6,11 @@ class XPixmap(XObject):
     @classmethod
     def create(cls, connection, depth, drawable, width, height):
         xpixmap = super(XPixmap, cls).create(connection)
-        xpixmap.connection.core.CreatePixmapCheced(depth,
-                                                   xpixmap,
-                                                   drawable,
-                                                   width,
-                                                   height).check()
+        xpixmap.connection.core.CreatePixmapChecked(depth,
+                                                    xpixmap,
+                                                    drawable,
+                                                    width,
+                                                    height).check()
         return xpixmap
 
 
