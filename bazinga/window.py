@@ -363,7 +363,7 @@ class Window(XObject):
                                        signal=xcb.Error)
 
     def __getattr__(self, value):
-        if not self._valid:
+        if value != Window._valid.key and not self._valid:
             raise BadWindow("This window has been destroyed.")
         return super(Window, self).__getattr__(value)
 
