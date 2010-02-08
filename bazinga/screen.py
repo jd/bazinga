@@ -121,9 +121,9 @@ class OutputRandr(Output, int):
         info = self.connection.randr.GetOutputInfo(self,
                                                    xcb.xproto.Time.CurrentTime).reply()
         from x import byte_list_to_str
-        self.__class__.name.set_cache(self, byte_list_to_str(info.name))
-        self.__class__.width_mm.set_cache(self, info.mm_width)
-        self.__class__.height_mm.set_cache(self, info.mm_height)
+        OutputRandr.name.set_cache(self, byte_list_to_str(info.name))
+        OutputRandr.width_mm.set_cache(self, info.mm_width)
+        OutputRandr.height_mm.set_cache(self, info.mm_height)
 
     def __repr__(self):
         return "<{0} {1} at 0x{2:x}>".format(self.__class__.__name__,
