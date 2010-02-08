@@ -17,40 +17,39 @@ import weakref
 class BadWindow(base.Exception):
     pass
 
-events_window_attribute = {
-    # Event: (event mask, attribute matching xid)
-    xcb.xproto.KeyPressEvent: (xcb.xproto.EventMask.KeyPress, "event"),
-    xcb.xproto.KeyReleaseEvent: (xcb.xproto.EventMask.KeyRelease, "event"),
-    xcb.xproto.ButtonPressEvent: (xcb.xproto.EventMask.ButtonPress, "event"),
-    xcb.xproto.ButtonReleaseEvent: (xcb.xproto.EventMask.ButtonRelease, "event"),
-    xcb.xproto.MotionNotifyEvent: (xcb.xproto.EventMask.PointerMotion, "event"),
-    xcb.xproto.EnterNotifyEvent: (xcb.xproto.EventMask.EnterWindow, "event"),
-    xcb.xproto.LeaveNotifyEvent: (xcb.xproto.EventMask.LeaveWindow, "event"),
-    xcb.xproto.FocusInEvent: (xcb.xproto.EventMask.FocusChange, "event"),
-    xcb.xproto.FocusOutEvent: (xcb.xproto.EventMask.FocusChange, "event"),
-    xcb.xproto.ExposeEvent: (xcb.xproto.EventMask.Exposure, "window"),
-    xcb.xproto.VisibilityNotifyEvent: (xcb.xproto.EventMask.VisibilityChange, "window"),
-    xcb.xproto.CreateNotifyEvent: (xcb.xproto.EventMask.SubstructureNotify, "parent"),
-    xcb.xproto.DestroyNotifyEvent: (xcb.xproto.EventMask.SubstructureNotify, "event"),
-    xcb.xproto.UnmapNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
-    xcb.xproto.MapNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
-    xcb.xproto.ReparentNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "event"),
-    xcb.xproto.ConfigureNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
-    xcb.xproto.ConfigureRequestEvent: (xcb.xproto.EventMask.SubstructureRedirect, "parent"),
-    xcb.xproto.CirculateNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
-    xcb.xproto.CirculateRequestEvent: (xcb.xproto.EventMask.SubstructureRedirect, "window"),
-    xcb.xproto.PropertyNotifyEvent: (xcb.xproto.EventMask.PropertyChange, "window"),
-    xcb.xproto.ClientMessageEvent: (None, "window")
-}
-
-
-_events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
-                           | xcb.xproto.EventMask.PropertyChange \
-                           | xcb.xproto.EventMask.VisibilityChange
-
 
 class Window(XObject):
     """A basic X window."""
+
+    events_window_attribute = {
+        # Event: (event mask, attribute matching xid)
+        xcb.xproto.KeyPressEvent: (xcb.xproto.EventMask.KeyPress, "event"),
+        xcb.xproto.KeyReleaseEvent: (xcb.xproto.EventMask.KeyRelease, "event"),
+        xcb.xproto.ButtonPressEvent: (xcb.xproto.EventMask.ButtonPress, "event"),
+        xcb.xproto.ButtonReleaseEvent: (xcb.xproto.EventMask.ButtonRelease, "event"),
+        xcb.xproto.MotionNotifyEvent: (xcb.xproto.EventMask.PointerMotion, "event"),
+        xcb.xproto.EnterNotifyEvent: (xcb.xproto.EventMask.EnterWindow, "event"),
+        xcb.xproto.LeaveNotifyEvent: (xcb.xproto.EventMask.LeaveWindow, "event"),
+        xcb.xproto.FocusInEvent: (xcb.xproto.EventMask.FocusChange, "event"),
+        xcb.xproto.FocusOutEvent: (xcb.xproto.EventMask.FocusChange, "event"),
+        xcb.xproto.ExposeEvent: (xcb.xproto.EventMask.Exposure, "window"),
+        xcb.xproto.VisibilityNotifyEvent: (xcb.xproto.EventMask.VisibilityChange, "window"),
+        xcb.xproto.CreateNotifyEvent: (xcb.xproto.EventMask.SubstructureNotify, "parent"),
+        xcb.xproto.DestroyNotifyEvent: (xcb.xproto.EventMask.SubstructureNotify, "event"),
+        xcb.xproto.UnmapNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
+        xcb.xproto.MapNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
+        xcb.xproto.ReparentNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "event"),
+        xcb.xproto.ConfigureNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
+        xcb.xproto.ConfigureRequestEvent: (xcb.xproto.EventMask.SubstructureRedirect, "parent"),
+        xcb.xproto.CirculateNotifyEvent: (xcb.xproto.EventMask.StructureNotify, "window"),
+        xcb.xproto.CirculateRequestEvent: (xcb.xproto.EventMask.SubstructureRedirect, "window"),
+        xcb.xproto.PropertyNotifyEvent: (xcb.xproto.EventMask.PropertyChange, "window"),
+        xcb.xproto.ClientMessageEvent: (None, "window")
+    }
+
+    _events_to_always_listen = xcb.xproto.EventMask.StructureNotify \
+                               | xcb.xproto.EventMask.PropertyChange \
+                               | xcb.xproto.EventMask.VisibilityChange
 
     __events = xcb.xproto.EventMask.NoEvent
 
@@ -352,10 +351,9 @@ class Window(XObject):
 
     def __init__(self, connection, xid):
         super(Window, self).__init__(connection, xid)
-        global _events_to_always_listen
         # Mandatory, we want this.
         # XXX this is bad. When doing create(), we call this before CreateWindow
-        self._set_events(_events_to_always_listen)
+        self._set_events(Window._events_to_always_listen)
         # Receive events and errors from the X connection
         self.connection.connect_signal(self._dispatch_events,
                                        signal=xcb.Event)
@@ -370,8 +368,8 @@ class Window(XObject):
     def _is_event_for_me(self, event):
         """Guess if an X even is for us or not."""
 
-        if event.__class__ in events_window_attribute.keys():
-            return getattr(event, events_window_attribute[event.__class__][1]) == self
+        if event.__class__ in Window.events_window_attribute.keys():
+            return getattr(event, Window.events_window_attribute[event.__class__][1]) == self
         return False
 
     def _dispatch_events(self, signal):
@@ -502,8 +500,8 @@ class Window(XObject):
 
     # Events handling
     def on_event(self, event):
-        if events_window_attribute[event][0]:
-            self._add_event(events_window_attribute[event][0])
+        if Window.events_window_attribute[event][0]:
+            self._add_event(Window.events_window_attribute[event][0])
         def _on_event(func):
             self.connect_signal(func, event)
             return func
@@ -517,7 +515,6 @@ class Window(XObject):
         """Create a subwindow for this window."""
         # Always listen to this events at creation.
         # Otherwise our cache might not be up to date.
-        global _events_to_always_listen
         create_window = \
         connection.core.CreateWindowChecked(xcb.xproto.WindowClass.CopyFromParent,
                                             xid,
@@ -527,10 +524,10 @@ class Window(XObject):
                                             xcb.xproto.WindowClass.CopyFromParent,
                                             xcb.xproto.WindowClass.CopyFromParent,
                                             xcb.xproto.CW.EventMask,
-                                            [ _events_to_always_listen ])
+                                            [ Window._events_to_always_listen ])
 
         window = cls(connection, xid)
-        window.__events = _events_to_always_listen
+        window.__events = Window._events_to_always_listen
 
         cls.border_width.set_cache(window, border_width)
         cls.x.set_cache(window, x)
@@ -628,18 +625,4 @@ def _build_key_button_event(xevent, cls):
     event.root_y = xevent.root_y
     return event
 
-@Window.on_class_signal(xcb.xproto.KeyPressEvent)
-def _on_key_press_emit_event(sender, signal):
-    sender.emit_signal(sender._build_key_button_event(signal, event.KeyPress))
-
-@Window.on_class_signal(xcb.xproto.KeyReleaseEvent)
-def _on_key_release_emit_event(sender, signal):
-    sender.emit_signal(sender._build_key_button_event(signal, event.KeyRelease))
-
-@Window.on_class_signal(xcb.xproto.ButtonPressEvent)
-def _on_button_press_emit_event(sender, signal):
-    sender.emit_signal(sender._build_key_button_event(signal, event.ButtonPress))
-
-@Window.on_class_signal(xcb.xproto.ButtonReleaseEvent)
-def _on_button_release_emit_event(sender, signal):
-    sender.emit_signal(sender._build_key_button_event(signal, event.ButtonRelease))
+Window.on_class_signal(xcb.Event)(event.Event.convert_and_reemit)
