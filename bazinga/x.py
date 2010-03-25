@@ -108,18 +108,12 @@ class Connection(Object, xcb.Connection):
 
             return screens
 
-    def grab(self):
-        self.core.GrabServer()
-
-    def ungrab(self):
-        self.core.UngrabServer()
-
     def __enter__(self):
-        self.grab()
+        self.core.GrabServer()
         return self
 
     def __exit__(self, type, value, traceback):
-        self.ungrab()
+        self.core.UngrabServer()
 
     @staticmethod
     def prepare_requests(method, variable_list, position, *args):
