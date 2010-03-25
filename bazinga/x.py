@@ -108,13 +108,8 @@ class Connection(Object, xcb.Connection):
 
             return screens
 
-    def sync(self):
-        """Synchronize connection."""
-        self.core.GetInputFocus().reply()
-
     def grab(self):
         self.core.GrabServer()
-        self.sync()
 
     def ungrab(self):
         self.core.UngrabServer()
